@@ -1,8 +1,5 @@
-<!-- =========================
-FILE: PHANToM_Image_Sorter.html
-Place this at repo root or link it from your launcher index.html
-Requires: /js/phantom-image-sorter.js
-========================= --><!DOCTYPE html><html lang="th">
+<!DOCTYPE html>
+<html lang="th">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -63,331 +60,71 @@ Requires: /js/phantom-image-sorter.js
       <small>AI Vision Auto-sort + Condo/House + Drag & Drop + Export JPG/ZIP</small>
     </div>
     <div>by PHANToM</div>
-  </header>  <main>
-    <!-- Left panel -->
+  </header>
+
+  <main>
     <section class="card left">
       <div class="kv">
         <span class="help">Google Cloud Vision API Key</span>
         <input id="apiKey" type="password" placeholder="ใส่ API Key"/>
         <button id="saveKey" class="ghost">บันทึก</button>
         <span id="keyState" class="help"></span>
-      </div><div class="kv" style="margin-top:8px">
-    <span class="help">โหมดการเรียง:</span>
-    <div class="radio">
-      <label><input type="radio" name="mode" value="condo" checked> คอนโด/ห้องเช่า</label>
-      <label><input type="radio" name="mode" value="house"> บ้าน</label>
-    </div>
-  </div>
+      </div>
 
-  <hr style="border:none;border-top:1px solid var(--edge);margin:12px 0"/>
+      <div class="kv" style="margin-top:8px">
+        <span class="help">โหมดการเรียง:</span>
+        <div class="radio">
+          <label><input type="radio" name="mode" value="condo" checked> คอนโด/ห้องเช่า</label>
+          <label><input type="radio" name="mode" value="house"> บ้าน</label>
+        </div>
+      </div>
 
-  <label class="help">อัปโหลดรูปภาพ (รองรับ .jpg .png .webp) — ลากวางหรือกดเลือกไฟล์</label>
-  <div id="drop" class="droper">
-    <div>ลากรูปมาวางที่นี่</div>
-    <div class="small">หรือ</div>
-    <label for="picker" class="small btn ghost" style="padding:6px 10px;display:inline-block;cursor:pointer">เลือกไฟล์…</label>
-    <input id="picker" type="file" accept="image/*" multiple>
-  </div>
+      <hr style="border:none;border-top:1px solid var(--edge);margin:12px 0"/>
 
-  <div class="note">คำสั่งเรียงแบบ <span class="hl">คอนโด/ห้องเช่า</span> (ค่าเริ่มต้น): Living → Dining/Kitchen → Corridor → Bedroom → Bathroom → Balcony/View → Facilities<br>ถ้าเป็น <span class="hl">บ้าน</span>: Exterior → Garage/Parking → Living → Dining → Kitchen → Stairs/Upstairs → Bedrooms → Other Rooms → Bathroom → Around House → Facilities</div>
+      <label class="help">อัปโหลดรูปภาพ (รองรับ .jpg .png .webp)</label>
+      <div id="drop" class="droper">
+        <div>ลากรูปมาวางที่นี่</div>
+        <div class="small">หรือ</div>
+        <label for="picker" class="small btn ghost" style="padding:6px 10px;display:inline-block;cursor:pointer">เลือกไฟล์…</label>
+        <input id="picker" type="file" accept="image/*" multiple>
+      </div>
 
-  <div class="btns">
-    <button id="autoHeu" class="ghost">Auto-sort (Heuristic)</button>
-    <button id="autoAI" class="secondary" title="ใช้ Vision API เพื่อตีความรูป">Auto-sort (AI)</button>
-    <button id="clear" class="warn">เคลียร์ทั้งหมด</button>
-  </div>
+      <div class="note">คำสั่งเรียงแบบ <span class="hl">คอนโด/ห้องเช่า</span> (ค่าเริ่มต้น): Living → Dining/Kitchen → Corridor → Bedroom → Bathroom → Balcony/View → Facilities<br>ถ้าเป็น <span class="hl">บ้าน</span>: Exterior → Garage/Parking → Living → Dining → Kitchen → Stairs/Upstairs → Bedrooms → Other Rooms → Bathroom → รอบบ้าน → Facilities</div>
 
-  <hr style="border:none;border-top:1px solid var(--edge);margin:12px 0"/>
+      <div class="btns">
+        <button id="autoHeu" class="ghost">Auto-sort (Heuristic)</button>
+        <button id="autoAI" class="secondary" title="ใช้ Vision API เพื่อตีความรูป">Auto-sort (AI)</button>
+        <button id="clear" class="warn">เคลียร์ทั้งหมด</button>
+      </div>
 
-  <div class="row">
-    <div>
-      <label class="help">คุณภาพ JPG (0.6–0.95)</label>
-      <input id="quality" type="number" min="0.6" max="0.95" step="0.01" value="0.9" style="width:100%;padding:8px;border-radius:10px;border:1px solid var(--edge);background:#0e1a3a;color:var(--txt)">
-    </div>
-    <div>
-      <label class="help">ปุ่มเด่นปก (เลือกได้สูงสุด 2 ภาพ)</label>
-      <div class="help">กดปุ่ม “Cover” บนรูปเพื่อปักเป็นภาพ 1–2</div>
-    </div>
-  </div>
+      <hr style="border:none;border-top:1px solid var(--edge);margin:12px 0"/>
 
-  <div class="btns">
-    <button id="exportZip" class="ok">Export: JPG + Rename (ZIP)</button>
-  </div>
+      <div class="row">
+        <div>
+          <label class="help">คุณภาพ JPG (0.6–0.95)</label>
+          <input id="quality" type="number" min="0.6" max="0.95" step="0.01" value="0.9" style="width:100%;padding:8px;border-radius:10px;border:1px solid var(--edge);background:#0e1a3a;color:var(--txt)">
+        </div>
+        <div>
+          <label class="help">ภาพปก (เลือกได้สูงสุด 2 ภาพ)</label>
+          <div class="help">กดปุ่ม “Cover” บนรูปเพื่อปักเป็นภาพ 1–2</div>
+        </div>
+      </div>
 
-  <div class="help" style="margin-top:8px">หลัง Export ไฟล์จะถูกรีเนมเป็น <span class="hl">1.jpg, 2.jpg, …</span> ตามลำดับที่เห็น (โดยภาพที่ติดป้าย Cover จะถูกวางเป็น 1 และ 2)</div>
-</section>
+      <div class="btns">
+        <button id="exportZip" class="ok">Export: JPG + Rename (ZIP)</button>
+      </div>
+    </section>
 
-<!-- Right panel: preview grid -->
-<section class="card right">
-  <div class="help" style="padding:6px 6px 10px">ลากสลับตำแหน่งรูปได้ด้วยนิ้ว/เมาส์ • แตะปุ่ม <b>Cover</b> เพื่อขึ้นปก • ป้ายหมวดจาก AI จะแสดงใต้ชื่อไฟล์</div>
-  <div id="grid" class="grid"></div>
-</section>
+    <section class="card right">
+      <div class="help" style="padding:6px 6px 10px">ลากสลับตำแหน่งรูปได้ด้วยนิ้ว/เมาส์ • แตะปุ่ม <b>Cover</b> เพื่อขึ้นปก • ป้ายหมวดจาก AI จะแสดงใต้ชื่อไฟล์</div>
+      <div id="grid" class="grid"></div>
+    </section>
+  </main>
 
-  </main>  <div id="toast" class="toast">พร้อมทำงาน</div>  <!-- libs for ZIP export -->  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>  <!-- app script -->  <script src="js/phantom-image-sorter.js"></script></body>
-</html><!-- =========================
-FILE: /js/phantom-image-sorter.js
-Create folder "js" in your repo and put this file inside.
-========================= --><script type="text/plain" data-filename="/js/phantom-image-sorter.js">
-(function(){
-  const $ = (s, c=document)=>c.querySelector(s);
-  const $$ = (s, c=document)=>Array.from(c.querySelectorAll(s));
+  <div id="toast" class="toast">พร้อมทำงาน</div>
 
-  const drop = $('#drop');
-  const picker = $('#picker');
-  const grid = $('#grid');
-  const toastEl = $('#toast');
-  const qualityEl = $('#quality');
-  const modeInputs = $$('input[name="mode"]');
-  const apiKeyEl = $('#apiKey');
-  const saveKeyBtn = $('#saveKey');
-  const keyState = $('#keyState');
-
-  const LS_KEY_ITEMS = 'phantom_sorter_items_v1'; // (optional) not used for persistence now
-  const LS_KEY_MODE  = 'phantom_sorter_mode_v1';
-  const LS_KEY_API   = 'phantom_ai_key_v1';
-
-  let items = []; // { id, file, url, cover:boolean, ai:{labels:[], cat:'', score:number} }
-  let mode = 'condo';
-
-  // --- init local state
-  const toast = (msg)=>{ toastEl.textContent = msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'), 1400); };
-  const loadSettings = ()=>{
-    const m = localStorage.getItem(LS_KEY_MODE);
-    if(m) mode = m;
-    modeInputs.forEach(r=> r.checked = (r.value===mode));
-
-    const k = localStorage.getItem(LS_KEY_API);
-    if(k){ apiKeyEl.value = k; keyState.textContent = 'บันทึกคีย์ไว้แล้ว'; }
-  };
-  const saveSettings = ()=>{
-    localStorage.setItem(LS_KEY_MODE, mode);
-  };
-
-  saveKeyBtn.addEventListener('click', ()=>{
-    const k = (apiKeyEl.value||'').trim();
-    if(!k) { keyState.textContent = 'ยังไม่ได้ใส่คีย์'; return; }
-    localStorage.setItem(LS_KEY_API, k);
-    keyState.textContent = 'บันทึกคีย์เรียบร้อย';
-    toast('บันทึก API Key แล้ว');
-  });
-
-  modeInputs.forEach(r=> r.addEventListener('change', ()=>{ mode = r.value; saveSettings(); toast('โหมด: '+(mode==='condo'?'คอนโด':'บ้าน')); }));
-
-  // ---- read & add files
-  const onFiles = async (fileList)=>{
-    const arr = Array.from(fileList||[]).filter(f=>/^image\//.test(f.type));
-    for(const f of arr){
-      const url = URL.createObjectURL(f);
-      items.push({ id: crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random()), file:f, url, cover:false, ai:null });
-    }
-    render(); toast('อัปโหลด '+arr.length+' ไฟล์');
-  };
-
-  picker.addEventListener('change', e=> onFiles(e.target.files));
-
-  // drag & drop
-  ;['dragenter','dragover'].forEach(ev=> drop.addEventListener(ev, e=>{e.preventDefault(); e.stopPropagation(); drop.classList.add('drag');}));
-  ;['dragleave','drop'].forEach(ev=> drop.addEventListener(ev, e=>{e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag');}));
-  drop.addEventListener('drop', e=> onFiles(e.dataTransfer.files));
-
-  // ---- Heuristic keywords
-  const orderCondo = ['living','dining','kitchen','corridor','bedroom','bathroom','balcony','facility','other'];
-  const keywordsCondo = {
-    living:['living room','sofa','lounge','tv','interior','นั่งเล่น'],
-    dining:['dining room','dining table','โต๊ะกินข้าว'],
-    kitchen:['kitchen','kitchenette','stove','microwave','refrigerator','ครัว'],
-    corridor:['hallway','corridor','ทางเดิน'],
-    bedroom:['bedroom','bed','wardrobe','closet','ห้องนอน'],
-    bathroom:['bathroom','toilet','shower','washbasin','bathtub','sink','ห้องน้ำ'],
-    balcony:['balcony','terrace','veranda','view','window view','cityscape','ระเบียง','วิว'],
-    facility:['swimming pool','pool','gym','fitness','lobby','sauna','garden','facility','facilities','สระ','ฟิตเนส','ล็อบบี้']
-  };
-
-  const orderHouse = ['exterior','garage','living','dining','kitchen','stairs','upstairs','bedroom','otherroom','bathroom','around','facility','other'];
-  const keywordsHouse = {
-    exterior:['exterior','facade','house','home','front yard','yard','gate','หน้าบ้าน'],
-    garage:['garage','driveway','parking','ที่จอดรถ','โรงรถ'],
-    living:['living room','sofa','ลิวิ่ง','ห้องรับแขก'],
-    dining:['dining room','โต๊ะกินข้าว'],
-    kitchen:['kitchen','ครัว'],
-    stairs:['staircase','stairs','บันได'],
-    upstairs:['landing','hallway','ชั้น2','โถงบันได'],
-    bedroom:['bedroom','bed','ห้องนอน'],
-    otherroom:['office','study','kids room','guest room','ห้องทำงาน','ห้องอเนกประสงค์'],
-    bathroom:['bathroom','toilet','ห้องน้ำ'],
-    around:['backyard','garden','รอบบ้าน'],
-    facility:['swimming pool','pool','gym','fitness','lobby','sauna','garden','facility']
-  };
-
-  const scoreByName = (name)=>{
-    const nm = name.toLowerCase();
-    const dict = (mode==='condo')?keywordsCondo:keywordsHouse;
-    const order = (mode==='condo')?orderCondo:orderHouse;
-    for(let i=0;i<order.length;i++){
-      const key = order[i];
-      const arr = dict[key]||[];
-      if(arr.some(k=> nm.includes(k))) return i+1;
-    }
-    return 999;
-  };
-
-  const autoHeuristic = ()=>{
-    items.sort((a,b)=> scoreByName(a.file.name) - scoreByName(b.file.name));
-    // keep covers first
-    const covers = items.filter(x=>x.cover);
-    const others = items.filter(x=>!x.cover);
-    items = [...covers, ...others];
-    render(); toast('เรียงแบบ Heuristic ('+mode+') แล้ว');
-  };
-
-  // ---- AI Vision (Google Cloud)
-  async function fileToBase64(file){
-    const buf = await file.arrayBuffer();
-    let binary = '';
-    const bytes = new Uint8Array(buf);
-    const chunk = 0x8000;
-    for (let i=0;i<bytes.length;i+=chunk){
-      binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunk));
-    }
-    return btoa(binary);
-  }
-
-  function mapLabelsToCategory(labels){
-    const dict = (mode==='condo')?keywordsCondo:keywordsHouse;
-    const order = (mode==='condo')?orderCondo:orderHouse;
-    const lower = labels.map(l=>l.toLowerCase());
-
-    let bestCat = 'other';
-    let bestIdx = order.length-1; // default last
-
-    order.forEach((cat, idx)=>{
-      const keys = dict[cat]||[];
-      if(keys.some(k=> lower.some(l=> l.includes(k)))){
-        if(idx < bestIdx){ bestIdx = idx; bestCat = cat; }
-      }
-    });
-    return {cat:bestCat, score:bestIdx};
-  }
-
-  async function callVisionLabels(file, apiKey){
-    const content = await fileToBase64(file);
-    const body = {
-      requests:[{
-        image:{content},
-        features:[{type:'LABEL_DETECTION', maxResults: 10}]
-      }]
-    };
-    const res = await fetch('https://vision.googleapis.com/v1/images:annotate?key='+encodeURIComponent(apiKey),{
-      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
-    });
-    if(!res.ok){ throw new Error('Vision API error '+res.status); }
-    const json = await res.json();
-    const anns = json.responses?.[0]?.labelAnnotations || [];
-    return anns.map(a=>a.description||'');
-  }
-
-  async function autoAIVision(){
-    const key = localStorage.getItem(LS_KEY_API) || apiKeyEl.value.trim();
-    if(!key){ toast('กรุณาใส่และบันทึก API Key ก่อน'); return; }
-    if(!items.length){ toast('ยังไม่มีรูป'); return; }
-
-    toast('AI กำลังวิเคราะห์…');
-
-    for(let i=0;i<items.length;i++){
-      const it = items[i];
-      try{
-        const labels = await callVisionLabels(it.file, key);
-        const {cat, score} = mapLabelsToCategory(labels);
-        it.ai = {labels, cat, score};
-      }catch(err){
-        console.error(err);
-        it.ai = {labels:[], cat:'other', score:999};
-      }
-    }
-
-    // sort by ai score, keep covers first
-    const covers = items.filter(x=>x.cover);
-    const others = items.filter(x=>!x.cover).sort((a,b)=> (a.ai?.score||999) - (b.ai?.score||999));
-    items = [...covers, ...others];
-    render();
-    toast('เรียงด้วย AI ('+mode+') สำเร็จ');
-  }
-
-  // ---- render preview grid with drag reorder
-  const render = ()=>{
-    grid.innerHTML='';
-    items.forEach((it, idx)=>{
-      const card = document.createElement('div');
-      card.className = 'item';
-      card.draggable = true;
-      card.dataset.id = it.id;
-      const cat = it.ai?.cat ? ` <span class="tag">AI:${it.ai.cat}</span>` : '';
-      card.innerHTML = `
-        <img class="thumb" src="${it.url}" alt="thumb"/>
-        <button class="cover ${it.cover?'active':''}" title="ปักปก">${it.cover?'Cover ✓':'Cover'}</button>
-        <div class="bar"><span class="idx">#${idx+1}</span><div class="tags"><span class="tag">${it.file.name}</span>${cat}</div></div>`;
-
-      // cover toggle
-      card.querySelector('.cover').addEventListener('click', ()=>{
-        const selected = items.filter(x=>x.cover);
-        if(!it.cover && selected.length>=2){ toast('เลือก Cover ได้สูงสุด 2 ภาพ'); return; }
-        it.cover = !it.cover; render();
-      });
-
-      // drag logic
-      card.addEventListener('dragstart', e=>{ card.classList.add('dragging'); e.dataTransfer.setData('text/plain', it.id); });
-      card.addEventListener('dragend', ()=> card.classList.remove('dragging'));
-      card.addEventListener('dragover', e=>{ e.preventDefault(); const dragging = $('.item.dragging'); if(!dragging||dragging===card) return; const rect = card.getBoundingClientRect(); const before = (e.clientY - rect.top) < rect.height/2; grid.insertBefore(dragging, before?card:card.nextSibling); });
-
-      grid.appendChild(card);
-    });
-
-    // after DOM reorder, sync items array
-    const ids = $$('.item', grid).map(el=>el.dataset.id);
-    items.sort((a,b)=> ids.indexOf(a.id) - ids.indexOf(b.id));
-  };
-
-  // ---- clear
-  $('#clear').addEventListener('click', ()=>{ items.forEach(i=> URL.revokeObjectURL(i.url)); items=[]; render(); toast('ล้างรายการแล้ว'); });
-  $('#autoHeu').addEventListener('click', autoHeuristic);
-  $('#autoAI').addEventListener('click', autoAIVision);
-
-  // ---- export: convert to JPG + rename 1..N + zip
-  async function imageToJpgBlob(file, quality){
-    const bmp = await createImageBitmap(file);
-    const canvas = document.createElement('canvas');
-    canvas.width = bmp.width; canvas.height = bmp.height;
-    const ctx = canvas.getContext('2d'); ctx.drawImage(bmp,0,0);
-    const blob = await new Promise(res=> canvas.toBlob(res,'image/jpeg', quality));
-    return blob;
-  }
-
-  $('#exportZip').addEventListener('click', async ()=>{
-    if(!items.length) return toast('ยังไม่มีรูป');
-    // ensure covers are first two
-    const covers = items.filter(x=>x.cover);
-    const others = items.filter(x=>!x.cover);
-    const ordered = [...covers, ...others];
-
-    const zip = new JSZip();
-    const q = Math.max(0.6, Math.min(0.95, parseFloat(qualityEl.value)||0.9));
-
-    let n = 1;
-    for(const it of ordered){
-      try{
-        const jpgBlob = await imageToJpgBlob(it.file, q);
-        const arrBuf = await jpgBlob.arrayBuffer();
-        zip.file(`${n}.jpg`, arrBuf);
-        n++;
-      }catch(err){ console.error(err); }
-    }
-
-    const content = await zip.generateAsync({type:'blob'});
-    saveAs(content, 'PHANToM_Images_Renamed.zip');
-    toast('ดาวน์โหลด ZIP แล้ว');
-  });
-
-  // First paint
-  loadSettings();
-})();
-</script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+  <script src="js/phantom-image-sorter.js"></script>
+</body>
+</html>
