@@ -11,21 +11,41 @@
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;background:radial-gradient(1000px 700px at 15% 15%,#101b3a,#070c18 60%);
-          color:var(--txt);font-family:system-ui,Segoe UI,Roboto,"Prompt",sans-serif}
-    header{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--edge);background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02))}
+    body{
+      margin:0;
+      background:radial-gradient(1000px 700px at 15% 15%,#101b3a,#070c18 60%);
+      color:var(--txt);
+      font-family:system-ui,Segoe UI,Roboto,"Prompt",sans-serif
+    }
+    header{
+      display:flex;gap:12px;justify-content:space-between;align-items:center;
+      padding:14px 16px;border-bottom:1px solid var(--edge);
+      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02))
+    }
     .brand{font-weight:800;letter-spacing:.4px}
     .brand small{display:block;color:var(--muted);font-weight:500}
     main{display:grid;grid-template-columns:340px 1fr;gap:12px;padding:12px}
     @media (max-width:980px){main{grid-template-columns:1fr}}
-    .card{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid var(--edge);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.25)}
+    .card{
+      background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+      border:1px solid var(--edge);border-radius:16px;
+      box-shadow:0 8px 32px rgba(0,0,0,.25)
+    }
     .left{padding:14px}
     .right{padding:10px}
-    .droper{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:140px;border:2px dashed var(--edge);border-radius:14px;background:#0c1633}
+    .droper{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:10px;min-height:140px;border:2px dashed var(--edge);border-radius:14px;
+      background:#0c1633;text-align:center;cursor:pointer;
+      transition:border .25s, box-shadow .25s
+    }
     .droper.drag{border-color:var(--a1);box-shadow:0 0 0 3px rgba(139,245,255,.15)}
     input[type="file"]{display:none}
     .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-    button{appearance:none;border:1px solid transparent;border-radius:12px;padding:10px 12px;font-weight:700;cursor:pointer;background:var(--pri);color:white}
+    button{
+      appearance:none;border:1px solid transparent;border-radius:12px;
+      padding:10px 12px;font-weight:700;cursor:pointer;background:var(--pri);color:white
+    }
     button.secondary{background:#132044;border-color:var(--edge)}
     button.ghost{background:transparent;border-color:var(--edge);color:var(--txt)}
     button.warn{background:var(--warn);color:black}
@@ -42,14 +62,21 @@
     .tag{font-size:.7rem;border:1px solid var(--edge);padding:3px 8px;border-radius:999px;color:var(--muted)}
     .cover{position:absolute;right:8px;top:8px;background:rgba(0,0,0,.45);border:1px solid var(--edge);padding:4px 6px;border-radius:10px;font-size:.75rem}
     .cover.active{background:linear-gradient(90deg,var(--pri),var(--a1));color:#001018}
-    .toast{position:fixed;right:14px;bottom:14px;background:#0d1b36;border:1px solid var(--edge);padding:10px 12px;border-radius:12px;opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .2s,transform .2s}
+    .toast{
+      position:fixed;right:14px;bottom:14px;background:#0d1b36;border:1px solid var(--edge);
+      padding:10px 12px;border-radius:12px;opacity:0;transform:translateY(10px);
+      pointer-events:none;transition:opacity .2s,transform .2s
+    }
     .toast.show{opacity:1;transform:translateY(0)}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .help{color:var(--muted);font-size:.92rem}
     .note{margin-top:8px;color:var(--muted)}
     .hl{color:var(--a1)}
     .kv{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .kv input[type="text"], .kv input[type="password"]{padding:8px 10px;border:1px solid var(--edge);border-radius:10px;background:#0e1a3a;color:var(--txt)}
+    .kv input[type="text"], .kv input[type="password"]{
+      padding:8px 10px;border:1px solid var(--edge);border-radius:10px;
+      background:#0e1a3a;color:var(--txt)
+    }
     .radio{display:flex;gap:12px;align-items:center}
     .radio label{display:inline-flex;gap:6px;align-items:center;color:var(--muted)}
   </style>
@@ -82,14 +109,17 @@
       <hr style="border:none;border-top:1px solid var(--edge);margin:12px 0"/>
 
       <label class="help">อัปโหลดรูปภาพ (รองรับ .jpg .png .webp)</label>
-      <div id="drop" class="droper">
+      <!-- ✅ Fixed ID -->
+      <div id="dropZone" class="droper">
         <div>ลากรูปมาวางที่นี่</div>
         <div class="small">หรือ</div>
-        <label for="picker" class="small btn ghost" style="padding:6px 10px;display:inline-block;cursor:pointer">เลือกไฟล์…</label>
-        <input id="picker" type="file" accept="image/*" multiple>
+        <div class="small" style="color:var(--a1)">คลิกเพื่อเลือกไฟล์…</div>
       </div>
 
-      <div class="note">คำสั่งเรียงแบบ <span class="hl">คอนโด/ห้องเช่า</span> (ค่าเริ่มต้น): Living → Dining/Kitchen → Corridor → Bedroom → Bathroom → Balcony/View → Facilities<br>ถ้าเป็น <span class="hl">บ้าน</span>: Exterior → Garage/Parking → Living → Dining → Kitchen → Stairs/Upstairs → Bedrooms → Other Rooms → Bathroom → รอบบ้าน → Facilities</div>
+      <div class="note">
+        คำสั่งเรียงแบบ <span class="hl">คอนโด/ห้องเช่า</span> (ค่าเริ่มต้น): Living → Dining/Kitchen → Corridor → Bedroom → Bathroom → Balcony/View → Facilities<br>
+        ถ้าเป็น <span class="hl">บ้าน</span>: Exterior → Garage/Parking → Living → Dining → Kitchen → Stairs/Upstairs → Bedrooms → Other Rooms → Bathroom → รอบบ้าน → Facilities
+      </div>
 
       <div class="btns">
         <button id="autoHeu" class="ghost">Auto-sort (Heuristic)</button>
