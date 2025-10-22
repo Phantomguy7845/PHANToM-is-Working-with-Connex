@@ -175,6 +175,12 @@ footer{text-align:center;margin:16px 0;color:var(--muted);font-size:.85rem;opaci
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.8.6"></script>
+<script>
+  // บังคับใช้ CPU backend แทน WebGL ถ้ามีปัญหา kernel
+  tf.setBackend('cpu');
+  tf.ready().then(() => console.log('[TFJS] Backend ready:', tf.getBackend()));
+</script>
+<script src="https://cdn.jsdelivr.net/npm/ml5@0.12.2/dist/ml5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/ml5@0.12.2/dist/ml5.min.js"></script>
 
 <!-- app -->
