@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PHANToM Image Sorter v2.2 — Aurora Reactive UI</title>
+<title>PHANToM Image Sorter v3.0 — Dual AI Mode</title>
 <style>
 :root{
   --bg:#0a0f1f;--panel:#121a32;--edge:#1f2b46;
@@ -47,8 +47,7 @@ main{display:grid;grid-template-columns:320px 1fr;gap:14px;padding:12px}
 .droper.drag{border-color:var(--pri2);background:#102047;transform:scale(1.02)}
 .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
 button{
-  position:relative;
-  border:none;border-radius:10px;
+  position:relative;border:none;border-radius:10px;
   padding:10px 16px;font-weight:600;cursor:pointer;
   font-size:.95rem;color:#000;
   background:linear-gradient(90deg,var(--pri1),var(--pri3),var(--pri2));
@@ -57,81 +56,58 @@ button{
   box-shadow:0 0 10px rgba(139,245,255,.25);
   overflow:hidden;
 }
-button::after{
-  content:"";position:absolute;inset:0;background:rgba(255,255,255,.15);
-  opacity:0;transition:opacity .3s ease;
-}
+button::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,.15);
+  opacity:0;transition:opacity .3s ease;}
 button:hover::after{opacity:.3}
 button:active{transform:scale(.97);filter:brightness(1.1)}
 button.secondary{
-  color:#fff;
-  background:linear-gradient(90deg,#243b6b,#1b294f,#3c6aff);
-  background-size:300% 300%;
-  animation:aurora 6s infinite alternate;
+  color:#fff;background:linear-gradient(90deg,#243b6b,#1b294f,#3c6aff);
+  background-size:300% 300%;animation:aurora 6s infinite alternate;
 }
 button.ghost{
   background:transparent;color:var(--txt);
-  border:1px solid var(--edge);
-  box-shadow:none;
+  border:1px solid var(--edge);box-shadow:none;
 }
 button.ghost:hover{border-color:var(--pri2);color:var(--pri2)}
 button.warn{background:linear-gradient(90deg,#f59e0b,#facc15);color:#000}
 button.ok{background:linear-gradient(90deg,#16a34a,#4ade80);color:#fff}
-@keyframes aurora{
-  0%{background-position:0% 50%}100%{background-position:100% 50%}
-}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
-  gap:12px;
-}
-.item{
-  position:relative;border:1px solid var(--edge);
-  border-radius:12px;overflow:hidden;
-  background:#101b3a;
-  transition:transform .2s ease,opacity .2s ease;
-  cursor:grab;
-}
+@keyframes aurora{0%{background-position:0% 50%}100%{background-position:100% 50%}}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.item{position:relative;border:1px solid var(--edge);border-radius:12px;overflow:hidden;
+  background:#101b3a;transition:transform .2s ease,opacity .2s ease;cursor:grab;}
 .item.dragging{opacity:.7;outline:2px dashed var(--pri2)}
 .thumb{aspect-ratio:1/1;width:100%;object-fit:cover;display:block}
-.cover{
-  position:absolute;right:6px;top:6px;background:rgba(0,0,0,.5);
+.cover{position:absolute;right:6px;top:6px;background:rgba(0,0,0,.5);
   border:1px solid var(--edge);padding:4px 6px;border-radius:8px;
-  font-size:.75rem;color:#e5e7eb;cursor:pointer;
-}
-.cover.active{
-  background:linear-gradient(90deg,var(--pri1),var(--pri2));
-  color:#001018;
-  box-shadow:0 0 6px rgba(139,245,255,.6);
-}
-.bar{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:6px 8px;background:rgba(255,255,255,.05)
-}
+  font-size:.75rem;color:#e5e7eb;cursor:pointer;}
+.cover.active{background:linear-gradient(90deg,var(--pri1),var(--pri2));color:#001018;
+  box-shadow:0 0 6px rgba(139,245,255,.6);}
+.bar{display:flex;justify-content:space-between;align-items:center;
+  padding:6px 8px;background:rgba(255,255,255,.05)}
 .idx{font-weight:700;font-size:.9rem;opacity:.9}
-.toast{
-  position:fixed;right:14px;bottom:14px;background:#0d1b36;
+.toast{position:fixed;right:14px;bottom:14px;background:#0d1b36;
   border:1px solid var(--edge);padding:10px 12px;border-radius:12px;
   opacity:0;transform:translateY(10px);
   transition:opacity .25s,transform .25s;
-  box-shadow:0 4px 20px rgba(0,0,0,.3);
-}
+  box-shadow:0 4px 20px rgba(0,0,0,.3);}
 .toast.show{opacity:1;transform:translateY(0)}
 .help{color:var(--muted);font-size:.9rem}
 footer{text-align:center;margin:20px 0;color:var(--muted);font-size:.85rem;opacity:.8}
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.ripple{position:absolute;width:80px;height:80px;background:rgba(255,255,255,.5);
+  border-radius:50%;transform:scale(0);animation:rippleAnim .5s linear;pointer-events:none;}
+@keyframes rippleAnim{to{transform:scale(4);opacity:0;}}
 </style>
 </head>
 <body>
 <header>
-  <div class="brand">PHANToM Image Sorter 
-    <small>v2.2 · Aurora Reactive Interface</small></div>
+  <div class="brand">PHANToM Image Sorter <small>v3.0 · Dual AI (Google & Offline)</small></div>
   <div>by PHANToM</div>
 </header>
 
 <main>
 <section class="card left">
-  <div class="help">Google Cloud Vision API Key</div>
+  <div class="help">Google Cloud Vision API Key (ใส่เฉพาะถ้ามี)</div>
   <input id="apiKey" type="password" placeholder="ใส่ API Key"
          style="width:100%;padding:8px;border-radius:8px;
                 background:#0e1a3a;border:1px solid var(--edge);
@@ -149,7 +125,8 @@ footer{text-align:center;margin:20px 0;color:var(--muted);font-size:.85rem;opaci
 
   <div class="btns">
     <button id="autoHeu" class="ghost">Auto-sort</button>
-    <button id="autoAI" class="secondary">AI Sort</button>
+    <button id="autoAI" class="secondary">AI Sort (Google)</button>
+    <button id="autoLocal" class="secondary">AI Sort (Offline)</button>
     <button id="clear" class="warn">ล้างทั้งหมด</button>
   </div>
 
@@ -160,45 +137,32 @@ footer{text-align:center;margin:20px 0;color:var(--muted);font-size:.85rem;opaci
 
 <section class="card right">
   <div class="help" style="padding:8px">
-    ลากเปลี่ยนลำดับได้ • แตะ “Cover” เพื่อปักภาพหน้าปก • รองรับการ Export เป็น ZIP
+    ลากเปลี่ยนลำดับได้ • แตะ “Cover” เพื่อปักภาพหน้าปก • รองรับ Auto-Sort และ Export ZIP
   </div>
   <div id="grid" class="grid"></div>
 </section>
 </main>
 
-<footer>PHANToM Image Sorter v2.2 — by PHANToM</footer>
-
+<footer>PHANToM Image Sorter v3.0 — by PHANToM</footer>
 <div id="toast" class="toast">พร้อมทำงาน</div>
 
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0"></script>
+<script src="https://cdn.jsdelivr.net/npm/ml5@0.12.2/dist/ml5.min.js"></script>
 <script src="js/phantom-image-sorter.js"></script>
+
 <script>
-  // ปุ่มตอบสนองแบบ ripple
-  document.querySelectorAll('button').forEach(btn=>{
-    btn.addEventListener('click',e=>{
-      let circle=document.createElement('span');
-      circle.classList.add('ripple');
-      circle.style.left=e.offsetX+'px';
-      circle.style.top=e.offsetY+'px';
-      btn.appendChild(circle);
-      setTimeout(()=>circle.remove(),500);
-    });
+document.querySelectorAll('button').forEach(btn=>{
+  btn.addEventListener('click',e=>{
+    const circle=document.createElement('span');
+    circle.classList.add('ripple');
+    circle.style.left=e.offsetX+'px';
+    circle.style.top=e.offsetY+'px';
+    btn.appendChild(circle);
+    setTimeout(()=>circle.remove(),500);
   });
+});
 </script>
-<style>
-  .ripple{
-    position:absolute;
-    width:80px;height:80px;
-    background:rgba(255,255,255,.5);
-    border-radius:50%;
-    transform:scale(0);
-    animation:rippleAnim .5s linear;
-    pointer-events:none;
-  }
-  @keyframes rippleAnim{
-    to{transform:scale(4);opacity:0;}
-  }
-</style>
 </body>
 </html>
