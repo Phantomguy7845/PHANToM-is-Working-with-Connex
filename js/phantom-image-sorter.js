@@ -188,5 +188,40 @@
     showToast("⚠️ Error: " + e.message, "#f87171");
   });
 
+   // ==== Delete Mode ====
+let deleteMode = false;
+const deleteBtn = document.getElementById("deleteMode");
+deleteBtn.addEventListener("click", ()=>{
+  deleteMode = !deleteMode;
+  deleteBtn.textContent = deleteMode ? "❌ ออกจากโหมดลบ" : "🗑️ ลบรูป";
+  toast(deleteMode ? "เข้าสู่โหมดลบ: แตะรูปเพื่อเลือก หรือลากไปที่ปุ่มลบ" : "ออกจากโหมดลบแล้ว");
+  document.querySelectorAll(".item").forEach(it=>{
+    it.classList.remove("selected");
+  });
+});
+
+document.addEventListener("click", e=>{
+  if(!deleteMode) return;
+  const it = e.target.closest(".item");
+  if(it){
+    it.classList.toggle("selected");
+  }
+});
+
+deleteBtn.addEventListener("dragover", e=>{
+  if(deleteMode){ e.preventDefault(); deleteBtn.style.background="#d33"; }
+});
+deleteBtn.addEventListener("dragleave", ()=> deleteBtn.style.background="var(--err)");
+deleteBtn.addEventListener("drop", e=>{
+  e.preventDefault();
+  if(!deleteMode) return;
+  const selected = document.querySelectorAll(".item.dragging, .item.selected");
+  selected.forEach(x=>{
+    x.style.opacity="0"; setTimeout(()=>x.remove(),200);
+  });
+  toast(`ลบรูป ${selected.length} ภาพแล้ว`);
+  deleteBtn.style.background="var(--err)";
+});
+
   console.log("🟢 PHANToM Sorter initialized successfully");
 })();
