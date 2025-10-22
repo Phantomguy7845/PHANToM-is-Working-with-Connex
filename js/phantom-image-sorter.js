@@ -1,127 +1,192 @@
-(function(){
-  const $ = (s, c=document)=>c.querySelector(s);
-  const $$ = (s, c=document)=>Array.from(c.querySelectorAll(s));
+/* ==========================================================
+   PHANToM Image Sorter (Debug Build v1.1)
+   by PHANToM — AI + Manual sorter for Condo/House listings
+   ========================================================== */
 
-  const drop = $('#drop');
-  const picker = $('#picker');
-  const grid = $('#grid');
-  const toastEl = $('#toast');
-  const qualityEl = $('#quality');
-  const modeInputs = $$('input[name="mode"]');
-  const apiKeyEl = $('#apiKey');
-  const saveKeyBtn = $('#saveKey');
-  const keyState = $('#keyState');
+(() => {
+  console.log("✅ PHANToM Image Sorter: Script Loaded");
 
-  const LS_KEY_MODE  = 'phantom_sorter_mode_v1';
-  const LS_KEY_API   = 'phantom_ai_key_v1';
+  // Shortcuts
+  const $ = (s, ctx = document) => ctx.querySelector(s);
+  const $$ = (s, ctx = document) => Array.from(ctx.querySelectorAll(s));
 
-  let items = [];
-  let mode = 'condo';
+  // Elements
+  const dropZone = $("#dropZone");
+  const grid = $("#grid");
+  const toast = $("#toast");
+  const qualityEl = $("#quality");
+  const exportBtn = $("#exportZip");
+  const clearBtn = $("#clear");
+  const modeCondo = document.querySelector('input[value="condo"]');
+  const modeHouse = document.querySelector('input[value="house"]');
 
-  const toast = (msg)=>{ toastEl.textContent = msg; toastEl.classList.add('show'); setTimeout(()=>toastEl.classList.remove('show'), 1400); };
+  let images = [];
+  let currentMode = "condo";
 
-  const loadSettings = ()=>{
-    const m = localStorage.getItem(LS_KEY_MODE);
-    if(m) mode = m;
-    modeInputs.forEach(r=> r.checked = (r.value===mode));
-    const k = localStorage.getItem(LS_KEY_API);
-    if(k){ apiKeyEl.value = k; keyState.textContent = 'บันทึกคีย์ไว้แล้ว'; }
+  /* === Toast Helper === */
+  const showToast = (msg, color = "#4ade80") => {
+    toast.textContent = msg;
+    toast.style.background = color;
+    toast.style.opacity = 1;
+    setTimeout(() => (toast.style.opacity = 0), 1800);
   };
 
-  const saveKey = ()=>{
-    const k = (apiKeyEl.value||'').trim();
-    if(!k){ keyState.textContent = 'ยังไม่ได้ใส่คีย์'; return; }
-    localStorage.setItem(LS_KEY_API, k);
-    keyState.textContent = 'บันทึกคีย์เรียบร้อย';
-    toast('บันทึก API Key แล้ว');
-  };
-
-  saveKeyBtn.addEventListener('click', saveKey);
-  modeInputs.forEach(r=> r.addEventListener('change', ()=>{ mode = r.value; localStorage.setItem(LS_KEY_MODE, mode); toast('โหมด: '+(mode==='condo'?'คอนโด':'บ้าน')); }));
-
-  const onFiles = async (fileList)=>{
-    const arr = Array.from(fileList||[]).filter(f=>/^image\\//.test(f.type));
-    for(const f of arr){
-      const url = URL.createObjectURL(f);
-      items.push({ id: crypto.randomUUID(), file:f, url, cover:false, ai:null });
+  /* === Handle Mode Switch === */
+  if (modeCondo && modeHouse) {
+    modeCondo.addEventListener("change", () => {
+      currentMode = "condo";
+      localStorage.setItem("phantom_mode", currentMode);
+      showToast("🛋 โหมด: คอนโด/ห้องเช่า");
+    });
+    modeHouse.addEventListener("change", () => {
+      currentMode = "house";
+      localStorage.setItem("phantom_mode", currentMode);
+      showToast("🏠 โหมด: บ้าน");
+    });
+    const saved = localStorage.getItem("phantom_mode");
+    if (saved) {
+      currentMode = saved;
+      (saved === "house" ? modeHouse : modeCondo).checked = true;
     }
-    render(); toast('อัปโหลด '+arr.length+' ไฟล์');
-  };
-
-  picker.addEventListener('change', e=> onFiles(e.target.files));
-  ['dragenter','dragover'].forEach(ev=> drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag');}));
-  ['dragleave','drop'].forEach(ev=> drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag');}));
-  drop.addEventListener('drop', e=> onFiles(e.dataTransfer.files));
-
-  const orderCondo = ['living','dining','kitchen','corridor','bedroom','bathroom','balcony','facility'];
-  const orderHouse = ['exterior','garage','living','dining','kitchen','stairs','bedroom','bathroom','around','facility'];
-
-  const scoreByName = (name)=>{
-    const nm = name.toLowerCase();
-    const order = (mode==='condo')?orderCondo:orderHouse;
-    for(let i=0;i<order.length;i++) if(nm.includes(order[i])) return i+1;
-    return 999;
-  };
-
-  const autoHeuristic = ()=>{
-    items.sort((a,b)=> scoreByName(a.file.name)-scoreByName(b.file.name));
-    const covers = items.filter(x=>x.cover);
-    const others = items.filter(x=>!x.cover);
-    items = [...covers,...others];
-    render(); toast('เรียงแบบ Heuristic แล้ว');
-  };
-
-  async function fileToBase64(file){
-    const buf = await file.arrayBuffer();
-    let binary=''; const bytes=new Uint8Array(buf);
-    for(let i=0;i<bytes.length;i+=0x8000){ binary+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000)); }
-    return btoa(binary);
   }
 
-  async function callVisionLabels(file, key){
-    const body={requests:[{image:{content:await fileToBase64(file)},features:[{type:'LABEL_DETECTION',maxResults:10}]}]};
-    const res=await fetch('https://vision.googleapis.com/v1/images:annotate?key='+encodeURIComponent(key),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
-    const json=await res.json();
-    return json.responses?.[0]?.labelAnnotations?.map(a=>a.description)||[];
-  }
-
-  async function autoAI(){
-    const key = localStorage.getItem(LS_KEY_API)||apiKeyEl.value.trim();
-    if(!key) return toast('กรุณาใส่และบันทึก API Key');
-    if(!items.length) return toast('ยังไม่มีรูป');
-
-    toast('AI กำลังวิเคราะห์…');
-    for(const it of items){
-      try{
-        const labels=await callVisionLabels(it.file,key);
-        it.ai={labels,score:scoreByName(labels.join(' '))};
-      }catch{it.ai={labels:[],score:999};}
+  /* === Handle File Upload === */
+  const handleFiles = (files) => {
+    console.log("📥 Files dropped:", files);
+    const arr = Array.from(files);
+    if (!arr.length) {
+      showToast("⚠️ ไม่มีไฟล์ที่เลือก", "#f87171");
+      return;
     }
-    items.sort((a,b)=>a.ai.score-b.ai.score);
-    render(); toast('เรียงด้วย AI แล้ว');
+    arr.forEach((file) => {
+      if (!file.type.startsWith("image/")) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = () => {
+          images.push({ file, src: img.src });
+          renderGrid();
+        };
+      };
+      reader.readAsDataURL(file);
+    });
+    showToast(`📸 อัปโหลด ${arr.length} ไฟล์แล้ว`);
+  };
+
+  /* === Drag and Drop Events === */
+  if (dropZone) {
+    dropZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = "#60a5fa";
+    });
+    dropZone.addEventListener("dragleave", () => {
+      dropZone.style.borderColor = "rgba(255,255,255,.2)";
+    });
+    dropZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropZone.style.borderColor = "rgba(255,255,255,.2)";
+      handleFiles(e.dataTransfer.files);
+    });
+    dropZone.addEventListener("click", () => {
+      const inp = document.createElement("input");
+      inp.type = "file";
+      inp.accept = "image/*";
+      inp.multiple = true;
+      inp.onchange = (e) => handleFiles(e.target.files);
+      inp.click();
+    });
   }
 
-  const render=()=>{
-    grid.innerHTML='';
-    items.forEach((it,idx)=>{
-      const card=document.createElement('div');
-      card.className='item'; card.draggable=true; card.dataset.id=it.id;
-      const aiTag=it.ai?`<span class=\"tag\">AI:${it.ai.score<999?'✓':'?'}</span>`:'';
-      card.innerHTML=`<img class=\"thumb\" src=\"${it.url}\"/><button class=\"cover ${it.cover?'active':''}\">${it.cover?'Cover✓':'Cover'}</button><div class=\"bar\"><span class=\"idx\">#${idx+1}</span><div class=\"tags\"><span class=\"tag\">${it.file.name}</span>${aiTag}</div></div>`;
-      card.querySelector('.cover').onclick=()=>{const sel=items.filter(x=>x.cover);if(!it.cover&&sel.length>=2)return toast('Cover สูงสุด 2');it.cover=!it.cover;render();};
-      card.addEventListener('dragstart',e=>{card.classList.add('dragging');e.dataTransfer.setData('text',it.id);});
-      card.addEventListener('dragend',()=>card.classList.remove('dragging'));
-      card.addEventListener('dragover',e=>{e.preventDefault();const dragging=$('.item.dragging');if(!dragging||dragging===card)return;const rect=card.getBoundingClientRect();const before=(e.clientY-rect.top)<rect.height/2;grid.insertBefore(dragging,before?card:card.nextSibling);});
+  /* === Render Preview Grid === */
+  const renderGrid = () => {
+    grid.innerHTML = "";
+    images.forEach((img, i) => {
+      const card = document.createElement("div");
+      card.className = "img-item";
+      card.style.border = "1px solid rgba(255,255,255,.15)";
+      card.style.borderRadius = "10px";
+      card.style.padding = "6px";
+      card.style.cursor = "grab";
+      card.innerHTML = `
+        <img src="${img.src}" style="max-width:100%;border-radius:8px"/>
+        <div style="text-align:center;margin-top:4px;color:#9ca3af;font-size:.85rem">#${i + 1}</div>
+      `;
+      card.draggable = true;
+      card.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", i);
+      });
+      card.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const from = e.dataTransfer.getData("text/plain");
+        const to = i;
+        const moved = images.splice(from, 1)[0];
+        images.splice(to, 0, moved);
+        renderGrid();
+      });
+      card.addEventListener("dragover", (e) => e.preventDefault());
       grid.appendChild(card);
     });
-    const ids=$$('.item',grid).map(el=>el.dataset.id);
-    items.sort((a,b)=>ids.indexOf(a.id)-ids.indexOf(b.id));
+    console.log("🧩 Rendered grid:", images.length, "images");
   };
 
-  $('#clear').onclick=()=>{items.forEach(i=>URL.revokeObjectURL(i.url));items=[];render();toast('ล้างแล้ว');};
-  $('#autoHeu').onclick=autoHeuristic;
-  $('#autoAI').onclick=autoAI;
+  /* === Clear === */
+  if (clearBtn) {
+    clearBtn.addEventListener("click", () => {
+      images = [];
+      grid.innerHTML = "";
+      showToast("🧹 เคลียร์ทั้งหมดแล้ว", "#facc15");
+    });
+  }
 
-  async function imageToJpgBlob(file,q){
-    const bmp=await createImageBitmap(file);
-    const cv=document.createElement('canvas
+  /* === Export as ZIP (Renamed) === */
+  if (exportBtn) {
+    exportBtn.addEventListener("click", async () => {
+      if (!images.length) return showToast("⚠️ ไม่มีภาพให้บันทึก", "#f87171");
+
+      showToast("⏳ กำลังสร้าง ZIP...");
+      const zip = new JSZip();
+
+      let quality = parseFloat(qualityEl?.value || "0.9");
+      quality = Math.min(Math.max(quality, 0.6), 0.95);
+
+      for (let i = 0; i < images.length; i++) {
+        const blob = await fetch(images[i].src).then((r) => r.blob());
+        const imgFile = await blobToJpg(blob, quality);
+        zip.file(`${i + 1}.jpg`, imgFile);
+      }
+
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "PHANToM_Sorted.zip";
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("✅ บันทึกเรียบร้อย");
+    });
+  }
+
+  async function blobToJpg(blob, quality) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob((b) => resolve(b), "image/jpeg", quality);
+      };
+      img.src = URL.createObjectURL(blob);
+    });
+  }
+
+  /* === Error Safety === */
+  window.addEventListener("error", (e) => {
+    console.error("❌ JS Error:", e.message, e.filename, e.lineno);
+    showToast("⚠️ Error: " + e.message, "#f87171");
+  });
+
+  console.log("🟢 PHANToM Sorter initialized successfully");
+})();
