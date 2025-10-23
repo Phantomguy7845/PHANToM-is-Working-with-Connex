@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" data-theme="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -14,10 +14,12 @@
       <div class="logo">PHANToM</div>
       <small>Report Counter — Main/Sub • Count & Text • Keyboard • Autosave • SUM Rules • Export/Import</small>
     </div>
+
     <div class="actions">
+      <button id="themeToggle" class="btn ghost" title="สลับธีม (Ctrl+L)">🌗</button>
       <input id="userName" type="text" placeholder="ชื่อผู้ใช้ (เช่น Stang)" />
       <input id="reportDate" type="date" />
-      <button id="copyReport" class="btn ok">📄 Copy Report</button>
+      <button id="copyReport" class="btn ok" title="คัดลอกรายงาน (Ctrl+C)">📄 Copy Report</button>
 
       <button id="manageSum" class="btn ghost" title="จัดการกฎรวมผล (SUM Rules)">⚙️ Manage SUM</button>
       <button id="exportSettings" class="btn ghost" title="Export การตั้งค่าเป็น .txt">⤓ Export</button>
@@ -37,16 +39,17 @@
         <input id="newMainTitle" type="text" placeholder="ชื่อหมวดหลัก เช่น Rented new" />
         <button id="addMain" class="btn">เพิ่ม</button>
       </div>
-      <p class="muted">
-        หมวดหลัก (Main) เปลี่ยนโหมด <b>Count/Text</b> ได้, มีสวิตช์ “นับเป็นโทรรวม”, และรองรับคีย์บอร์ดเต็มรูปแบบ
-      </p>
-      <div class="help">
-        <b>คีย์บอร์ด:</b>
-        ↑/↓/←/→ เลือก • +/− ปรับค่า (Count) • Enter เพิ่มบรรทัด (Text) • Ctrl+C คัดลอก • Ctrl+S บันทึก
-      </div>
+      <details class="help-block">
+        <summary>วิธีใช้อย่างไว</summary>
+        <div class="help">
+          <b>คีย์บอร์ด:</b>
+          ↑/↓/←/→ เลือก • +/− ปรับค่า (Count) • Enter เพิ่มบรรทัด (Text) • Ctrl+C คัดลอก • Ctrl+S บันทึก • Ctrl+L สลับธีม
+        </div>
+      </details>
     </aside>
 
     <section class="board card">
+      <div id="dailySummary" class="summary-bar" aria-live="polite">—</div>
       <div id="tree" class="tree" tabindex="0" aria-label="PHANToM Report Tree"></div>
     </section>
   </main>
@@ -60,7 +63,7 @@
       </header>
       <section class="modal-body">
         <div class="sum-help">
-          รายการ “สรุป” จะถูกพิมพ์ท้ายรายงานภายใต้บรรทัด <code>//////////SUM//////////</code><br>
+          รายการ “สรุป” จะพิมพ์ท้ายรายงานภายใต้บรรทัด <code>//////////SUM//////////</code><br>
           แต่ละรายการกำหนดได้ว่าจะ “รวมค่าจากหัวข้อหลัก” ใดบ้าง (รวมข้ามหมวดได้)
         </div>
         <div id="sumList" class="sum-list"></div>
