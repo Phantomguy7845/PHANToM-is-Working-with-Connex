@@ -1,72 +1,141 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PHANToM Room Trainer</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PHANToM Room Trainer — Fast</title>
 <style>
-body{margin:0;background:#0a1020;color:#e5e7eb;font-family:system-ui,'Prompt',sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh}
-h1{margin:20px 0;text-shadow:0 0 10px #8bf5ff}
-.container{max-width:600px;width:90%;background:rgba(255,255,255,.03);padding:20px;border-radius:14px;box-shadow:0 0 20px rgba(0,0,0,.4)}
-button{padding:10px 16px;border:none;border-radius:10px;cursor:pointer;font-weight:700;margin:4px}
-#status{margin-top:10px;font-size:.9rem;color:#8bf5ff}
-input[type=file]{margin:10px 0}
+:root{--bg:#0b1220;--panel:#101a33;--edge:#243353;--txt:#e7e7f0;--muted:#9db0d6;--pri:#6b8bff}
+*{box-sizing:border-box} body{margin:0;background:radial-gradient(900px 700px at 16% 16%,#132049,#070c18 60%);color:var(--txt);
+font-family:'Prompt',system-ui,Segoe UI,Roboto,sans-serif}
+header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--edge);
+background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
+.brand{font-weight:800}.brand small{display:block;color:var(--muted)}
+.main{max-width:880px;margin:14px auto;padding:0 12px;display:grid;grid-template-columns:1fr;gap:12px}
+.card{background:rgba(255,255,255,.04);border:1px solid var(--edge);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);padding:14px}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.btn{border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer}
+.btn.ghost{background:transparent;border:1px solid var(--edge);color:var(--txt)}
+.btn.main{background:var(--pri);color:#fff}
+.btn.warn{background:#f59e0b;color:#000}
+.help{color:var(--muted)}
+.labels{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:10px}
+.bucket{border:1px dashed var(--edge);border-radius:12px;background:#0f1a38;padding:10px;min-height:140px}
+.bucket.drag{border-color:#8bf5ff}
+.bucket h4{margin:0 0 6px}
+.thumbs{display:flex;flex-wrap:wrap;gap:6px}
+.thumb{width:66px;height:66px;border:1px solid var(--edge);border-radius:8px;object-fit:cover}
+#status{margin-top:8px}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/ml5@0.12.2/dist/ml5.min.js"></script>
 </head>
 <body>
-<h1>PHANToM Room Trainer</h1>
-<div class="container">
-  <p>อัปโหลดภาพแต่ละหมวด เช่น LivingRoom / Kitchen / Bathroom / Balcony แล้วกด Train</p>
-  <div>
-    <input type="file" id="fileInput" multiple accept="image/*">
-    <input type="text" id="labelInput" placeholder="ชื่อหมวด เช่น LivingRoom">
-    <button id="addBtn">เพิ่มชุดภาพ</button>
-  </div>
-  <div>
-    <button id="trainBtn">เริ่มเทรน</button>
-    <button id="saveBtn">Export Model</button>
-  </div>
-  <div id="status">รอเพิ่มข้อมูล...</div>
+<header class="card"><div class="brand">PHANToM Room Trainer<small>MobileNet Feature Extractor • Offline</small></div><div>by PHANToM</div></header>
+
+<div class="main">
+  <section class="card">
+    <div class="help">ขั้นตอน: เลือกไฟล์ + ตั้งชื่อหมวด → เพิ่มชุดภาพ → กด “เทรน” → กด “ส่งออกโมเดล” (ได้ <code>model.json</code> + <code>model.weights.bin</code>)</div>
+    <div class="actions" style="margin-top:8px">
+      <label class="btn ghost" style="cursor:pointer">เลือกภาพหลายไฟล์
+        <input id="fileInput" type="file" accept="image/*" multiple style="display:none">
+      </label>
+      <input id="labelInput" placeholder="เช่น living / kitchen / bedroom" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--edge);background:#0e1a3a;color:#e7e7f0">
+      <button id="addBtn" class="btn ghost">เพิ่มชุดภาพ</button>
+      <button id="trainBtn" class="btn main">เทรน</button>
+      <button id="saveBtn" class="btn ghost">ส่งออกโมเดล</button>
+      <button id="clearBtn" class="btn warn">ล้างทั้งหมด</button>
+    </div>
+    <div id="status" class="help">กำลังโหลด MobileNet…</div>
+  </section>
+
+  <section class="card">
+    <div class="help">หมวด (คุณตั้งเองได้) — ลากรูปใส่กล่องหมวดก็ได้เช่นกัน</div>
+    <div class="labels" id="labels"></div>
+  </section>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.7.4"></script>
+<script src="https://cdn.jsdelivr.net/npm/ml5@0.12.2/dist/ml5.min.js"></script>
 <script>
-let featureExtractor, classifier;
-let added = 0;
+(function(){
+  const $=s=>document.querySelector(s); const labelsEl=$("#labels");
+  const fileInput=$("#fileInput"), labelInput=$("#labelInput");
+  const addBtn=$("#addBtn"), trainBtn=$("#trainBtn"), saveBtn=$("#saveBtn"), clearBtn=$("#clearBtn"), status=$("#status");
+  let fx=null, clf=null; const buckets={}; // label -> {wrap, dataURLs[]}
 
-window.onload = ()=>{
-  featureExtractor = ml5.featureExtractor('MobileNet', ()=>{
-    log('MobileNet Loaded ✓');
-    classifier = featureExtractor.classification();
-  });
-}
+  function setStatus(t){ status.textContent=t; }
 
-document.getElementById('addBtn').onclick = ()=>{
-  const files = document.getElementById('fileInput').files;
-  const label = document.getElementById('labelInput').value.trim();
-  if(!label || files.length===0){log('กรุณาเลือกไฟล์และกรอกชื่อหมวด');return;}
-  for(let f of files){
-    const img = new Image();
-    img.src = URL.createObjectURL(f);
-    img.onload = ()=>classifier.addImage(img,label);
+  // dynamic buckets
+  function ensureBucket(label){
+    if(buckets[label]) return buckets[label];
+    const box=document.createElement("div"); box.className="bucket";
+    box.innerHTML=`<h4>${label}</h4><div class="thumbs"></div>`;
+    labelsEl.appendChild(box);
+    const wrap=box.querySelector(".thumbs");
+    buckets[label]={wrap, data:[]};
+    // dnd
+    box.addEventListener('dragover',e=>{e.preventDefault();box.classList.add('drag');});
+    box.addEventListener('dragleave',()=>box.classList.remove('drag'));
+    box.addEventListener('drop',e=>{
+      e.preventDefault(); box.classList.remove('drag'); handleFiles(e.dataTransfer.files,label);
+    });
+    return buckets[label];
   }
-  added += files.length;
-  log(`เพิ่มภาพ ${files.length} ภาพ เข้า label "${label}" แล้ว`);
-}
 
-document.getElementById('trainBtn').onclick = ()=>{
-  log('กำลังเทรน...');
-  classifier.train(loss=>{
-    if(loss===null){log('✅ เทรนเสร็จสิ้น พร้อม Export');}
-    else log('Loss: '+loss.toFixed(4));
+  function addThumb(url,label){
+    const t=new Image(); t.src=url; t.className="thumb"; t.draggable=true;
+    t.addEventListener('contextmenu',(e)=>{e.preventDefault(); buckets[label].data=buckets[label].data.filter(x=>x!==url); t.remove();});
+    buckets[label].wrap.appendChild(t);
+  }
+
+  function handleFiles(files, forceLabel=null){
+    const arr=Array.from(files||[]);
+    if(!arr.length) return;
+    const label= forceLabel || (labelInput.value.trim()||"other");
+    ensureBucket(label);
+    arr.forEach(f=>{
+      if(!f.type.startsWith("image/")) return;
+      const rd=new FileReader();
+      rd.onload=e=>{
+        const url=e.target.result; buckets[label].data.push(url); addThumb(url,label);
+        // also add to classifier if ready
+        if(clf){ const img=new Image(); img.src=url; img.onload=()=> clf.addImage(img,label); }
+      };
+      rd.readAsDataURL(f);
+    });
+    setStatus(`เพิ่มภาพให้ "${label}" จำนวน ${arr.length} ไฟล์`);
+  }
+
+  addBtn.addEventListener('click',()=> handleFiles(fileInput.files));
+
+  trainBtn.addEventListener('click',()=>{
+    if(!clf){ setStatus('โมเดลยังไม่พร้อม'); return; }
+    const total=Object.values(buckets).reduce((s,b)=>s+b.data.length,0);
+    if(!total){ setStatus('ยังไม่มีข้อมูลฝึก'); return; }
+    setStatus('กำลังเทรน…');
+    clf.train(loss=>{
+      if(loss==null){ setStatus('✅ เทรนเสร็จสิ้น พร้อมส่งออก'); }
+      else setStatus(`Loss: ${loss.toFixed(4)}`);
+    });
   });
-}
 
-document.getElementById('saveBtn').onclick = ()=>{
-  classifier.save();
-  log('บันทึกโมเดลเรียบร้อย ✓');
-}
+  saveBtn.addEventListener('click',()=>{ if(!clf) return; clf.save(); setStatus('กำลังส่งออก…'); });
 
-function log(msg){document.getElementById('status').innerText=msg;}
+  clearBtn.addEventListener('click',()=>{
+    labelsEl.innerHTML=""; for(const k in buckets) delete buckets[k];
+    setStatus('ล้างข้อมูลแล้ว');
+  });
+
+  // global dnd
+  document.addEventListener('dragover',e=>e.preventDefault());
+  document.addEventListener('drop',e=>e.preventDefault());
+
+  // init base model
+  try{
+    setStatus('กำลังโหลด MobileNet…');
+    fx=ml5.featureExtractor('MobileNet', {numLabels: 20}, ()=>{
+      clf=fx.classification(); setStatus('พร้อมฝึก — เพิ่มภาพและกดเทรน');
+    });
+  }catch(e){ console.error(e); setStatus('โหลดโมเดลไม่สำเร็จ'); }
+})();
 </script>
 </body>
 </html>
