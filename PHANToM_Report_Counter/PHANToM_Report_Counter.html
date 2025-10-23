@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PHANToM Report Counter</title>
+  <link rel="stylesheet" href="css/phantom-report-counter.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">PHANToM</div>
+      <small>Report Counter — Main/Sub • Count & Text • Keyboard • Autosave • SUM Rules • Export/Import</small>
+    </div>
+    <div class="actions">
+      <input id="userName" type="text" placeholder="ชื่อผู้ใช้ (เช่น Stang)" />
+      <input id="reportDate" type="date" />
+      <button id="copyReport" class="btn ok">📄 Copy Report</button>
+
+      <button id="manageSum" class="btn ghost" title="จัดการกฎรวมผล (SUM Rules)">⚙️ Manage SUM</button>
+      <button id="exportSettings" class="btn ghost" title="Export การตั้งค่าเป็น .txt">⤓ Export</button>
+      <label class="btn ghost import-label" title="Import การตั้งค่าจาก .txt">
+        ⤒ Import<input id="importSettings" type="file" accept=".txt" hidden>
+      </label>
+
+      <button id="resetCounts" class="btn warn" title="ล้างเฉพาะค่าตัวเลข/ข้อความ (คงโครงสร้าง)">รีเซ็ตค่าประจำวัน</button>
+      <button id="resetAll" class="btn danger" title="ล้างทุกอย่าง (รวมโครงสร้าง & กฎ SUM)">ล้างทั้งหมด</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <aside class="panel card">
+      <h3>เพิ่มหมวดหลัก</h3>
+      <div class="row">
+        <input id="newMainTitle" type="text" placeholder="ชื่อหมวดหลัก เช่น Rented new" />
+        <button id="addMain" class="btn">เพิ่ม</button>
+      </div>
+      <p class="muted">
+        หมวดหลัก (Main) เป็นแบบนับจำนวนเสมอ และมีสวิตช์ “นับเป็นโทรรวม” ให้เปิดใช้เมื่อคุณต้องการให้หมวดนี้นับเป็น “โทร” โดยตรง
+      </p>
+      <div class="help">
+        <b>คีย์บอร์ด:</b>
+        ↑/↓/←/→ เลือก • +/− ปรับค่า (เฉพาะ Count) • Enter เพิ่มบรรทัด (Text) • Ctrl+C คัดลอกรายงาน • Ctrl+S บันทึก
+      </div>
+    </aside>
+
+    <section class="board card">
+      <div id="tree" class="tree" tabindex="0" aria-label="PHANToM Report Tree"></div>
+    </section>
+  </main>
+
+  <!-- SUM Rule Modal -->
+  <dialog id="sumModal" class="modal">
+    <form method="dialog" class="modal-card">
+      <header class="modal-head">
+        <h3>จัดการกฎรวมผล (SUM Rules)</h3>
+        <button id="closeSum" class="icon" value="cancel">✖</button>
+      </header>
+      <section class="modal-body">
+        <div class="sum-help">
+          เพิ่มรายการ “สรุป” ที่ส่วนท้าย (//////////SUM//////////) ได้อิสระ เช่น โทรรวม / ติดต่อได้ / อัปเดท 99 ห้อง<br>
+          แต่ละรายการสามารถกำหนด “รวมค่าจากหัวข้อใดบ้าง” (รวมข้ามหมวดหลักได้)
+        </div>
+        <div id="sumList" class="sum-list"></div>
+
+        <div class="row add-sum-row">
+          <input id="sumNewLabel" type="text" placeholder="ชื่อสรุป เช่น โทรรวม / ติดต่อได้ / อัปเดท" />
+          <input id="sumNewSuffix" type="text" placeholder="หน่วยเสริม เช่น ห้อง (เว้นว่างได้)" />
+          <button id="sumAdd" type="button" class="btn">เพิ่มรายการสรุป</button>
+        </div>
+
+        <div class="sum-actions">
+          <button id="sumDefault" type="button" class="btn ghost">รีเซ็ตเป็นค่าเริ่มต้น</button>
+          <button id="sumSave" type="button" class="btn ok">บันทึกการตั้งค่า</button>
+        </div>
+      </section>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast">พร้อมทำงาน</div>
+
+  <script src="js/phantom-report-counter.js"></script>
+</body>
+</html>
