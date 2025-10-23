@@ -1,81 +1,110 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>PHANToM Image Sorter — Aurora</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PHANToM Image Sorter — AI + Condo/House</title>
 <style>
-:root{--bg:#0b1220;--panel:#101a33;--edge:#243353;--txt:#e7e7f0;--muted:#9db0d6;--pri:#6b8bff;--a1:#8bf5ff;--ok:#22c55e;--warn:#f59e0b}
-*{box-sizing:border-box} body{margin:0;background:radial-gradient(1000px 700px at 18% 14%,#121e43,#070c18 60%);
-font-family:'Prompt',system-ui,Segoe UI,Roboto,sans-serif;color:var(--txt)}
-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--edge);
-background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
-.brand{font-weight:800}.brand small{display:block;color:var(--muted)}
-main{display:grid;grid-template-columns:360px 1fr;gap:12px;padding:12px}
+:root{
+  --bg:#0b1220; --panel:#0f1830; --edge:#243353; --txt:#e5e7eb;
+  --muted:#9cb1d9; --pri:#6b8bff; --a1:#8bf5ff; --ok:#22c55e;
+  --warn:#f59e0b; --err:#ef4444;
+}
+*{box-sizing:border-box;font-family:'Prompt',system-ui,sans-serif}
+html,body{margin:0;height:100%}
+body{
+  background:radial-gradient(1000px 700px at 15% 15%,#101b3a,#070c18 60%);
+  color:var(--txt);display:flex;flex-direction:column;min-height:100vh;
+}
+header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 18px;border-bottom:1px solid var(--edge);
+  background:rgba(255,255,255,.03);
+}
+h1{font-size:1.3rem;margin:0;font-weight:700}
+main{display:grid;grid-template-columns:340px 1fr;gap:12px;padding:12px}
 @media(max-width:980px){main{grid-template-columns:1fr}}
-.card{background:rgba(255,255,255,.04);border:1px solid var(--edge);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);padding:14px}
-.btn{border:none;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer}
-.btn.ghost{background:transparent;border:1px solid var(--edge);color:var(--txt)}
-.btn.main{background:var(--pri);color:#fff}
-.btn.ok{background:var(--ok);color:#fff}
-.btn.warn{background:var(--warn);color:#000}
-.status{font-size:.9rem;color:var(--muted);margin-top:6px}
-.droper{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:130px;border:2px dashed var(--edge);border-radius:12px;background:#0c1837;text-align:center}
-.droper.drag{border-color:var(--a1);box-shadow:0 0 0 3px rgba(139,245,255,.15)}
-#grid{--w:180px;display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--w),1fr));gap:10px}
-.item{position:relative;border:1px solid var(--edge);border-radius:12px;overflow:hidden;background:#0f1938}
-.thumb{display:block;width:100%;aspect-ratio:1/1;object-fit:cover}
-.cover{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.5);border:1px solid var(--edge);color:#fff;border-radius:8px;padding:4px 6px;font-size:.75rem;cursor:pointer}
-.cover.active{background:linear-gradient(90deg,var(--pri),var(--a1));color:#001018;font-weight:800}
-.bar{padding:6px 8px;font-size:.85rem;background:rgba(255,255,255,.05);display:flex;justify-content:space-between}
-.toast{position:fixed;right:14px;bottom:14px;background:#0d1b36;border:1px solid var(--edge);padding:10px 12px;border-radius:12px;opacity:0;transform:translateY(10px);transition:opacity .25s,transform .25s}
+.card{background:rgba(255,255,255,.04);border:1px solid var(--edge);
+  border-radius:16px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+button{
+  border:none;border-radius:10px;padding:8px 14px;margin:4px;cursor:pointer;
+  font-weight:600;color:#fff;background:var(--pri);transition:.3s;
+}
+button:hover{filter:brightness(1.2)}
+button.warn{background:var(--warn);color:#000}
+button.ok{background:var(--ok)}
+button.secondary{background:#132044}
+button.ghost{background:transparent;border:1px solid var(--edge);color:var(--txt)}
+.note{color:var(--muted);font-size:.9rem;margin-top:6px}
+.radio{display:flex;gap:12px;align-items:center}
+.radio label{display:inline-flex;gap:6px;align-items:center;color:var(--muted)}
+.droper{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;min-height:140px;border:2px dashed var(--edge);border-radius:14px;
+  background:#0c1633}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:10px}
+.item{position:relative;border:1px solid var(--edge);border-radius:14px;overflow:hidden;background:#0e1a3a}
+.item.dragging{opacity:.6;outline:2px dashed var(--a1)}
+.thumb{aspect-ratio:1/1;width:100%;object-fit:cover}
+.cover{position:absolute;right:8px;top:8px;background:rgba(0,0,0,.4);
+  border:1px solid var(--edge);padding:4px 6px;border-radius:10px;font-size:.75rem}
+.cover.active{background:linear-gradient(90deg,var(--pri),var(--a1));color:#001018}
+.toast{position:fixed;right:14px;bottom:14px;background:#0d1b36;border:1px solid var(--edge);
+  padding:10px 12px;border-radius:12px;opacity:0;transform:translateY(10px);
+  pointer-events:none;transition:.25s}
 .toast.show{opacity:1;transform:translateY(0)}
-input[type=number]{width:100%;padding:8px;border-radius:10px;border:1px solid var(--edge);background:#0e1a3a;color:#e7e7f0}
 </style>
 </head>
 <body>
-<header class="card">
-  <div class="brand">PHANToM Image Sorter<small>AI + Drag & Drop + Export ZIP</small></div>
+<header>
+  <h1>PHANToM Image Sorter</h1>
   <div>by PHANToM</div>
 </header>
 
 <main>
   <section class="card">
-    <h3>อัปโหลดรูปภาพ</h3>
-    <div id="drop" class="droper">
-      <div>ลากรูปมาวางที่นี่</div>
-      <div class="status">หรือคลิกเพื่อเลือกไฟล์…</div>
-      <input id="picker" type="file" accept="image/*" multiple style="display:none">
+    <label>Google Cloud Vision API Key (ถ้ามี)</label>
+    <input id="apiKey" type="password" placeholder="ใส่ API Key" style="width:100%;padding:6px;border-radius:8px;background:#0e1a3a;color:var(--txt);border:1px solid var(--edge)">
+    <div class="note">สถานะ Offline AI: <span id="aiStatus" style="color:var(--err)">โหลดไม่สำเร็จ</span></div>
+
+    <hr style="border:none;border-top:1px solid var(--edge);margin:10px 0">
+    <div class="radio">
+      <label><input type="radio" name="mode" value="condo" checked> คอนโด/ห้องเช่า</label>
+      <label><input type="radio" name="mode" value="house"> บ้าน</label>
     </div>
-    <div class="status" id="aiStatus">Offline AI: ยังไม่โหลด</div>
-    <div class="status" id="customStatus">Custom Model: ยังไม่โหลด</div>
-    <hr style="border:none;border-top:1px solid var(--edge);margin:12px 0">
-    <div style="display:flex;flex-wrap:wrap;gap:8px">
-      <button id="autoHeu" class="btn ghost">Heuristic Sort</button>
-      <button id="autoAI" class="btn main">AI Sort (Offline)</button>
-      <button id="autoCustom" class="btn ghost">AI Sort (Custom)</button>
-      <button id="clear" class="btn warn">ล้างทั้งหมด</button>
+
+    <hr style="border:none;border-top:1px solid var(--edge);margin:10px 0">
+    <div class="droper" id="drop">
+      <div>ลากรูปมาวางที่นี่</div><div>หรือ</div>
+      <input type="file" id="picker" accept="image/*" multiple>
+      <button id="fileSelect" class="ghost">เลือกไฟล์...</button>
     </div>
+
+    <div class="note">คำสั่งเรียงภาพ: <b>Living → Dining/Kitchen → Corridor → Bedroom → Bathroom → Balcony/View → Facilities</b></div>
+
+    <div style="margin-top:8px">
+      <button id="autoHeu" class="ghost">Heuristic Sort</button>
+      <button id="autoAI" class="secondary">AI Sort (Offline)</button>
+      <button id="autoGoogle" class="ok">AI Sort (Google)</button>
+      <button id="clear" class="warn">ล้างทั้งหมด</button>
+    </div>
+
+    <div style="margin-top:12px">
+      <button id="trainAI" class="ghost" onclick="window.open('PHANToM_Room_Trainer.html','_blank')">เปิด PHANToM Room Trainer</button>
+    </div>
+
     <hr style="border:none;border-top:1px solid var(--edge);margin:12px 0">
-    <label class="status">คุณภาพ JPG (0.6–0.95)</label>
-    <input id="quality" type="number" min="0.6" max="0.95" step="0.01" value="0.9">
-    <button id="exportZip" class="btn ok" style="width:100%;margin-top:10px">Export: JPG + Rename (ZIP)</button>
+    <button id="exportZip" class="ok">Export : JPG + Rename (ZIP)</button>
   </section>
 
   <section class="card">
-    <h3>แกลเลอรี</h3>
-    <div id="grid"></div>
+    <div id="grid" class="grid"></div>
   </section>
 </main>
 
 <div id="toast" class="toast">พร้อมทำงาน</div>
 
-<!-- libs -->
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.7.4"></script>
-<script src="https://cdn.jsdelivr.net/npm/ml5@0.12.2/dist/ml5.min.js"></script>
-
-<!-- app -->
 <script src="js/phantom-image-sorter.js"></script>
 </body>
 </html>
