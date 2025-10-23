@@ -1,128 +1,179 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PHANToM Room Trainer — Offline</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PHANToM Room Trainer — TensorFlow Aurora Edition</title>
 <style>
-:root {
-  --bg1:#080d1a; --bg2:#0e1730; --txt:#e6ebf3; --pri:#6b8bff; --a1:#8bf5ff;
-  --ok:#22c55e; --warn:#f59e0b; --err:#ef4444;
+:root{
+  --bg:#0b1220; --panel:#0f1830; --edge:#243353; --txt:#e5e7eb;
+  --muted:#9cb1d9; --pri:#6b8bff; --a1:#8bf5ff; --ok:#22c55e;
+  --warn:#f59e0b; --err:#ef4444;
 }
 *{box-sizing:border-box;font-family:'Prompt',system-ui,sans-serif}
 body{
-  margin:0;background:radial-gradient(900px 700px at 20% 20%,var(--bg2),var(--bg1));
-  color:var(--txt);min-height:100vh;padding:12px;
+  margin:0;min-height:100vh;background:radial-gradient(1000px 700px at 15% 15%,#101b3a,#070c18 60%);
+  color:var(--txt);display:flex;flex-direction:column;align-items:center;padding:20px;
 }
-header{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.08);
-  background:rgba(255,255,255,.03);
-}
-h1{margin:0;font-size:1.3rem;font-weight:700}
-main{margin-top:14px;display:flex;flex-direction:column;gap:14px}
+h1{font-size:1.6rem;margin-bottom:8px;text-shadow:0 0 10px rgba(139,245,255,.3);}
+p{color:var(--muted);margin:0 0 18px;text-align:center;max-width:600px}
 .card{
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.1);
-  border-radius:16px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.3);
+  background:rgba(255,255,255,.04);border:1px solid var(--edge);
+  border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.25);
+  padding:20px;max-width:900px;width:100%;
 }
 button{
-  border:none;border-radius:10px;padding:8px 14px;margin:3px;cursor:pointer;
-  font-weight:600;color:#fff;background:var(--pri);
+  border:none;border-radius:10px;padding:10px 14px;margin:4px;
+  cursor:pointer;font-weight:600;color:#fff;background:var(--pri);
+  transition:.3s;
 }
-button:hover{filter:brightness(1.1)}
+button:hover{filter:brightness(1.15)}
 button.warn{background:var(--warn);color:#000}
 button.ok{background:var(--ok)}
 button.secondary{background:#132044}
-input,select{
-  background:#0f1b39;border:1px solid rgba(255,255,255,.15);
-  color:var(--txt);border-radius:8px;padding:8px;
-}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-top:10px}
-.cell{background:#0e1633;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:6px}
-.cell h3{margin:4px 0 6px;font-size:.9rem}
-.imgs{display:flex;flex-wrap:wrap;gap:6px}
-.imgs img{width:70px;height:70px;object-fit:cover;border-radius:6px}
-.status{margin-top:6px;font-size:.9rem;opacity:.8}
+.note{color:var(--muted);font-size:.9rem;margin-top:6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px}
+.item{border:1px solid var(--edge);border-radius:10px;padding:6px;text-align:center;background:#0d1733}
+.thumb{width:100%;border-radius:6px;aspect-ratio:1/1;object-fit:cover}
+.toast{position:fixed;right:14px;bottom:14px;background:#0d1b36;border:1px solid var(--edge);
+  padding:10px 12px;border-radius:12px;opacity:0;transform:translateY(10px);
+  pointer-events:none;transition:.25s}
+.toast.show{opacity:1;transform:translateY(0)}
 </style>
 </head>
 <body>
-<header>
-  <h1>PHANToM Room Trainer</h1>
-  <div>by PHANToM</div>
-</header>
+<h1>PHANToM Room Trainer</h1>
+<p>เทรนโมเดลจำแนกรูปภาพห้อง (Living, Bedroom, Bathroom, Kitchen ฯลฯ) ด้วย TensorFlow.js<br>
+สามารถส่งออกโมเดลและนำไปใช้กับ PHANToM Image Sorter ได้ทันที</p>
 
-<main>
-  <section class="card">
-    <p>ขั้นตอน: เลือกไฟล์ → ตั้งชื่อหมวด → เพิ่มชุดภาพ → กด “เทรน” → ส่งออกโมเดล (ได้ <b>model.json</b> + <b>model.weights.bin</b>)</p>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-      <input type="file" id="picker" multiple accept="image/*">
-      <input type="text" id="labelName" placeholder="ชื่อหมวด (เช่น living)" style="flex:1">
-      <button id="addSet" class="ok">เพิ่มชุดภาพ</button>
-      <button id="train" class="secondary">เทรน</button>
-      <button id="export" class="ok">ส่งออกโมเดล</button>
-      <button id="clear" class="warn">ล้างทั้งหมด</button>
-    </div>
-    <div id="status" class="status">กำลังโหลดโมเดล MobileNet...</div>
-  </section>
+<div class="card">
+  <div style="margin-bottom:10px">
+    <button id="addClass" class="secondary">เพิ่มหมวดใหม่</button>
+    <button id="train" class="ok">เทรนโมเดล</button>
+    <button id="export" class="warn">ส่งออกโมเดล</button>
+  </div>
+  <div id="classes"></div>
+  <div id="progress" class="note">สถานะ: รอเริ่มเทรน</div>
+</div>
 
-  <section class="card" id="dataset">
-    <p>หมวด (ลากภาพเข้าแต่ละหมวดได้)</p>
-    <div id="grid" class="grid"></div>
-  </section>
-</main>
+<div id="toast" class="toast">พร้อมทำงาน</div>
 
-<script src="https://cdn.jsdelivr.net/npm/ml5@0.12.2/dist/ml5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
 <script>
-let fx, clf, currentLabel='', dataMap={};
+const $=s=>document.querySelector(s); const $$=s=>Array.from(document.querySelectorAll(s));
+const toastEl=$("#toast"), clsWrap=$("#classes"), progress=$("#progress");
+let classData={}; let model=null;
 
-function setStatus(t){ document.getElementById('status').textContent=t; console.log(t); }
+function toast(t,ok=false){toastEl.textContent=t;toastEl.style.background=ok?"#153a1f":"#0d1b36";toastEl.classList.add("show");setTimeout(()=>toastEl.classList.remove("show"),1500);}
 
-// โหลด MobileNet
-setStatus('⏳ กำลังโหลด MobileNet...');
-fx = ml5.featureExtractor('MobileNet', {numLabels:20}, ()=>{
-  clf = fx.classification();
-  setStatus('✅ โหลด MobileNet สำเร็จ พร้อมเทรน');
-});
+// เพิ่มหมวดใหม่
+$("#addClass").onclick=()=>{
+  const name=prompt("ชื่อหมวด (เช่น living, kitchen, bedroom)");
+  if(!name) return;
+  if(classData[name]) return toast("มีหมวดนี้แล้ว");
+  classData[name]=[];
+  render();
+};
 
-document.getElementById('addSet').onclick=()=>{
-  const lbl=document.getElementById('labelName').value.trim();
-  const files=document.getElementById('picker').files;
-  if(!lbl || files.length==0){ alert('กรอกชื่อหมวดและเลือกภาพ'); return; }
-  if(!dataMap[lbl]){
-    dataMap[lbl]=[];
-    const c=document.createElement('div');c.className='cell';c.innerHTML=`<h3>${lbl}</h3><div class="imgs" id="img-${lbl}"></div>`;
-    document.getElementById('grid').appendChild(c);
+// แสดงภาพแต่ละหมวด
+function render(){
+  clsWrap.innerHTML="";
+  Object.keys(classData).forEach(k=>{
+    const box=document.createElement("div");
+    box.innerHTML=`<h3>${k}</h3><div class="grid"></div><button class="secondary">เพิ่มรูป</button>`;
+    const grid=box.querySelector(".grid");
+    const btn=box.querySelector("button");
+    btn.onclick=()=>pickImgs(k);
+    classData[k].forEach(src=>{
+      const im=document.createElement("img"); im.src=src; im.className="thumb";
+      grid.append(im);
+    });
+    clsWrap.append(box);
+  });
+}
+
+// เลือกภาพเข้าแต่ละหมวด
+function pickImgs(k){
+  const inp=document.createElement("input");
+  inp.type="file"; inp.accept="image/*"; inp.multiple=true;
+  inp.onchange=e=>{
+    Array.from(e.target.files).forEach(f=>{
+      const r=new FileReader();
+      r.onload=v=>{ classData[k].push(v.target.result); render(); };
+      r.readAsDataURL(f);
+    });
+  };
+  inp.click();
+}
+
+// สร้างและเทรนโมเดล
+$("#train").onclick=async()=>{
+  if(Object.keys(classData).length<2){return toast("เพิ่มหมวดอย่างน้อย 2 หมวด");}
+  progress.textContent="กำลังเตรียมข้อมูล…";
+
+  const {xs, ys, labels}=await buildDataset();
+  model=createModel(labels.length);
+  model.compile({optimizer:'adam',loss:'categoricalCrossentropy',metrics:['accuracy']});
+  progress.textContent="เริ่มเทรน...";
+  await model.fit(xs, ys, {
+    epochs:10,
+    batchSize:8,
+    shuffle:true,
+    callbacks:{
+      onEpochEnd:(ep,logs)=>progress.textContent=`Epoch ${ep+1}/10 — Loss ${logs.loss.toFixed(4)} Acc ${(logs.acc*100).toFixed(1)}%`
+    }
+  });
+  xs.dispose(); ys.dispose();
+  progress.textContent="✅ เทรนเสร็จสิ้น พร้อมส่งออก";
+  toast("เทรนเสร็จสิ้น",true);
+};
+
+// สร้าง dataset จากภาพ
+async function buildDataset(){
+  let dataX=[], dataY=[], labels=Object.keys(classData);
+  for(let i=0;i<labels.length;i++){
+    const name=labels[i];
+    for(let imgData of classData[name]){
+      const tensor=await imgToTensor(imgData);
+      dataX.push(tensor);
+      dataY.push(i);
+    }
   }
-  const container=document.getElementById('img-'+lbl);
-  [...files].forEach(f=>{
-    const img=document.createElement('img');
-    img.src=URL.createObjectURL(f);
-    container.appendChild(img);
-    clf.addImage(img,lbl);
-    dataMap[lbl].push(img);
+  const xs=tf.concat(dataX);
+  const ys=tf.oneHot(tf.tensor1d(dataY,'int32'),labels.length);
+  dataX.forEach(t=>t.dispose());
+  return {xs,ys,labels};
+}
+
+// แปลงรูปเป็น tensor
+function imgToTensor(data){
+  return new Promise(res=>{
+    const im=new Image();
+    im.src=data;
+    im.onload=()=>{
+      const t=tf.tidy(()=>tf.image.resizeBilinear(tf.browser.fromPixels(im),[128,128])
+        .toFloat().div(255).expandDims(0));
+      res(t);
+    };
   });
-  setStatus(`เพิ่มภาพเข้า "${lbl}" แล้ว (${files.length} รูป)`);
-};
+}
 
-document.getElementById('train').onclick=()=>{
-  if(!clf){ alert('ยังไม่พร้อมเทรน'); return; }
-  setStatus('🚀 เริ่มเทรน...');
-  clf.train(l=>{
-    let val=(typeof l==='object'&&l!==null)?l.loss:l;
-    if(val==null){ setStatus('✅ เทรนเสร็จสิ้น พร้อมส่งออก'); }
-    else{ setStatus(`Loss: ${Number(val).toFixed(4)}`); }
-  });
-};
+// สร้างโมเดล
+function createModel(classes){
+  const m=tf.sequential();
+  m.add(tf.layers.conv2d({inputShape:[128,128,3],filters:16,kernelSize:3,activation:'relu'}));
+  m.add(tf.layers.maxPooling2d({poolSize:2}));
+  m.add(tf.layers.flatten());
+  m.add(tf.layers.dense({units:64,activation:'relu'}));
+  m.add(tf.layers.dense({units:classes,activation:'softmax'}));
+  return m;
+}
 
-document.getElementById('export').onclick=()=>{
-  if(!clf){ alert('ยังไม่มีโมเดล'); return; }
-  clf.save(()=>setStatus('💾 ส่งออกโมเดลเรียบร้อย (model.json + weights.bin)'));
-};
-
-document.getElementById('clear').onclick=()=>{
-  dataMap={};document.getElementById('grid').innerHTML='';
-  setStatus('ล้างข้อมูลทั้งหมดแล้ว');
+// ส่งออกโมเดล
+$("#export").onclick=async()=>{
+  if(!model) return toast("ยังไม่มีโมเดลเทรน");
+  await model.save('downloads://PHANToM_Room_Model');
+  toast("บันทึกโมเดลแล้ว",true);
 };
 </script>
 </body>
