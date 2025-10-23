@@ -1,197 +1,193 @@
-// ============================================================
-// PHANToM Image Sorter v3.4
-// Offline AI + Google Vision + Heuristic
-// ============================================================
+/*
+PHANToM Image Sorter v3.3
+- Heuristic Sort (Basic logic)
+- Offline AI (MobileNet Feature Extractor)
+- Custom AI (Load model.json + weights.bin)
+- UI feedback + Toast system
+by PHANToM
+*/
 
-window.addEventListener("load", async () => {
-  console.log("PHANToM Image Sorter Loaded");
+console.log("PHANToM Image Sorter Loaded");
 
-  const dropZone = document.getElementById("drop");
-  const picker = document.getElementById("picker");
-  const grid = document.getElementById("grid");
-  const toast = document.getElementById("toast");
-  const aiLocalEl = document.getElementById("aiLocal");
-  const aiCustomEl = document.getElementById("aiCustom");
-  const modeRadios = document.getElementsByName("mode");
-  const exportBtn = document.getElementById("exportZip");
-  const autoHeuBtn = document.getElementById("autoHeu");
-  const autoAIBtn = document.getElementById("autoAI");
-  const autoCustomBtn = document.getElementById("autoCustom");
-  const clearBtn = document.getElementById("clear");
-  const qualityInput = document.getElementById("quality");
-  const saveKeyBtn = document.getElementById("saveKey");
-  const apiKeyInput = document.getElementById("apiKey");
-  const keyState = document.getElementById("keyState");
+const drop = document.getElementById("drop");
+const grid = document.getElementById("grid");
+const toast = document.getElementById("toast");
 
-  let files = [];
-  let mode = "condo";
-  let model = null;
-  let classifier = null;
-  let googleApiKey = localStorage.getItem("phantom_api_key") || "";
-  let localAIReady = false;
+let images = [];
+let classifier = null;
+let customClassifier = null;
 
-  if (apiKeyInput) apiKeyInput.value = googleApiKey;
+// 🔹 แสดงข้อความแจ้งเตือน
+function showToast(msg, ok = false) {
+  toast.innerText = msg;
+  toast.classList.add("show");
+  toast.style.background = ok ? "#1b3a1b" : "#0d1b36";
+  setTimeout(() => toast.classList.remove("show"), 2500);
+}
 
-  function showToast(msg) {
-    toast.textContent = msg;
-    toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 2500);
-  }
-
-  function refreshGrid() {
-    grid.innerHTML = "";
-    files.forEach((f, i) => {
-      const div = document.createElement("div");
-      div.className = "item";
-      div.draggable = true;
-      div.innerHTML = `
-        <img src="${f.url}" class="thumb"/>
-        <div class="bar">
-          <div class="idx">${i + 1}</div>
-          <div class="tags">
-            ${(f.tags || []).map(t => `<span class="tag">${t}</span>`).join("")}
-          </div>
-        </div>
-        <div class="cover ${f.cover ? "active" : ""}">Cover</div>
-      `;
-      const coverBtn = div.querySelector(".cover");
-      coverBtn.addEventListener("click", () => {
-        f.cover = !f.cover;
-        coverBtn.classList.toggle("active", f.cover);
-      });
-      grid.appendChild(div);
+// 🔹 โหลด Offline AI
+async function initOfflineAI() {
+  try {
+    classifier = ml5.imageClassifier("MobileNet", () => {
+      console.log("Offline AI loaded");
+      showToast("Offline AI โหลดสำเร็จ ✓", true);
+      document.querySelector("#aiStatus").textContent = "โหลดสำเร็จ";
     });
+  } catch (e) {
+    console.error(e);
+    showToast("Offline AI โหลดไม่สำเร็จ ❌");
   }
+}
 
-  // ---------- Drag & Drop Upload ----------
-  dropZone.addEventListener("dragover", e => {
-    e.preventDefault();
-    dropZone.classList.add("drag");
-  });
-  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag"));
-  dropZone.addEventListener("drop", e => {
-    e.preventDefault();
-    dropZone.classList.remove("drag");
-    handleFiles(e.dataTransfer.files);
-  });
-  picker.addEventListener("change", e => handleFiles(e.target.files));
-
-  function handleFiles(list) {
-    for (let f of list) {
-      if (!f.type.startsWith("image/")) continue;
-      const url = URL.createObjectURL(f);
-      files.push({ file: f, url, name: f.name });
-    }
-    refreshGrid();
-    showToast("เพิ่มรูปภาพแล้ว");
-  }
-
-  // ---------- Clear ----------
-  clearBtn.addEventListener("click", () => {
-    files = [];
-    refreshGrid();
-    showToast("ล้างทั้งหมดแล้ว");
-  });
-
-  // ---------- Save API Key ----------
-  saveKeyBtn.addEventListener("click", () => {
-    const key = apiKeyInput.value.trim();
-    if (key) {
-      localStorage.setItem("phantom_api_key", key);
-      googleApiKey = key;
-      keyState.textContent = "บันทึกแล้ว ✓";
-    } else {
-      keyState.textContent = "กรุณาใส่ API Key";
-    }
-  });
-
-  // ---------- Mode ----------
-  modeRadios.forEach(r => {
-    r.addEventListener("change", () => {
-      mode = r.value;
-      showToast("เปลี่ยนโหมดเป็น: " + (mode === "condo" ? "คอนโด" : "บ้าน"));
-    });
-  });
-
-  // ---------- Offline AI Loading ----------
-  async function loadOfflineAI() {
-    try {
-      if (!window.ml5) {
-        aiLocalEl.textContent = "โหลด ml5.js...";
-        await new Promise((res, rej) => {
-          const s = document.createElement("script");
-          s.src = "https://cdn.jsdelivr.net/npm/ml5@0.12.2/dist/ml5.min.js";
-          s.onload = res;
-          s.onerror = rej;
-          document.body.appendChild(s);
-        });
-      }
-      aiLocalEl.textContent = "กำลังโหลดโมเดล…";
-      classifier = await ml5.imageClassifier("MobileNet", () => {
-        aiLocalEl.textContent = "พร้อมใช้งาน ✓";
-        localAIReady = true;
-        console.log("Offline AI ready");
-      });
-    } catch (e) {
-      aiLocalEl.textContent = "โหลดไม่สำเร็จ ❌";
-      console.error("Offline AI error:", e);
-      localAIReady = false;
-    }
-  }
-
-  await loadOfflineAI();
-
-  // ---------- Auto-sort (Heuristic) ----------
-  autoHeuBtn.addEventListener("click", () => {
-    if (!files.length) return showToast("ไม่มีภาพในรายการ");
-    files.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
-    refreshGrid();
-    showToast("เรียงตามชื่อไฟล์แล้ว");
-  });
-
-  // ---------- Auto-sort (Offline AI) ----------
-  autoAIBtn.addEventListener("click", async () => {
-    if (!localAIReady || !classifier) return showToast("Offline AI ยังไม่พร้อม");
-    if (!files.length) return showToast("ไม่มีภาพให้วิเคราะห์");
-
-    showToast("กำลังวิเคราะห์ภาพด้วย Offline AI…");
-
-    for (const f of files) {
-      try {
-        const img = document.createElement("img");
-        img.src = f.url;
-        await new Promise(res => (img.onload = res));
-        const results = await classifier.classify(img);
-        f.tags = [results[0].label];
-      } catch (err) {
-        console.error("AI classify error:", err);
-      }
-    }
-    refreshGrid();
-    showToast("วิเคราะห์เสร็จแล้ว (Offline AI)");
-  });
-
-  // ---------- Export ZIP ----------
-  exportBtn.addEventListener("click", async () => {
-    if (!files.length) return showToast("ไม่มีภาพจะบันทึก");
-    const zip = new JSZip();
-    const q = parseFloat(qualityInput.value) || 0.9;
-    let idx = 1;
-    for (const f of files) {
-      const blob = await fetch(f.url).then(r => r.blob());
-      const canvas = document.createElement("canvas");
-      const img = await createImageBitmap(blob);
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0);
-      const jpg = await new Promise(r => canvas.toBlob(r, "image/jpeg", q));
-      zip.file(`${idx++}.jpg`, jpg);
-    }
-    const out = await zip.generateAsync({ type: "blob" });
-    saveAs(out, "PHANToM_Sorted.zip");
-    showToast("บันทึก ZIP เรียบร้อย");
-  });
-
-  console.log("PHANToM Sorter initialized successfully");
+// 🔹 ลากวางรูป
+drop.addEventListener("dragover", e => {
+  e.preventDefault();
+  drop.classList.add("drag");
 });
+drop.addEventListener("dragleave", () => drop.classList.remove("drag"));
+drop.addEventListener("drop", e => {
+  e.preventDefault();
+  drop.classList.remove("drag");
+  handleFiles(e.dataTransfer.files);
+});
+
+document.getElementById("picker").addEventListener("change", e => {
+  handleFiles(e.target.files);
+});
+
+// 🔹 แสดงรูปใน Grid
+function handleFiles(fileList) {
+  grid.innerHTML = "";
+  images = [];
+  for (let file of fileList) {
+    if (!file.type.startsWith("image/")) continue;
+    const url = URL.createObjectURL(file);
+    const img = document.createElement("img");
+    img.src = url;
+    img.className = "thumb";
+    const item = document.createElement("div");
+    item.className = "item";
+    const cover = document.createElement("button");
+    cover.innerText = "Cover";
+    cover.className = "cover";
+    cover.onclick = () => cover.classList.toggle("active");
+    item.appendChild(img);
+    item.appendChild(cover);
+    grid.appendChild(item);
+    images.push({ file, img, cover });
+  }
+  showToast(`เพิ่มรูป ${images.length} รูป ✓`, true);
+}
+
+// 🔹 Heuristic Sort (เรียงเบื้องต้นจากชื่อไฟล์)
+function heuristicSort() {
+  if (images.length === 0) return showToast("ยังไม่มีรูป");
+  images.sort((a, b) => a.file.name.localeCompare(b.file.name, undefined, { numeric: true }));
+  renderSorted();
+  showToast("เรียงรูปตามชื่อไฟล์แล้ว ✓", true);
+}
+
+// 🔹 Offline AI Sort (MobileNet)
+async function aiSortOffline() {
+  if (!classifier) return showToast("Offline AI ยังไม่พร้อม");
+  if (images.length === 0) return showToast("ยังไม่มีรูป");
+
+  showToast("กำลังวิเคราะห์รูป...", false);
+  const predictions = [];
+  for (let img of images) {
+    const result = await classifier.classify(img.img);
+    predictions.push({ img, label: result[0].label });
+  }
+
+  images.sort((a, b) => a.label.localeCompare(b.label));
+  renderSorted();
+  showToast("AI Offline เรียงรูปสำเร็จ ✓", true);
+}
+
+// 🔹 Custom Model Sort (PHANToM Room Trainer)
+async function aiSortCustom() {
+  if (!customClassifier) return showToast("ยังไม่ได้โหลดโมเดล Custom");
+  if (images.length === 0) return showToast("ยังไม่มีรูป");
+
+  showToast("กำลังใช้โมเดล Custom วิเคราะห์...", false);
+  for (let img of images) {
+    const result = await customClassifier.classify(img.img);
+    img.label = result[0].label;
+  }
+  images.sort((a, b) => a.label.localeCompare(b.label));
+  renderSorted();
+  showToast("AI Custom เรียงรูปสำเร็จ ✓", true);
+}
+
+// 🔹 โหลดโมเดล Custom จาก Room Trainer
+async function loadCustomModel() {
+  try {
+    showToast("กำลังโหลดโมเดล Custom...");
+    customClassifier = await ml5.imageClassifier("model.json", () => {
+      showToast("โมเดล Custom พร้อมใช้งาน ✓", true);
+      document.querySelector("#customStatus").textContent = "โหลดสำเร็จ";
+    });
+  } catch (e) {
+    console.error(e);
+    showToast("โหลดโมเดล Custom ไม่สำเร็จ ❌");
+  }
+}
+
+// 🔹 เคลียร์ทั้งหมด
+function clearAll() {
+  grid.innerHTML = "";
+  images = [];
+  showToast("ล้างทั้งหมดแล้ว", true);
+}
+
+// 🔹 Export ZIP
+async function exportZip() {
+  if (images.length === 0) return showToast("ไม่มีรูปให้บันทึก");
+  const zip = new JSZip();
+  const quality = parseFloat(document.getElementById("quality").value || "0.9");
+
+  let i = 1;
+  for (let img of images) {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = img.img.naturalWidth;
+    canvas.height = img.img.naturalHeight;
+    ctx.drawImage(img.img, 0, 0);
+    const data = canvas.toDataURL("image/jpeg", quality);
+    const base64 = data.split(",")[1];
+    zip.file(`${i++}.jpg`, base64, { base64: true });
+  }
+
+  const blob = await zip.generateAsync({ type: "blob" });
+  saveAs(blob, "PHANToM_Sorted_Images.zip");
+  showToast("ส่งออกไฟล์ ZIP เรียบร้อย ✓", true);
+}
+
+// 🔹 Render UI ใหม่
+function renderSorted() {
+  grid.innerHTML = "";
+  let index = 1;
+  for (let img of images) {
+    const item = document.createElement("div");
+    item.className = "item";
+    const imageEl = document.createElement("img");
+    imageEl.src = img.img.src;
+    imageEl.className = "thumb";
+    const label = document.createElement("div");
+    label.className = "bar";
+    label.innerHTML = `<span class="idx">${index++}</span> <span>${img.label || ""}</span>`;
+    item.appendChild(imageEl);
+    item.appendChild(label);
+    grid.appendChild(item);
+  }
+}
+
+// 🔹 ปุ่มต่างๆ
+document.getElementById("autoHeu")?.addEventListener("click", heuristicSort);
+document.getElementById("autoAI")?.addEventListener("click", aiSortOffline);
+document.getElementById("autoCustom")?.addEventListener("click", aiSortCustom);
+document.getElementById("exportZip")?.addEventListener("click", exportZip);
+document.getElementById("clear")?.addEventListener("click", clearAll);
+
+// 🔹 โหลด AI อัตโนมัติเมื่อเริ่มต้น
+window.addEventListener("load", initOfflineAI);
