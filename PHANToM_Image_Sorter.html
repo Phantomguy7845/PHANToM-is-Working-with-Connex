@@ -21,7 +21,7 @@ header{
 }
 .brand{font-weight:800;letter-spacing:.4px;font-size:1.1rem}
 small{display:block;color:var(--muted);font-weight:500;font-size:.8rem}
-main{display:grid;grid-template-columns:340px 1fr;gap:14px;padding:14px}
+main{display:grid;grid-template-columns:360px 1fr;gap:14px;padding:14px}
 @media(max-width:960px){main{grid-template-columns:1fr}}
 .card{
   background:rgba(255,255,255,.03);border:1px solid var(--edge);
@@ -42,6 +42,7 @@ button:hover{transform:translateY(-1px);filter:brightness(1.1)}
 .ghost{background:transparent;border:1px solid var(--edge);color:var(--txt)}
 .secondary{background:var(--pri);color:white}
 .warn{background:var(--warn);color:black}
+.link{background:#132044;color:#e5e7eb;border:1px solid var(--edge)}
 .droper{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:10px;min-height:150px;border:2px dashed var(--edge);
@@ -54,6 +55,8 @@ button:hover{transform:translateY(-1px);filter:brightness(1.1)}
 .bar{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;font-size:.8rem;color:var(--muted)}
 .cover{position:absolute;top:8px;right:8px;padding:4px 6px;border-radius:8px;font-size:.75rem;background:rgba(0,0,0,.5);border:1px solid var(--edge);color:var(--txt)}
 .cover.active{background:linear-gradient(90deg,var(--pri),var(--a1));color:black;font-weight:700}
+.del{position:absolute;top:8px;left:8px;width:28px;height:28px;border-radius:999px;border:1px solid var(--edge);background:rgba(239,68,68,.85);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:.8rem}
+.del:hover{filter:brightness(1.1)}
 .toast{
   position:fixed;right:14px;bottom:14px;padding:10px 14px;border-radius:10px;
   background:#0d1b36;border:1px solid var(--edge);opacity:0;transform:translateY(10px);
@@ -62,7 +65,6 @@ button:hover{transform:translateY(-1px);filter:brightness(1.1)}
 .toast.show{opacity:1;transform:translateY(0)}
 .status{margin-top:6px;font-size:.85rem}
 #aiStatus{color:var(--warn)} #customStatus{color:var(--muted)}
-/* Overlay for custom model picker */
 .overlay{
   position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);
   display:none;align-items:center;justify-content:center;z-index:80
@@ -110,6 +112,7 @@ button:hover{transform:translateY(-1px);filter:brightness(1.1)}
       <button id="autoAI" class="secondary">AI Sort (Offline)</button>
       <button id="autoCustom" class="ok">AI Sort (Custom)</button>
       <button id="clear" class="warn">ล้างทั้งหมด</button>
+      <a href="PHANToM_Room_Trainer.html" class="link" style="text-decoration:none;display:inline-block">Train AI Model</a>
     </div>
     <div class="btns">
       <button id="exportZip" class="ok" style="width:100%">Export : JPG + Rename (ZIP)</button>
@@ -117,14 +120,14 @@ button:hover{transform:translateY(-1px);filter:brightness(1.1)}
   </section>
 
   <section class="card">
-    <div class="status" style="padding-bottom:8px">ลากสลับตำแหน่งได้ • กดปุ่ม <span class="kbd">Cover</span> บนรูปเพื่อขึ้นปก</div>
+    <div class="status" style="padding-bottom:8px">ลากสลับตำแหน่งได้ • กด <span class="kbd">Cover</span> เพื่อขึ้นปก • กดปุ่ม 🗑 เพื่อลบรูป</div>
     <div id="grid" class="grid"></div>
   </section>
 </main>
 
 <div id="toast" class="toast" role="status" aria-live="polite">พร้อมทำงาน</div>
 
-<!-- Custom Model Loader Overlay (สร้างจาก JS ถ้าอยากแก้ UI ให้เปิดดูที่ JS) -->
+<!-- Custom Model Loader Overlay -->
 <div id="overlay" class="overlay" aria-modal="true">
   <div class="modal">
     <h3>โหลด Custom Model</h3>
