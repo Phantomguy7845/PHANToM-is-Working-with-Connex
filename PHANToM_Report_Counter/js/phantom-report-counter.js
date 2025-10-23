@@ -1,11 +1,12 @@
-/* PHANToM Report Counter — Aurora Engine 2025
+/* PHANToM Report Counter — Aurora Dark+Light 2025
    - Main/Sub nodes; Main supports type: 'count' | 'text'
    - Sub nodes: type = 'count' | 'text'
    - Inline number edit; + / - buttons; Text counts by lines
-   - Keyboard: arrows, +/- , Enter, Ctrl+C (copy), Ctrl+S (save)
-   - Autosave localStorage (key = PHANTOM_REPORT_STATE_V3)
+   - Keyboard: arrows, +/- , Enter, Ctrl+C(copy), Ctrl+S(save), Ctrl+L(theme)
+   - Autosave localStorage (PHANTOM_REPORT_STATE_V4) + theme memory (PHANTOM_THEME)
    - SUM Rules (global, cross-main) + default rules
-   - Report output as requested, with //Section and //////////SUM//////////
+   - Daily Summary (compact)
+   - Text mode focus-safe: shortcuts are disabled while typing
 */
 
 (function(){
@@ -17,6 +18,8 @@
   const toastEl = $("#toast");
   const userNameEl = $("#userName");
   const dateEl = $("#reportDate");
+
+  const themeToggleBtn = $("#themeToggle");
   const copyBtn = $("#copyReport");
   const addMainBtn = $("#addMain");
   const newMainTitleEl = $("#newMainTitle");
@@ -33,9 +36,11 @@
   const sumCloseBtn = $("#closeSum");
   const exportBtn = $("#exportSettings");
   const importInput = $("#importSettings");
+  const dailySummaryEl = $("#dailySummary");
 
   // ---- Storage ----
-  const LS_KEY = "PHANTOM_REPORT_STATE_V3";
+  const LS_KEY = "PHANTOM_REPORT_STATE_V4";
+  const THEME_KEY = "PHANTOM_THEME";
   const DEF_SUM = [
     { id: uid(), label: "โทรรวม", suffix: "", sources: [] },
     { id: uid(), label: "ติดต่อได้", suffix: "", sources: [] },
@@ -47,10 +52,29 @@
   let focusPath = []; // [mainIdx, subIdx, ...]
   let lastFocusId = null;
 
+  // ---- Theme ----
+  initTheme();
+
   // ---- Init ----
   initUI();
   render();
   focusRestore();
+
+  function initTheme(){
+    const t = localStorage.getItem(THEME_KEY) || "dark";
+    document.documentElement.setAttribute("data-theme", t);
+    themeToggleBtn?.addEventListener("click", toggleTheme);
+    document.addEventListener("keydown", (e)=>{
+      if(e.ctrlKey && (e.key==='l'||e.key==='L')){ e.preventDefault(); toggleTheme(); }
+    });
+  }
+  function toggleTheme(){
+    const cur = document.documentElement.getAttribute("data-theme") || "dark";
+    const next = cur==="dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem(THEME_KEY, next);
+    tip(next==="dark"?"Dark Mode":"Light Mode", true);
+  }
 
   function initUI(){
     // date default
@@ -123,8 +147,8 @@
       r.readAsText(f); importInput.value="";
     });
 
-    // Keyboard shortcuts
-    document.addEventListener("keydown", onKey);
+    // Keyboard shortcuts (focus-safe)
+    document.addEventListener("keydown", onKey, true);
     treeEl.addEventListener("click", ()=> treeEl.focus());
   }
 
@@ -134,18 +158,26 @@
     state.categories.forEach((main,mi)=>{
       treeEl.appendChild(renderMain(main, mi));
     });
+    updateDailySummary();
     saveState();
+  }
+
+  function updateDailySummary(){
+    const sums = computeSums();
+    // หา 3 รายการแรก (หรือทั้งหมดถ้าน้อยกว่า)
+    const top = sums.slice(0,3).map(s=> `${s.label} ${s.value}${s.suffix?` ${s.suffix}`:''}`);
+    dailySummaryEl.textContent = top.length ? top.join(" | ") : "—";
   }
 
   function renderMain(main, mi){
     const node = el("div","node main"); node.dataset.id = main.id;
 
-    // Title editable
+    // Title (editable on dblclick)
     const title = el("div","title", main.title);
     title.title="ดับเบิลคลิกเพื่อแก้ชื่อ";
     title.ondblclick = ()=> inlineRename(title, main, "title");
 
-    // Main type select
+    // Main type select (count/text)
     const typeSel = el("select");
     typeSel.innerHTML = `<option value="count">Count</option><option value="text">Text</option>`;
     typeSel.value = main.type || "count";
@@ -163,10 +195,10 @@
       const btnPlus  = miniBtn("+", ()=> inc(main,+1));
       countWrap.append(btnMinus, c, btnPlus);
     }else{
-      // text area for main
       bodyArea = el("textarea","textbox");
       bodyArea.placeholder="พิมพ์ข้อความ (1 บรรทัด = 1 นับ)";
       bodyArea.value = (main.lines||[]).join("\n");
+      bodyArea.addEventListener("keydown",(e)=>{ e.stopPropagation(); }); // ป้องกันคีย์ลัดมากวน
       bodyArea.addEventListener("input", ()=>{
         main.lines = bodyArea.value.split("\n").map(s=>s.trim()).filter(Boolean);
         saveState(); render();
@@ -187,15 +219,18 @@
     const bDel  = dangerBtn("ลบ", ()=> delMain(mi));
     ops.append(bUp,bDown,bEdit,bDel);
 
-    const headRow = el("div","row2");
-    headRow.append(title, typeSel, asCall, el("span","badge","Main"), countWrap, ops);
+    const headRow = el("div","header");
+    const left = el("div"); left.append(title);
+    const center = el("div"); center.append(typeSel, asCall);
+    const right = el("div"); right.append(countWrap, ops);
+    headRow.append(left, center, right);
 
     const nodeInner = el("div");
     nodeInner.append(headRow);
 
     // Add sub controls
     const addRow = el("div","row");
-    const subName = el("input"); subName.placeholder="เพิ่มหมวดย่อย เช่น ว่าง / ขายแล้ว / หมายเหตุ";
+    const subName = el("input"); subName.placeholder="เพิ่มหมวดย่อย (เช่น ว่าง / ขายแล้ว / หมายเหตุ)";
     const subType = el("select"); subType.innerHTML=`<option value="count">Count</option><option value="text">Text</option>`;
     const addBtn = el("button","btn","เพิ่มย่อย");
     addBtn.addEventListener("click", ()=>{
@@ -205,7 +240,9 @@
     nodeInner.append(addRow); addRow.append(subName, subType, addBtn);
 
     // Body area (text mode)
-    if(bodyArea) nodeInner.append(el("div","group", bodyArea.outerHTML));
+    if(bodyArea) {
+      const group = el("div","group"); group.append(bodyArea); nodeInner.append(group);
+    }
 
     // children
     if ((main.children||[]).length){
@@ -250,6 +287,7 @@
       const ta = el("textarea","textbox");
       ta.placeholder = "พิมพ์แยกบรรทัด (1 บรรทัด = 1 นับ)";
       ta.value = (nodeData.lines||[]).join("\n");
+      ta.addEventListener("keydown",(e)=>{ e.stopPropagation(); }); // ป้องกันคีย์ลัดมากวน
       ta.addEventListener("input", ()=>{
         nodeData.lines = ta.value.split("\n").map(s=>s.trim()).filter(Boolean);
         saveState(); render();
@@ -266,7 +304,10 @@
     );
 
     const header = el("div","sub-header");
-    header.append(title, badge, countWrap, ops);
+    const left = el("div"); left.append(title);
+    const center = el("div"); center.append(badge);
+    const right = el("div"); right.append(countWrap, ops);
+    header.append(left, center, right);
 
     const group = el("div","group");
     // add sub-sub
@@ -413,8 +454,10 @@
   function inlineNumberEdit(countElm, node, key){
     const val = String(node[key]||0);
     const box = document.createElement("input");
-    box.type="number"; box.value=val; box.min="0"; box.className="";
+    box.type="number"; box.value=val; box.min="0";
     countElm.innerHTML=""; countElm.appendChild(box); box.focus(); box.select();
+    // ไม่ให้คีย์ลัดรบกวนขณะพิมพ์
+    box.addEventListener("keydown",(e)=>{ e.stopPropagation(); });
     const commit=()=>{
       const n = Math.max(0, parseInt(box.value||"0",10));
       node[key]=n; saveState(); render();
@@ -485,7 +528,6 @@
       const total = calcCount(main);
       lines.push(`//${main.title}${total>0?` ${total}`:""}`);
       appendSubLines(lines, main);
-      // If main is text, show its lines directly under section
       if(main.type==="text" && (main.lines||[]).length){
         main.lines.forEach(t=> lines.push(t));
       }
@@ -530,15 +572,16 @@
     return out;
   }
 
-  // ---- Keyboard ----
-  document.addEventListener("keydown", onKey);
+  // ---- Keyboard (focus-safe) ----
   function onKey(e){
-    // global shortcuts (except when typing in inputs/textareas)
     const tag=(e.target.tagName||"").toLowerCase();
+    const isTyping = (tag==='input' || tag==='textarea' || e.target.isContentEditable);
+    // Global shortcuts
     if(e.ctrlKey && (e.key==='s'||e.key==='S')){ e.preventDefault(); saveState(); tip("บันทึกแล้ว",true); return; }
     if(e.ctrlKey && (e.key==='c'||e.key==='C')){ e.preventDefault(); const t=buildReport(); copy(t).then(()=>tip("คัดลอก Report แล้ว",true)); return; }
 
-    if(tag==='input' || tag==='textarea' || e.target.isContentEditable) return;
+    // ปิดคีย์ลัดนำทางระหว่างพิมพ์ (แก้ปัญหา text mode พิมพ์ได้แค่ตัวเดียว)
+    if(isTyping) return;
 
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','+','-','Enter','NumpadAdd','NumpadSubtract'].includes(e.key)){
       e.preventDefault();
@@ -646,6 +689,22 @@
   function focusRestore(){
     if(lastFocusId){ renderFocus(); }
     else if(state.categories[0]){ lastFocusId=state.categories[0].id; focusPath=[0]; renderFocus(); }
+  }
+
+  // ---- Reset Daily ----
+  function resetCountsOnly(){
+    // reset count & lines only, keep structure and sum rules
+    state.categories.forEach(m=>{
+      if(m.type==="count") m.count=0; else m.lines=[];
+      resetChildren(m);
+    });
+    function resetChildren(n){
+      (n.children||[]).forEach(ch=>{
+        if(ch.type==="count") ch.count=0; else ch.lines=[];
+        resetChildren(ch);
+      });
+    }
+    saveState(); render();
   }
 
 })();
