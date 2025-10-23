@@ -1,7 +1,7 @@
 /* PHANToM Image Sorter — TensorFlow v4 Stable (Aurora Edition)
    - Offline AI: TFHub MobileNetV2 (GraphModel)
    - Custom Model Loader: Overlay (JSON+BIN) with user activation safe
-   - Heuristic Sort + Drag/Drop + Cover + Export ZIP
+   - Heuristic Sort + Drag/Drop + Cover + Delete + Export ZIP
    - Robust guards, progress, and UI feedback
 */
 (function(){
@@ -15,7 +15,7 @@
         jsonName=$("#jsonName"), binName=$("#binName"),
         btnLoadCustom=$("#loadCustom"), btnCloseOverlay=$("#closeOverlay");
 
-  if(!drop || !grid) { console.warn("Missing essential DOM. Abort init."); return; }
+  if(!drop || !grid){ console.warn("Missing essential DOM. Abort init."); return; }
 
   // ---------------- State ----------------
   let images=[]; // {src, name, label?, conf?, cover?}
@@ -45,7 +45,6 @@
   function handleFiles(fs){
     const arr = Array.from(fs||[]).filter(f=> f.type.startsWith("image/"));
     if(!arr.length){ toastMsg("ไม่มีไฟล์ภาพ"); return; }
-    // show progress bar
     if(loadBar){ loadBar.style.display="block"; loadBar.firstElementChild.style.width="0%"; }
     let done=0;
     arr.forEach(f=>{
@@ -61,7 +60,7 @@
     toastMsg(`เพิ่มรูป ${arr.length} ไฟล์`, true);
   }
 
-  // ------------- Render Grid + Drag -------------
+  // ------------- Render Grid + Drag + Delete -------------
   function render(){
     grid.innerHTML="";
     images.forEach((x,i)=>{
@@ -72,6 +71,10 @@
       const cover=document.createElement("button");
       cover.className="cover"+(x.cover?" active":""); cover.textContent="Cover";
       cover.onclick=()=>{ x.cover=!x.cover; cover.classList.toggle("active", x.cover); };
+
+      const del=document.createElement("button");
+      del.className="del"; del.title="ลบรูปนี้"; del.textContent="🗑";
+      del.onclick=()=>{ images.splice(i,1); render(); };
 
       const bar=document.createElement("div"); bar.className="bar";
       const idx=document.createElement("div"); idx.textContent=(i+1);
@@ -92,7 +95,7 @@
         render();
       });
 
-      item.append(im, cover, bar);
+      item.append(im, cover, del, bar);
       grid.appendChild(item);
     });
   }
@@ -111,7 +114,6 @@
       aiStatus.textContent="Offline AI: กำลังโหลด…";
       if(typeof tf === "undefined") throw new Error("TensorFlow.js not loaded");
       await tf.ready();
-      // load from TFHub; GraphModel classification
       offlineModel = await tf.loadGraphModel(
         "https://tfhub.dev/google/tfjs-model/imagenet/mobilenet_v2_140_224/classification/5",
         { fromTFHub:true }
@@ -140,7 +142,7 @@
         const pred = offlineModel.predict(t);
         const probs = await pred.data();
         const idx = argmax(probs);
-        images[i].label = "cls_"+idx; // ImageNet label index (ไม่แมปเป็นห้อง เพราะไม่ได้เทรน)
+        images[i].label = "cls_"+idx; // ไม่ mapping เป็นชื่อห้อง เพราะ model เป็น ImageNet
         images[i].conf  = probs[idx] || 0;
         tf.dispose([pred,t]);
         await tf.nextFrame();
@@ -154,7 +156,6 @@
   });
 
   // ------------- Custom Model Loader (Safe Overlay) -------------
-  // เปิด overlay
   btnCustom?.addEventListener("click", ()=>{
     _jsonFile=null; _binFile=null;
     jsonName.textContent="ยังไม่ได้เลือก";
@@ -164,7 +165,6 @@
   });
   btnCloseOverlay?.addEventListener("click", ()=> overlay.classList.remove("show"));
 
-  // ผู้ใช้กดเลือก JSON/BIN (user activation safe)
   btnPickJson?.addEventListener("click", ()=>{
     pickFileNative(".json").then(f=>{
       if(f){ _jsonFile=f; jsonName.textContent=f.name; }
@@ -178,14 +178,11 @@
     });
   });
 
-  // โหลดโมเดล
   btnLoadCustom?.addEventListener("click", async ()=>{
     if(!(_jsonFile && _binFile)) return;
     try{
       customStatus.textContent="Custom Model: กำลังโหลด…";
       const modelURL = URL.createObjectURL(_jsonFile);
-      // NOTE: tf.loadLayersModel จะอ้างถึง weights ผ่าน relative URL ที่อยู่ใน .json
-      // เมื่อเปิดจาก blob: URL จะโหลดได้หาก browser map ได้—ส่วนใหญ่โอเค
       customModel = await tf.loadLayersModel(modelURL);
       customReady=true;
       customStatus.textContent="Custom Model: พร้อมใช้งาน";
@@ -199,11 +196,10 @@
       toastMsg("โหลดโมเดลไม่สำเร็จ");
     }
 
-    // ถ้ามีรูปแล้ว ให้จัดเรียงเลย
     if(customReady && images.length){
       toastMsg("กำลังเรียงด้วย Custom Model…");
       for(let i=0;i<images.length;i++){
-        const t = await dataToTensor(images[i].src, 128); // ขนาดเล็กลง = เร็วขึ้น
+        const t = await dataToTensor(images[i].src, 128);
         try{
           const pred = customModel.predict(t);
           const probs = await pred.data();
@@ -226,7 +222,6 @@
   btnExport?.addEventListener("click", async ()=>{
     if(!images.length) return toastMsg("ไม่มีภาพสำหรับส่งออก");
     const q = Math.max(0.6, Math.min(0.95, parseFloat(qualityEl?.value)||0.9));
-    // cover มาก่อน
     const covers=images.filter(x=>x.cover), rest=images.filter(x=>!x.cover);
     const list=[...covers, ...rest];
     const zip=new JSZip();
@@ -269,14 +264,12 @@
     });
   }
 
-  // File picker “user activation safe”
   function pickFileNative(accept){
     return new Promise(res=>{
       const inp=document.createElement("input");
       inp.type="file"; inp.accept=accept;
       inp.addEventListener("change", e=> res(e.target.files[0]||null), {once:true});
-      // ต้องถูกเรียกใน click handler เสมอ (เราเรียกจากปุ่ม overlay แล้ว)
-      inp.click();
+      inp.click(); // ถูกเรียกจากปุ่มใน overlay แล้ว จึงปลอดภัยต่อ user activation
     });
   }
 
