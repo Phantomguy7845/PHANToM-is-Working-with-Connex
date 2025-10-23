@@ -1,120 +1,106 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PHANToM Image Sorter — TensorFlow Aurora Edition</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>PHANToM Image Sorter — Aurora Edition</title>
 <style>
 :root{
-  --bg:#0b1220; --panel:#0f1830; --edge:#243353; --txt:#e5e7eb;
-  --muted:#9cb1d9; --pri:#6b8bff; --a1:#8bf5ff; --ok:#22c55e;
-  --warn:#f59e0b; --err:#ef4444;
+  --bg:#0b1220;--panel:#0f1830;--edge:#243353;--txt:#e5e7eb;--muted:#94a3b8;
+  --pri:#4f9eff;--ok:#22c55e;--warn:#f59e0b;--err:#ef4444;--a1:#7dd3fc;
 }
-*{box-sizing:border-box;font-family:'Prompt',system-ui,sans-serif}
-body{
-  margin:0;min-height:100vh;background:radial-gradient(1000px 700px at 15% 15%,#101b3a,#070c18 60%);
-  color:var(--txt);display:flex;flex-direction:column;
+*{box-sizing:border-box}body{
+  margin:0;background:radial-gradient(circle at 20% 20%,#101b3a,#070c18);
+  color:var(--txt);font-family:"Prompt",sans-serif;
+  display:flex;flex-direction:column;min-height:100vh;
 }
 header{
   display:flex;justify-content:space-between;align-items:center;
   padding:14px 18px;border-bottom:1px solid var(--edge);
-  background:rgba(255,255,255,.03);
+  background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
 }
-h1{margin:0;font-size:1.3rem;font-weight:700}
-main{display:grid;grid-template-columns:340px 1fr;gap:12px;padding:12px}
-@media(max-width:900px){main{grid-template-columns:1fr}}
-.card{background:rgba(255,255,255,.04);border:1px solid var(--edge);
-  border-radius:16px;padding:14px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.brand{font-weight:800;letter-spacing:.4px;font-size:1.1rem}
+small{display:block;color:var(--muted);font-weight:500;font-size:.8rem}
+main{display:grid;grid-template-columns:340px 1fr;gap:14px;padding:14px}
+@media(max-width:960px){main{grid-template-columns:1fr}}
+.card{background:rgba(255,255,255,.03);border:1px solid var(--edge);
+  border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.25);padding:14px}
+label{color:var(--muted);font-size:.9rem}
+input[type="number"],input[type="password"]{
+  background:#0e1a3a;border:1px solid var(--edge);border-radius:10px;
+  color:var(--txt);padding:8px;width:100%;
+}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 button{
-  border:none;border-radius:10px;padding:8px 14px;margin:4px;cursor:pointer;
-  font-weight:600;color:#fff;background:var(--pri);transition:.3s;
+  border:none;border-radius:10px;padding:9px 14px;font-weight:700;
+  cursor:pointer;transition:all .2s ease;
 }
-button:hover{filter:brightness(1.15)}
-button.warn{background:var(--warn);color:#000}
-button.ok{background:var(--ok)}
-button.secondary{background:#132044}
-button.ghost{background:transparent;border:1px solid var(--edge);color:var(--txt)}
-.note{color:var(--muted);font-size:.9rem;margin-top:6px}
+button:hover{transform:translateY(-1px);filter:brightness(1.1)}
+.ok{background:var(--ok);color:#001b0c}
+.ghost{background:transparent;border:1px solid var(--edge);color:var(--txt)}
+.secondary{background:var(--pri);color:white}
+.warn{background:var(--warn);color:black}
 .droper{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:10px;min-height:140px;border:2px dashed var(--edge);border-radius:14px;
-  background:#0c1633;cursor:pointer;
+  gap:10px;min-height:140px;border:2px dashed var(--edge);
+  border-radius:14px;background:#0c1633;cursor:pointer;
 }
-.droper.drag{border-color:var(--a1);box-shadow:0 0 10px var(--a1);}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-top:10px}
+.droper.drag{border-color:var(--a1);box-shadow:0 0 0 3px rgba(125,211,252,.2)}
+.grid{--w:180px;display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--w),1fr));gap:10px}
 .item{position:relative;border:1px solid var(--edge);border-radius:14px;overflow:hidden;background:#0e1a3a}
-.thumb{aspect-ratio:1/1;width:100%;object-fit:cover}
-.cover{position:absolute;right:8px;top:8px;background:rgba(0,0,0,.4);
-  border:1px solid var(--edge);padding:4px 6px;border-radius:10px;font-size:.75rem}
-.cover.active{background:linear-gradient(90deg,var(--pri),var(--a1));color:#001018}
-.toast{position:fixed;right:14px;bottom:14px;background:#0d1b36;border:1px solid var(--edge);
-  padding:10px 12px;border-radius:12px;opacity:0;transform:translateY(10px);
-  pointer-events:none;transition:.25s}
+.thumb{width:100%;aspect-ratio:1/1;object-fit:cover}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;font-size:.8rem;color:var(--muted)}
+.cover{position:absolute;top:8px;right:8px;padding:4px 6px;border-radius:8px;font-size:.75rem;background:rgba(0,0,0,.5);border:1px solid var(--edge);color:var(--txt)}
+.cover.active{background:linear-gradient(90deg,var(--pri),var(--a1));color:black;font-weight:700}
+.toast{position:fixed;right:14px;bottom:14px;padding:10px 14px;border-radius:10px;
+  background:#0d1b36;border:1px solid var(--edge);opacity:0;transform:translateY(10px);
+  transition:opacity .25s,transform .25s}
 .toast.show{opacity:1;transform:translateY(0)}
+.status{margin-top:6px;font-size:.85rem}
+#aiStatus{color:var(--warn)}#customStatus{color:var(--muted)}
 </style>
 </head>
 <body>
 <header>
-  <h1>PHANToM Image Sorter</h1>
+  <div class="brand">PHANToM Image Sorter <small>Offline AI + Heuristic + Custom</small></div>
   <div>by PHANToM</div>
 </header>
 
 <main>
   <section class="card">
-    <label class="note">โหมดการเรียง:</label>
-    <div style="display:flex;gap:10px">
-      <label><input type="radio" name="mode" value="condo" checked> คอนโด/ห้องเช่า</label>
-      <label><input type="radio" name="mode" value="house"> บ้าน</label>
-    </div>
+    <label>คุณภาพ JPG (0.6–0.95)</label>
+    <input id="quality" type="number" min="0.6" max="0.95" step="0.01" value="0.9"/>
+    <div class="status" id="aiStatus">Offline AI: ยังไม่โหลด</div>
+    <div class="status" id="customStatus">Custom Model: ยังไม่โหลด</div>
 
-    <hr style="border:none;border-top:1px solid var(--edge);margin:10px 0">
-    <label class="note">อัปโหลดรูปภาพ</label>
+    <hr style="border:none;border-top:1px solid var(--edge);margin:12px 0"/>
+
     <div id="drop" class="droper">
-      <div>ลากรูปมาวางที่นี่</div><div>หรือ</div>
-      <label for="picker" class="ghost" style="padding:8px 14px;cursor:pointer">เลือกไฟล์...</label>
-      <input id="picker" type="file" accept="image/*" multiple style="display:none">
+      <div>ลากรูปมาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</div>
+      <input id="picker" type="file" accept="image/*" multiple hidden>
     </div>
 
-    <div class="note" style="margin-top:6px">
-      <b>คำสั่งเรียง:</b> Living → Dining/Kitchen → Corridor → Bedroom → Bathroom → Balcony/View → Facilities
-    </div>
-
-    <div style="margin-top:8px">
+    <div class="btns">
       <button id="autoHeu" class="ghost">Heuristic Sort</button>
       <button id="autoAI" class="secondary">AI Sort (Offline)</button>
       <button id="autoCustom" class="ok">AI Sort (Custom)</button>
       <button id="clear" class="warn">ล้างทั้งหมด</button>
-      <button id="openTrainer" class="ghost" style="margin-top:8px;">เทรนโมเดลใหม่ (เปิด Room Trainer)</button>
     </div>
-
-    <div class="note" style="margin-top:8px">
-      <span id="aiStatus" style="color:#ef4444">Offline AI: ยังไม่โหลด</span><br>
-      <span id="customStatus" style="color:#ef4444">Custom Model: ยังไม่โหลด</span>
+    <div class="btns">
+      <button id="exportZip" class="ok" style="width:100%">Export : JPG + Rename (ZIP)</button>
     </div>
-
-    <hr style="border:none;border-top:1px solid var(--edge);margin:10px 0">
-    <button id="exportZip" class="ok">Export JPG + ZIP</button>
   </section>
 
   <section class="card">
-    <div class="note" style="padding-bottom:6px">ลากภาพสลับตำแหน่งได้ หรือกดปุ่ม Cover เพื่อเลือกภาพปก</div>
     <div id="grid" class="grid"></div>
   </section>
 </main>
 
 <div id="toast" class="toast">พร้อมทำงาน</div>
 
-<!-- JS Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.14.0/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
 <script src="js/phantom-image-sorter.js"></script>
-
-<!-- ปุ่มเปิด Room Trainer -->
-<script>
-document.getElementById("openTrainer").addEventListener("click",()=>{
-  window.open("PHANToM_Room_Trainer.html","_blank");
-});
-</script>
 </body>
 </html>
