@@ -1,187 +1,72 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PHANToM Room Trainer — Offline (ml5.js)</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PHANToM Room Trainer</title>
 <style>
-  :root{--bg:#0b1220;--panel:#111b34;--edge:#22345c;--txt:#e7ebf7;--muted:#9cb1d9;--pri:#6b8bff;--ok:#22c55e;--warn:#f59e0b}
-  *{box-sizing:border-box} body{margin:0;background:radial-gradient(900px 700px at 15% 15%,#101a38,#070c18 60%);color:var(--txt);font-family:'Prompt',system-ui,sans-serif}
-  header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--edge);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}
-  .brand{font-weight:800} .brand small{display:block;color:var(--muted)}
-  main{padding:14px;display:grid;grid-template-columns:1fr;gap:12px}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  @media(max-width:1000px){.row{grid-template-columns:1fr}}
-  .card{background:rgba(255,255,255,.03);border:1px solid var(--edge);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.3);padding:12px}
-  .help{color:var(--muted);font-size:.95rem}
-  .labels{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:10px}
-  .bucket{border:1px dashed var(--edge);border-radius:12px;padding:10px;background:#0f1a36;min-height:140px}
-  .bucket.drag{border-color:#8bf5ff}
-  .bucket h4{margin:0 0 6px} .thumbs{display:flex;flex-wrap:wrap;gap:6px}
-  .thumb{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--edge)}
-  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-  button{border:none;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer}
-  .ghost{background:#182647;border:1px solid var(--edge);color:var(--txt)}
-  .ghost:hover{background:#22355c}
-  .ok{background:var(--ok);color:#fff}
-  .warn{background:var(--warn)}
-  .toast{position:fixed;right:14px;bottom:14px;background:#0d1b36;border:1px solid var(--edge);padding:10px 12px;border-radius:12px;opacity:0;transform:translateY(10px);transition:.25s}
-  .toast.show{opacity:1;transform:translateY(0)}
-  .progress{height:10px;border-radius:999px;background:#0e1835;border:1px solid var(--edge);overflow:hidden}
-  .progress>span{display:block;height:100%;width:0;background:linear-gradient(90deg,#6b8bff,#8bf5ff);transition:width .2s}
+body{margin:0;background:#0a1020;color:#e5e7eb;font-family:system-ui,'Prompt',sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh}
+h1{margin:20px 0;text-shadow:0 0 10px #8bf5ff}
+.container{max-width:600px;width:90%;background:rgba(255,255,255,.03);padding:20px;border-radius:14px;box-shadow:0 0 20px rgba(0,0,0,.4)}
+button{padding:10px 16px;border:none;border-radius:10px;cursor:pointer;font-weight:700;margin:4px}
+#status{margin-top:10px;font-size:.9rem;color:#8bf5ff}
+input[type=file]{margin:10px 0}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/ml5@0.12.2/dist/ml5.min.js"></script>
 </head>
 <body>
-<header>
-  <div class="brand">PHANToM Room Trainer <small>Offline • MobileNet feature extractor</small></div>
-  <div>by PHANToM</div>
-</header>
-
-<main>
-  <section class="card">
-    <div class="help">ลากรูปเข้า “ถังหมวด” ที่ถูกต้อง จากนั้นกด <b>เทรนโมเดล</b> และ <b>ส่งออกโมเดล</b>. โมเดลนี้จะถูกนำไปใช้ใน Image Sorter (ปุ่ม AI Sort - Custom).</div>
-    <div class="actions">
-      <label class="ghost" style="display:inline-block;padding:10px 14px;cursor:pointer">
-        เลือกรูป (หลายไฟล์)
-        <input id="picker" type="file" accept="image/*" multiple style="display:none">
-      </label>
-      <button id="train" class="ok">เทรนโมเดล</button>
-      <button id="save" class="ghost">ส่งออกโมเดล (download)</button>
-      <button id="clear" class="warn">ล้างทั้งหมด</button>
-    </div>
-    <div class="progress" style="margin-top:10px"><span id="bar"></span></div>
-    <div id="status" class="help" style="margin-top:6px">สถานะ: กำลังโหลดโมเดลพื้นฐาน…</div>
-  </section>
-
-  <section class="card">
-    <div class="help">หมวดมาตรฐาน (ปรับแก้ได้):</div>
-    <div id="labels" class="labels"></div>
-  </section>
-</main>
-
-<div id="toast" class="toast">พร้อมทำงาน</div>
-
-<!-- libs -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.7.4"></script>
-<script src="https://cdn.jsdelivr.net/npm/ml5@0.12.2/dist/ml5.min.js"></script>
-
+<h1>PHANToM Room Trainer</h1>
+<div class="container">
+  <p>อัปโหลดภาพแต่ละหมวด เช่น LivingRoom / Kitchen / Bathroom / Balcony แล้วกด Train</p>
+  <div>
+    <input type="file" id="fileInput" multiple accept="image/*">
+    <input type="text" id="labelInput" placeholder="ชื่อหมวด เช่น LivingRoom">
+    <button id="addBtn">เพิ่มชุดภาพ</button>
+  </div>
+  <div>
+    <button id="trainBtn">เริ่มเทรน</button>
+    <button id="saveBtn">Export Model</button>
+  </div>
+  <div id="status">รอเพิ่มข้อมูล...</div>
+</div>
 <script>
-(() =>{
-  const CATS = ["living","dining","kitchen","bedroom","bathroom","balcony","corridor","exterior","facility","stairs","garage","yard","other"];
-  const $ = (s,ctx=document)=>ctx.querySelector(s);
-  const labelsEl = $("#labels"), picker=$("#picker");
-  const status=$("#status"), bar=$("#bar"), toast=$("#toast");
-  const trainBtn=$("#train"), saveBtn=$("#save"), clearBtn=$("#clear");
-  let featureExtractor, classifier, ready=false;
-  const buckets = {}; // {label: {wrapEl, data: [ImageDataURL,...]}}
+let featureExtractor, classifier;
+let added = 0;
 
-  const toastMsg=(t)=>{toast.textContent=t;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1800);};
-  const setProg=(p)=> bar.style.width = Math.max(0,Math.min(100,p))+"%";
-
-  // init UI buckets
-  CATS.forEach(label=>{
-    const box = document.createElement('div');
-    box.className = 'bucket';
-    box.innerHTML = `<h4>${label}</h4><div class="thumbs"></div>`;
-    labelsEl.appendChild(box);
-    buckets[label] = {wrap: box.querySelector('.thumbs'), data: []};
-
-    // dnd
-    box.addEventListener('dragover', e=>{e.preventDefault();box.classList.add('drag');});
-    box.addEventListener('dragleave', ()=>box.classList.remove('drag'));
-    box.addEventListener('drop', e=>{
-      e.preventDefault(); box.classList.remove('drag');
-      handleFiles(e.dataTransfer.files, label);
-    });
+window.onload = ()=>{
+  featureExtractor = ml5.featureExtractor('MobileNet', ()=>{
+    log('MobileNet Loaded ✓');
+    classifier = featureExtractor.classification();
   });
+}
 
-  // load base model
-  async function loadBase(){
-    try{
-      status.textContent = "สถานะ: กำลังโหลด MobileNet feature extractor…";
-      featureExtractor = await ml5.featureExtractor('MobileNet', {numLabels: CATS.length}, ()=>{
-        ready = true;
-        classifier = featureExtractor.classification();
-        status.textContent = "สถานะ: พร้อมเทรน (ลากรูปใส่ถังหมวด หรือเลือกไฟล์)";
-        toastMsg("MobileNet พร้อมใช้งาน ✅");
-      });
-    }catch(e){
-      console.error(e);
-      status.innerHTML = 'สถานะ: โหลดโมเดลไม่สำเร็จ';
-    }
-  }
-
-  function handleFiles(files, forceLabel=null){
-    const arr = Array.from(files||[]);
-    if(!arr.length){ toastMsg('ไม่มีไฟล์'); return; }
-    arr.forEach(file=>{
-      if(!file.type.startsWith('image/')) return;
-      const fr = new FileReader();
-      fr.onload = e=>{
-        const url = e.target.result;
-        const label = forceLabel || prompt('หมวดของภาพนี้คืออะไร?\n' + CATS.join(', '), 'living') || 'other';
-        const L = CATS.includes(label)? label : 'other';
-        addExample(url, L);
-      };
-      fr.readAsDataURL(file);
-    });
-  }
-
-  function addExample(dataURL, label){
+document.getElementById('addBtn').onclick = ()=>{
+  const files = document.getElementById('fileInput').files;
+  const label = document.getElementById('labelInput').value.trim();
+  if(!label || files.length===0){log('กรุณาเลือกไฟล์และกรอกชื่อหมวด');return;}
+  for(let f of files){
     const img = new Image();
-    img.src = dataURL; img.className = 'thumb'; img.draggable = true;
-    img.addEventListener('contextmenu', (e)=>{e.preventDefault(); removeExample(label, dataURL, img);});
-    buckets[label].wrap.appendChild(img);
-    buckets[label].data.push(dataURL);
-
-    const hidden = new Image(); hidden.src = dataURL;
-    hidden.onload = ()=>{ classifier.addImage(hidden, label, ()=>{}); };
+    img.src = URL.createObjectURL(f);
+    img.onload = ()=>classifier.addImage(img,label);
   }
+  added += files.length;
+  log(`เพิ่มภาพ ${files.length} ภาพ เข้า label "${label}" แล้ว`);
+}
 
-  function removeExample(label, dataURL, imgEl){
-    buckets[label].data = buckets[label].data.filter(x=>x!==dataURL);
-    imgEl.remove();
-    toastMsg(`ลบตัวอย่างจาก ${label}`);
-  }
-
-  picker.addEventListener('change', e=> handleFiles(e.target.files));
-  document.addEventListener('dragover', e=>e.preventDefault());
-  document.addEventListener('drop', e=>e.preventDefault());
-
-  // train
-  trainBtn.addEventListener('click', ()=>{
-    if(!ready){ toastMsg('โมเดลยังไม่พร้อม'); return; }
-    const total = Object.values(buckets).reduce((s,b)=> s + b.data.length, 0);
-    if(!total){ toastMsg('ยังไม่มีตัวอย่าง'); return; }
-    status.textContent = 'สถานะ: กำลังเทรน…';
-    setProg(5);
-    classifier.train((lossValue)=>{
-      if(lossValue == null){
-        setProg(100);
-        status.textContent = 'สถานะ: เทรนเสร็จสิ้น ✅';
-        toastMsg('Train เสร็จแล้ว', true);
-        setTimeout(()=>setProg(0),800);
-      }else{
-        setProg( Math.max(10, 100 - Math.min(95, lossValue*100)) );
-      }
-    });
+document.getElementById('trainBtn').onclick = ()=>{
+  log('กำลังเทรน...');
+  classifier.train(loss=>{
+    if(loss===null){log('✅ เทรนเสร็จสิ้น พร้อม Export');}
+    else log('Loss: '+loss.toFixed(4));
   });
+}
 
-  // save
-  saveBtn.addEventListener('click', ()=>{
-    if(!ready){ toastMsg('โมเดลยังไม่พร้อม'); return; }
-    classifier.save(); // download model.json + weights.bin
-    toastMsg('กำลังส่งออกโมเดล…');
-  });
+document.getElementById('saveBtn').onclick = ()=>{
+  classifier.save();
+  log('บันทึกโมเดลเรียบร้อย ✓');
+}
 
-  clearBtn.addEventListener('click', ()=>{
-    Object.values(buckets).forEach(b=>{ b.data=[]; b.wrap.innerHTML=''; });
-    status.textContent = 'สถานะ: เคลียร์ข้อมูลแล้ว';
-    setProg(0);
-  });
-
-  loadBase();
-})();
+function log(msg){document.getElementById('status').innerText=msg;}
 </script>
 </body>
 </html>
