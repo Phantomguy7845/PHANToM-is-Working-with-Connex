@@ -11,24 +11,24 @@
 <body>
   <header class="topbar">
     <div class="brand">
-      <div class="logo">PHANToM</div>
-      <small>Report Counter — Main/Sub • Count & Text • Keyboard • Autosave • SUM Rules • Export/Import</small>
+      <div class="logo aurora">PHANToM</div>
+      <small>Report Counter — Multi-level • Count/Text • Keyboard • Autosave • SUM Rules • Export/Import</small>
     </div>
 
     <div class="actions">
       <button id="themeToggle" class="btn ghost" title="สลับธีม (Ctrl+L)">🌗</button>
       <input id="userName" type="text" placeholder="ชื่อผู้ใช้ (เช่น Stang)" />
       <input id="reportDate" type="date" />
-      <button id="copyReport" class="btn ok" title="คัดลอกรายงาน (Ctrl+C)">📄 Copy Report</button>
+      <button id="copyReport" class="btn ok" title="คัดลอกรายงาน (Ctrl+C)">📋 Copy</button>
 
-      <button id="manageSum" class="btn ghost" title="จัดการกฎรวมผล (SUM Rules)">⚙️ Manage SUM</button>
-      <button id="exportSettings" class="btn ghost" title="Export การตั้งค่าเป็น .txt">⤓ Export</button>
-      <label class="btn ghost import-label" title="Import การตั้งค่าจาก .txt">
-        ⤒ Import<input id="importSettings" type="file" accept=".txt" hidden>
+      <button id="manageSum" class="btn ghost" title="จัดการกฎรวมผล (SUM Rules)">⚙️ SUM</button>
+      <button id="exportSettings" class="btn ghost" title="บันทึกการตั้งค่าเป็น .txt">⤓ Export</button>
+      <label class="btn ghost import-label" title="นำเข้าการตั้งค่าจาก .txt">
+        ⤒ Import <input id="importSettings" type="file" accept=".txt" hidden>
       </label>
 
-      <button id="resetCounts" class="btn warn" title="ล้างเฉพาะค่าตัวเลข/ข้อความ (คงโครงสร้าง)">รีเซ็ตค่าประจำวัน</button>
-      <button id="resetAll" class="btn danger" title="ล้างทุกอย่าง (รวมโครงสร้าง & กฎ SUM)">ล้างทั้งหมด</button>
+      <button id="resetCounts" class="btn warn" title="ล้างเฉพาะค่าประจำวัน">รีเซ็ตวันนี้</button>
+      <button id="resetAll" class="btn danger" title="ล้างทุกอย่าง (รวมกฎ SUM)">ล้างทั้งหมด</button>
     </div>
   </header>
 
@@ -40,11 +40,15 @@
         <button id="addMain" class="btn">เพิ่ม</button>
       </div>
       <details class="help-block">
-        <summary>วิธีใช้อย่างไว</summary>
-        <div class="help">
-          <b>คีย์บอร์ด:</b>
-          ↑/↓/←/→ เลือก • +/− ปรับค่า (Count) • Enter เพิ่มบรรทัด (Text) • Ctrl+C คัดลอก • Ctrl+S บันทึก • Ctrl+L สลับธีม
-        </div>
+        <summary>⌨️ คีย์ลัดและการใช้งาน</summary>
+        <ul class="help">
+          <li>↑ / ↓ / ← / → : เคลื่อนย้ายระหว่างหัวข้อ</li>
+          <li>+ / − : เพิ่ม-ลดค่า Count</li>
+          <li>Enter : เพิ่มบรรทัดใน Text Mode</li>
+          <li>Ctrl + C : คัดลอกรายงาน</li>
+          <li>Ctrl + S : บันทึก</li>
+          <li>Ctrl + L : สลับธีม</li>
+        </ul>
       </details>
     </aside>
 
@@ -62,21 +66,23 @@
         <button id="closeSum" class="icon" value="cancel" type="button">✖</button>
       </header>
       <section class="modal-body">
-        <div class="sum-help">
-          รายการ “สรุป” จะพิมพ์ท้ายรายงานภายใต้บรรทัด <code>//////////SUM//////////</code><br>
-          แต่ละรายการกำหนดได้ว่าจะ “รวมค่าจากหัวข้อหลัก” ใดบ้าง (รวมข้ามหมวดได้)
-        </div>
+        <p class="sum-help">
+          รายการ “สรุปผล” จะอยู่ท้ายรายงานภายใต้บรรทัด
+          <code>//////////SUM//////////</code><br />
+          แต่ละรายการสามารถเลือก “รวมค่าจากหัวข้อหลัก” ได้อิสระ (รวมข้ามหมวดได้)
+        </p>
+
         <div id="sumList" class="sum-list"></div>
 
         <div class="row add-sum-row">
           <input id="sumNewLabel" type="text" placeholder="ชื่อสรุป เช่น โทรรวม / ติดต่อได้ / อัปเดท" />
-          <input id="sumNewSuffix" type="text" placeholder="หน่วยเสริม เช่น ห้อง (เว้นว่างได้)" />
-          <button id="sumAdd" type="button" class="btn">เพิ่มรายการสรุป</button>
+          <input id="sumNewSuffix" type="text" placeholder="หน่วย เช่น ห้อง (ไม่บังคับ)" />
+          <button id="sumAdd" type="button" class="btn ok">เพิ่ม</button>
         </div>
 
         <div class="sum-actions">
           <button id="sumDefault" type="button" class="btn ghost">รีเซ็ตค่าเริ่มต้น</button>
-          <button id="sumSave" type="button" class="btn ok">บันทึกกฎ SUM</button>
+          <button id="sumSave" type="button" class="btn ok">💾 บันทึก</button>
         </div>
       </section>
     </form>
