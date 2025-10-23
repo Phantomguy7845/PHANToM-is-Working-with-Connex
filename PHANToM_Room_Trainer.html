@@ -1,64 +1,215 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>PHANToM Room Trainer — TensorFlow Aurora Edition</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>PHANToM Room Trainer — Aurora TF Edition</title>
 <style>
 :root{
-  --bg:#0b1220; --panel:#0f1830; --edge:#243353; --txt:#e5e7eb;
-  --muted:#9cb1d9; --pri:#6b8bff; --a1:#8bf5ff; --ok:#22c55e;
-  --warn:#f59e0b; --err:#ef4444;
+  --bg:#0b1220;--panel:#0f1830;--edge:#243353;--txt:#e5e7eb;--muted:#94a3b8;
+  --pri:#4f9eff;--ok:#22c55e;--warn:#f59e0b;--err:#ef4444;--a1:#7dd3fc;
 }
-*{box-sizing:border-box;font-family:'Prompt',system-ui,sans-serif}
-body{
+*{box-sizing:border-box} body{
   margin:0;min-height:100vh;background:radial-gradient(1000px 700px at 15% 15%,#101b3a,#070c18 60%);
-  color:var(--txt);display:flex;flex-direction:column;align-items:center;padding:20px;
+  color:var(--txt);font-family:"Prompt",system-ui,Segoe UI,Roboto,sans-serif;
+  display:flex;flex-direction:column;gap:16px;padding:16px
 }
-h1{font-size:1.6rem;margin-bottom:8px;text-shadow:0 0 10px rgba(139,245,255,.3);}
-p{color:var(--muted);margin:0 0 18px;text-align:center;max-width:600px}
-.card{
-  background:rgba(255,255,255,.04);border:1px solid var(--edge);
-  border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,.25);
-  padding:20px;max-width:900px;width:100%;
+header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 12px;border:1px solid var(--edge);border-radius:12px;
+  background:rgba(255,255,255,.03)
 }
+h1{font-size:1.2rem;margin:0}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
 button{
-  border:none;border-radius:10px;padding:10px 14px;margin:4px;
-  cursor:pointer;font-weight:600;color:#fff;background:var(--pri);
-  transition:.3s;
+  border:none;border-radius:10px;padding:9px 14px;font-weight:700;cursor:pointer;
+  transition:transform .15s ease, filter .2s ease;
 }
-button:hover{filter:brightness(1.15)}
-button.warn{background:var(--warn);color:#000}
-button.ok{background:var(--ok)}
-button.secondary{background:#132044}
-.note{color:var(--muted);font-size:.9rem;margin-top:6px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px}
-.item{border:1px solid var(--edge);border-radius:10px;padding:6px;text-align:center;background:#0d1733}
-.thumb{width:100%;border-radius:6px;aspect-ratio:1/1;object-fit:cover}
-.toast{position:fixed;right:14px;bottom:14px;background:#0d1b36;border:1px solid var(--edge);
-  padding:10px 12px;border-radius:12px;opacity:0;transform:translateY(10px);
-  pointer-events:none;transition:.25s}
-.toast.show{opacity:1;transform:translateY(0)}
+button:hover{transform:translateY(-1px);filter:brightness(1.05)}
+.ok{background:var(--ok);color:#001b0c}
+.ghost{background:transparent;border:1px solid var(--edge);color:var(--txt)}
+.secondary{background:var(--pri);color:white}
+.warn{background:var(--warn);color:black}
+.card{
+  background:rgba(255,255,255,.03);border:1px solid var(--edge);border-radius:16px;
+  padding:14px;box-shadow:0 8px 30px rgba(0,0,0,.25)
+}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.item{position:relative;border:1px solid var(--edge);border-radius:12px;background:#0e1a3a;padding:8px}
+.thumb{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:8px}
+.bar{display:flex;justify-content:space-between;align-items:center;font-size:.85rem;color:var(--muted);margin-top:6px}
+.del{position:absolute;top:8px;left:8px;width:26px;height:26px;border-radius:999px;border:1px solid var(--edge);background:rgba(239,68,68,.85);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:.8rem}
+.section{margin-bottom:14px}
+.note{color:var(--muted);font-size:.9rem}
 </style>
 </head>
 <body>
-<h1>PHANToM Room Trainer</h1>
-<p>เทรนโมเดลจำแนกรูปภาพห้อง (Living, Bedroom, Bathroom, Kitchen ฯลฯ) ด้วย TensorFlow.js<br>
-สามารถส่งออกโมเดลและนำไปใช้กับ PHANToM Image Sorter ได้ทันที</p>
-
-<div class="card">
-  <div style="margin-bottom:10px">
+<header>
+  <h1>PHANToM Room Trainer</h1>
+  <div class="btns">
+    <a href="PHANToM_Image_Sorter.html" class="ghost" style="text-decoration:none;display:inline-block">⬅ กลับไป Sorter</a>
     <button id="addClass" class="secondary">เพิ่มหมวดใหม่</button>
     <button id="train" class="ok">เทรนโมเดล</button>
     <button id="export" class="warn">ส่งออกโมเดล</button>
   </div>
-  <div id="classes"></div>
+</header>
+
+<section class="card">
+  <div class="note">เพิ่มหมวด (เช่น living, bedroom, kitchen, bathroom, balcony, corridor ฯลฯ) แล้วอัปโหลดรูปเข้าแต่ละหมวด จากนั้นกด “เทรนโมเดล” และ “ส่งออกโมเดล” เพื่อใช้งานใน Sorter (AI Sort: Custom)</div>
+</section>
+
+<section id="classes" class="card"></section>
+
+<section class="card">
   <div id="progress" class="note">สถานะ: รอเริ่มเทรน</div>
-</div>
+</section>
 
-<div id="toast" class="toast">พร้อมทำงาน</div>
+<div id="toast" class="card" style="position:fixed;right:14px;bottom:14px;padding:10px 14px;opacity:0;transform:translateY(10px);transition:.25s;background:#0d1b36">พร้อมทำงาน</div>
 
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
-<script src="js/phantom-room-trainer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.14.0/dist/tf.min.js"></script>
+<script>
+const $=s=>document.querySelector(s); const $$=s=>Array.from(document.querySelectorAll(s));
+const toastEl=$("#toast"), clsWrap=$("#classes"), progress=$("#progress");
+let classData={}; let model=null;
+
+function toast(t,ok=false){toastEl.textContent=t;toastEl.style.background=ok?"#153a1f":"#0d1b36";toastEl.style.opacity=1;toastEl.style.transform="translateY(0)";setTimeout(()=>{toastEl.style.opacity=0;toastEl.style.transform="translateY(10px)";},1500);}
+
+// เพิ่มหมวดใหม่
+$("#addClass").onclick=()=>{
+  const name=prompt("ชื่อหมวด (เช่น living, kitchen, bedroom)");
+  if(!name) return;
+  if(classData[name]) return toast("มีหมวดนี้แล้ว");
+  classData[name]=[];
+  render();
+};
+
+// เลือกภาพเข้าแต่ละหมวด
+function pickImgs(k){
+  const inp=document.createElement("input");
+  inp.type="file"; inp.accept="image/*"; inp.multiple=true;
+  inp.onchange=e=>{
+    Array.from(e.target.files).forEach(f=>{
+      const r=new FileReader();
+      r.onload=v=>{ classData[k].push(v.target.result); render(); };
+      r.readAsDataURL(f);
+    });
+  };
+  inp.click();
+}
+
+// ลบรูป
+function removeImage(k, idx){
+  classData[k].splice(idx,1);
+  render();
+}
+
+// ลบหมวด
+function removeClass(k){
+  if(confirm(`ลบหมวด ${k}?`)){
+    delete classData[k];
+    render();
+  }
+}
+
+// แสดงภาพแต่ละหมวด
+function render(){
+  clsWrap.innerHTML="";
+  Object.keys(classData).forEach(k=>{
+    const box=document.createElement("div"); box.className="section";
+    box.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <h3 style="margin:0">${k}</h3>
+        <div class="btns">
+          <button class="ghost add">เพิ่มรูป</button>
+          <button class="warn del-class">ลบหมวด</button>
+        </div>
+      </div>
+      <div class="grid"></div>`;
+    const grid=box.querySelector(".grid");
+    box.querySelector(".add").onclick=()=>pickImgs(k);
+    box.querySelector(".del-class").onclick=()=>removeClass(k);
+    classData[k].forEach((src,i)=>{
+      const item=document.createElement("div"); item.className="item";
+      const img=document.createElement("img"); img.src=src; img.className="thumb";
+      const del=document.createElement("button"); del.className="del"; del.textContent="🗑";
+      del.onclick=()=>removeImage(k,i);
+      const bar=document.createElement("div"); bar.className="bar";
+      bar.innerHTML=`<span>#${i+1}</span><span class="note">${k}</span>`;
+      item.append(img,del,bar); grid.append(item);
+    });
+    clsWrap.append(box);
+  });
+}
+
+// เทรนโมเดล
+$("#train").onclick=async()=>{
+  if(Object.keys(classData).length<2){return toast("เพิ่มหมวดอย่างน้อย 2 หมวด");}
+  progress.textContent="กำลังเตรียมข้อมูล…";
+
+  const {xs, ys, labels}=await buildDataset();
+  model=createModel(labels.length);
+  model.compile({optimizer:'adam',loss:'categoricalCrossentropy',metrics:['accuracy']});
+  progress.textContent="เริ่มเทรน...";
+  await model.fit(xs, ys, {
+    epochs:12, batchSize:8, shuffle:true,
+    callbacks:{
+      onEpochEnd:(ep,logs)=>{
+        const acc=(logs.acc||logs.accuracy||0)*100;
+        progress.textContent=`Epoch ${ep+1}/12 — Loss ${logs.loss.toFixed(4)} Acc ${acc.toFixed(1)}%`;
+      }
+    }
+  });
+  xs.dispose(); ys.dispose();
+  progress.textContent="✅ เทรนเสร็จสิ้น พร้อมส่งออก";
+  toast("เทรนเสร็จสิ้น",true);
+};
+
+// ส่งออกโมเดล
+$("#export").onclick=async()=>{
+  if(!model) return toast("ยังไม่มีโมเดลเทรน");
+  await model.save('downloads://PHANToM_Room_Model');
+  toast("บันทึกโมเดลแล้ว",true);
+};
+
+// Dataset helpers
+async function buildDataset(){
+  let dataX=[], dataY=[], labels=Object.keys(classData);
+  for(let i=0;i<labels.length;i++){
+    const name=labels[i];
+    for(let imgData of classData[name]){
+      const tensor=await imgToTensor(imgData,128);
+      dataX.push(tensor);
+      dataY.push(i);
+    }
+  }
+  const xs=tf.concat(dataX);
+  const ys=tf.oneHot(tf.tensor1d(dataY,'int32'),labels.length);
+  dataX.forEach(t=>t.dispose());
+  return {xs,ys,labels};
+}
+
+function imgToTensor(data,size=128){
+  return new Promise(res=>{
+    const im=new Image(); im.src=data;
+    im.onload=()=>{
+      const t=tf.tidy(()=>tf.image.resizeBilinear(tf.browser.fromPixels(im),[size,size])
+        .toFloat().div(255).expandDims(0));
+      res(t);
+    };
+  });
+}
+
+function createModel(classes){
+  const m=tf.sequential();
+  m.add(tf.layers.conv2d({inputShape:[128,128,3],filters:16,kernelSize:3,activation:'relu'}));
+  m.add(tf.layers.maxPooling2d({poolSize:2}));
+  m.add(tf.layers.conv2d({filters:32,kernelSize:3,activation:'relu'}));
+  m.add(tf.layers.maxPooling2d({poolSize:2}));
+  m.add(tf.layers.flatten());
+  m.add(tf.layers.dense({units:96,activation:'relu'}));
+  m.add(tf.layers.dropout({rate:0.2}));
+  m.add(tf.layers.dense({units:classes,activation:'softmax'}));
+  return m;
+}
+</script>
 </body>
 </html>
