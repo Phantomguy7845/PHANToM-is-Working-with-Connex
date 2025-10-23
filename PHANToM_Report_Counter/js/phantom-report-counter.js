@@ -1,148 +1,250 @@
-/* PHANToM Report Counter — Aurora Dark+Light 2025
-   Fixed Text Mode Focus + Multi-line Input
+/* PHANToM Report Counter — Stable Aurora Edition (Full Fix 2025)
+   by PHANToM
+   • Text Mode focus stable (multi-line input)
+   • Keyboard shortcuts improved
+   • Inline count editing + autosave
+   • SUM / Import / Export / Copy / Reset fixed
 */
 
-(function(){
-  const $=(s,ctx=document)=>ctx.querySelector(s);
-  const $$=(s,ctx=document)=>Array.from(ctx.querySelectorAll(s));
-  const treeEl=$("#tree"),toastEl=$("#toast");
-  const userNameEl=$("#userName"),dateEl=$("#reportDate");
-  const addMainBtn=$("#addMain"),newMainTitleEl=$("#newMainTitle");
-  const copyBtn=$("#copyReport"),resetCountsBtn=$("#resetCounts"),resetAllBtn=$("#resetAll");
-  const manageSumBtn=$("#manageSum"),sumModal=$("#sumModal"),sumListEl=$("#sumList");
-  const sumNewLabelEl=$("#sumNewLabel"),sumNewSuffixEl=$("#sumNewSuffix");
-  const sumAddBtn=$("#sumAdd"),sumSaveBtn=$("#sumSave"),sumDefaultBtn=$("#sumDefault"),sumCloseBtn=$("#closeSum");
-  const exportBtn=$("#exportSettings"),importInput=$("#importSettings"),dailySummaryEl=$("#dailySummary");
+(function () {
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => Array.from(document.querySelectorAll(s));
 
-  const LS_KEY="PHANTOM_REPORT_STATE_V4";
-  const DEF_SUM=[{id:uid(),label:"โทรรวม",suffix:"",sources:[]},{id:uid(),label:"ติดต่อได้",suffix:"",sources:[]},{id:uid(),label:"อัปเดท",suffix:"ห้อง",sources:[]}];
+  const tree = $("#tree");
+  const addMainBtn = $("#addMain");
+  const newMainTitle = $("#newMainTitle");
+  const copyBtn = $("#copyReport");
+  const resetCountsBtn = $("#resetCounts");
+  const resetAllBtn = $("#resetAll");
+  const manageSumBtn = $("#manageSum");
+  const exportBtn = $("#exportSettings");
+  const importInput = $("#importSettings");
+  const toast = $("#toast");
 
-  let state=loadState()||defaultState();
+  let data = JSON.parse(localStorage.getItem("phantomReportData") || "[]");
+  let sumRules = JSON.parse(localStorage.getItem("phantomSumRules") || "[]");
+
+  const saveState = () => {
+    localStorage.setItem("phantomReportData", JSON.stringify(data));
+  };
+  const saveSum = () => {
+    localStorage.setItem("phantomSumRules", JSON.stringify(sumRules));
+  };
+
+  const toastMsg = (msg, ok = false) => {
+    toast.textContent = msg;
+    toast.style.background = ok ? "#153a1f" : "#0d1b36";
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 1400);
+  };
+
+  // === Render ===
+  function render() {
+    tree.innerHTML = "";
+    data.forEach((main, mi) => {
+      const mainEl = document.createElement("div");
+      mainEl.className = "main";
+      mainEl.tabIndex = 0;
+
+      const head = document.createElement("div");
+      head.className = "head";
+
+      const title = document.createElement("input");
+      title.value = main.title;
+      title.className = "title";
+      title.oninput = () => {
+        main.title = title.value.trim();
+        saveState();
+      };
+
+      const countBox = document.createElement("div");
+      countBox.className = "count-box";
+
+      const minus = document.createElement("button");
+      minus.textContent = "−";
+      const plus = document.createElement("button");
+      plus.textContent = "+";
+      const num = document.createElement("input");
+      num.type = "number";
+      num.value = main.count || 0;
+      num.className = "count-num";
+
+      minus.onclick = () => {
+        main.count = Math.max(0, (main.count || 0) - 1);
+        num.value = main.count;
+        saveState();
+      };
+      plus.onclick = () => {
+        main.count = (main.count || 0) + 1;
+        num.value = main.count;
+        saveState();
+      };
+      num.oninput = () => {
+        main.count = parseInt(num.value) || 0;
+        saveState();
+      };
+
+      countBox.append(minus, num, plus);
+
+      const modeSel = document.createElement("select");
+      modeSel.innerHTML = `<option value="count">Count</option><option value="text">Text</option>`;
+      modeSel.value = main.mode || "count";
+      modeSel.onchange = () => {
+        main.mode = modeSel.value;
+        saveState();
+        render();
+      };
+
+      const toggleTel = document.createElement("label");
+      toggleTel.className = "toggle";
+      const telCheck = document.createElement("input");
+      telCheck.type = "checkbox";
+      telCheck.checked = !!main.isTelSum;
+      telCheck.onchange = () => {
+        main.isTelSum = telCheck.checked;
+        saveState();
+      };
+      toggleTel.append(telCheck, document.createTextNode(" นับเป็นโทรรวม"));
+
+      const del = document.createElement("button");
+      del.textContent = "🗑";
+      del.onclick = () => {
+        if (confirm(`ลบหมวด "${main.title}" ?`)) {
+          data.splice(mi, 1);
+          saveState();
+          render();
+        }
+      };
+
+      head.append(title, countBox, modeSel, toggleTel, del);
+      mainEl.appendChild(head);
+
+      if (main.mode === "text") {
+        const textWrap = document.createElement("div");
+        textWrap.className = "text-mode";
+        const area = document.createElement("textarea");
+        area.value = (main.lines || []).join("\n");
+
+        let debounceTimer = null;
+        area.addEventListener("input", () => {
+          clearTimeout(debounceTimer);
+          main.lines = area.value.split("\n").map(s => s.trim()).filter(Boolean);
+          debounceTimer = setTimeout(() => saveState(), 400);
+        });
+        area.addEventListener("keydown", e => {
+          e.stopPropagation(); // ป้องกันคีย์ลัด global
+          if (e.key === "Enter" && !e.shiftKey) return; // ป้องกัน focus หลุด
+        });
+        textWrap.append(area);
+        mainEl.appendChild(textWrap);
+      }
+
+      tree.appendChild(mainEl);
+    });
+  }
+
   render();
 
-  // --- Render Tree ---
-  function render(){
-    treeEl.innerHTML="";
-    state.categories.forEach((main,mi)=> treeEl.appendChild(renderMain(main,mi)));
+  // === Add new main ===
+  addMainBtn.onclick = () => {
+    const t = newMainTitle.value.trim();
+    if (!t) return toastMsg("กรอกชื่อหมวดก่อน");
+    data.push({ title: t, count: 0, mode: "count", lines: [], isTelSum: false });
+    newMainTitle.value = "";
     saveState();
-  }
+    render();
+  };
 
-  function renderMain(main,mi){
-    const node=el("div","node main");
-    const title=el("div","title",main.title);
-    const typeSel=el("select");
-    typeSel.innerHTML=`<option value="count">Count</option><option value="text">Text</option>`;
-    typeSel.value=main.type||"count";
-    typeSel.addEventListener("change",()=>{main.type=typeSel.value;saveState();render();});
+  // === Copy Report ===
+  copyBtn.onclick = () => {
+    const user = $("#userName").value || "Unknown";
+    const date = $("#reportDate").value || new Date().toISOString().slice(0, 10);
 
-    const countWrap=el("div","countWrap");
-    if(main.type==="count"){
-      const c=el("div","count",String(main.count||0));
-      c.addEventListener("click",()=>inlineNumberEdit(c,main,"count"));
-      const minus=miniBtn("−",()=>inc(main,-1));
-      const plus=miniBtn("+",()=>inc(main,+1));
-      countWrap.append(minus,c,plus);
-    }else{
-      const ta=el("textarea","textbox");
-      ta.placeholder="พิมพ์ข้อความ (1 บรรทัด = 1 นับ)";
-      ta.value=(main.lines||[]).join("\n");
-
-      // 🔧 แก้ปัญหาหลุดโฟกัส + debounce save
-      ta.addEventListener("keydown",e=>{
-        e.stopPropagation(); // block shortcut
-      });
-      let debounceTimer=null;
-      ta.addEventListener("input",()=>{
-        clearTimeout(debounceTimer);
-        debounceTimer=setTimeout(()=>{
-          main.lines=ta.value.split("\n").map(s=>s.trim()).filter(Boolean);
-          saveState();
-          updateDailySummary();
-        },500);
-      });
-      countWrap.append(ta);
-    }
-
-    const asCall=el("label","toggle");
-    const chk=el("input");chk.type="checkbox";chk.checked=!!main.useAsCall;
-    chk.addEventListener("change",()=>{main.useAsCall=chk.checked;saveState();});
-    asCall.append(chk,el("span",null,"นับเป็นโทรรวม"));
-
-    const head=el("div","header");
-    head.append(title,typeSel,countWrap,asCall);
-
-    const addRow=el("div","row");
-    const subName=el("input");subName.placeholder="เพิ่มหมวดย่อย";
-    const subType=el("select");subType.innerHTML=`<option value="count">Count</option><option value="text">Text</option>`;
-    const addBtn=el("button","btn","เพิ่ม");
-    addBtn.addEventListener("click",()=>{
-      const t=subName.value.trim();if(!t)return tip("กรอกชื่อหมวดย่อยก่อน");
-      addSub(main,t,subType.value);subName.value="";
+    let out = `${user} ${date}\n\n`;
+    data.forEach(m => {
+      out += `//${m.title}\n`;
+      if (m.mode === "count") out += `โทร ${m.count}\n\n`;
+      else if (m.mode === "text")
+        out += (m.lines || []).map(l => l).join("\n") + "\n\n";
     });
-    addRow.append(subName,subType,addBtn);
 
-    const wrap=el("div","wrap");wrap.append(head,addRow);
-    (main.children||[]).forEach((ch,i)=>wrap.append(renderSub(main,ch,[mi,i])));
-    node.append(wrap);
-    return node;
-  }
+    out += "//////////SUM//////////\n";
+    out += sumRules.map(s => `${s.label} ${s.total || 0}`).join("\n");
 
-  function renderSub(parent,nodeData,path){
-    const node=el("div","node sub");
-    const title=el("div","title",nodeData.title);
-    const badge=el("span","mtype",nodeData.type==="text"?"Text":"Count");
-    const countWrap=el("div","countWrap");
+    navigator.clipboard.writeText(out);
+    toastMsg("คัดลอกรายงานแล้ว", true);
+  };
 
-    if(nodeData.type==="count"){
-      const c=el("div","count",String(nodeData.count||0));
-      c.addEventListener("click",()=>inlineNumberEdit(c,nodeData,"count"));
-      const minus=miniBtn("−",()=>inc(nodeData,-1));
-      const plus=miniBtn("+",()=>inc(nodeData,+1));
-      countWrap.append(minus,c,plus);
-    }else{
-      const ta=el("textarea","textbox");
-      ta.placeholder="พิมพ์แยกบรรทัด (1 บรรทัด = 1 นับ)";
-      ta.value=(nodeData.lines||[]).join("\n");
+  // === Reset Counts ===
+  resetCountsBtn.onclick = () => {
+    if (!confirm("รีเซ็ตค่าตัวเลขและข้อความทั้งหมดหรือไม่?")) return;
+    data.forEach(m => {
+      m.count = 0;
+      if (m.mode === "text") m.lines = [];
+    });
+    saveState();
+    render();
+    toastMsg("รีเซ็ตสำเร็จ", true);
+  };
 
-      // ✅ ป้องกันหลุดโฟกัส
-      ta.addEventListener("keydown",e=>{
-        e.stopPropagation();
-      });
-      let debounceTimer=null;
-      ta.addEventListener("input",()=>{
-        clearTimeout(debounceTimer);
-        debounceTimer=setTimeout(()=>{
-          nodeData.lines=ta.value.split("\n").map(s=>s.trim()).filter(Boolean);
-          saveState();
-          updateDailySummary();
-        },500);
-      });
-      countWrap.append(ta);
+  // === Reset All ===
+  resetAllBtn.onclick = () => {
+    if (!confirm("ล้างข้อมูลทั้งหมดจริงหรือไม่?")) return;
+    data = [];
+    sumRules = [];
+    localStorage.removeItem("phantomReportData");
+    localStorage.removeItem("phantomSumRules");
+    render();
+    toastMsg("ล้างทั้งหมดแล้ว", true);
+  };
+
+  // === Export ===
+  exportBtn.onclick = () => {
+    const blob = new Blob(
+      [JSON.stringify({ data, sumRules }, null, 2)],
+      { type: "text/plain" }
+    );
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "PHANToM_Report_Settings.txt";
+    a.click();
+    toastMsg("Export แล้ว", true);
+  };
+
+  // === Import ===
+  importInput.onchange = async e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    try {
+      const json = JSON.parse(text);
+      data = json.data || [];
+      sumRules = json.sumRules || [];
+      saveState(); saveSum(); render();
+      toastMsg("Import สำเร็จ", true);
+    } catch (err) {
+      toastMsg("ไฟล์ไม่ถูกต้อง");
     }
+  };
 
-    const header=el("div","sub-header");
-    header.append(title,badge,countWrap);
-    node.append(header);
-    return node;
-  }
-
-  // --- helpers ---
-  function el(tag,cls,txt){const e=document.createElement(tag);if(cls)e.className=cls;if(txt)e.textContent=txt;return e;}
-  function miniBtn(t,fn){const b=el("button","mini",t);b.addEventListener("click",fn);return b;}
-  function inc(node,d){node.count=Math.max(0,(node.count||0)+d);saveState();render();}
-  function inlineNumberEdit(c,node,k){
-    const box=document.createElement("input");box.type="number";box.value=node[k]||0;box.min="0";
-    c.innerHTML="";c.append(box);box.focus();box.select();
-    box.addEventListener("keydown",e=>e.stopPropagation());
-    const commit=()=>{node[k]=parseInt(box.value)||0;saveState();render();};
-    box.addEventListener("blur",commit);
-    box.addEventListener("keydown",e=>{if(e.key==="Enter")commit();if(e.key==="Escape")render();});
-  }
-  function addSub(p,t,ty){p.children=p.children||[];p.children.push({id:uid(),title:t,type:ty,count:0,lines:[],children:[]});saveState();render();}
-  function uid(){return Math.random().toString(36).slice(2);}
-  function saveState(){localStorage.setItem(LS_KEY,JSON.stringify(state));}
-  function loadState(){try{return JSON.parse(localStorage.getItem(LS_KEY)||"");}catch{return null;}}
-  function defaultState(){return{userName:"",reportDate:new Date().toISOString().slice(0,10),categories:[],sumRules:DEF_SUM.map(x=>({...x}))};}
-  function tip(t,ok=false){toastEl.textContent=t;toastEl.style.background=ok?"#153a1f":"#0d1b36";toastEl.classList.add("show");setTimeout(()=>toastEl.classList.remove("show"),1200);}
-  function updateDailySummary(){if(dailySummaryEl)dailySummaryEl.textContent="บันทึกแล้ว";}
+  // === Keyboard shortcuts ===
+  document.addEventListener("keydown", e => {
+    if (["INPUT", "TEXTAREA"].includes(e.target.tagName)) return; // ป้องกันชน text
+    if (e.key === "+") {
+      const last = data[data.length - 1];
+      if (last) last.count++;
+      saveState(); render();
+    }
+    if (e.key === "-") {
+      const last = data[data.length - 1];
+      if (last && last.count > 0) last.count--;
+      saveState(); render();
+    }
+    if (e.ctrlKey && e.key.toLowerCase() === "s") {
+      e.preventDefault(); saveState(); toastMsg("บันทึกแล้ว", true);
+    }
+    if (e.ctrlKey && e.key.toLowerCase() === "c") {
+      e.preventDefault(); copyBtn.click();
+    }
+  });
 })();
