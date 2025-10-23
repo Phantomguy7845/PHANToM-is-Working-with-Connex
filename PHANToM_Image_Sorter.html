@@ -1,155 +1,127 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>PHANToM Image Sorter — Aurora TF Edition</title>
-<style>
-:root{
-  --bg:#0b1220;--panel:#0f1830;--edge:#243353;--txt:#e5e7eb;--muted:#94a3b8;
-  --pri:#4f9eff;--ok:#22c55e;--warn:#f59e0b;--err:#ef4444;--a1:#7dd3fc;
-}
-*{box-sizing:border-box} body{
-  margin:0;min-height:100vh;display:flex;flex-direction:column;
-  background:radial-gradient(1000px 700px at 15% 15%,#101b3a,#070c18 60%);
-  color:var(--txt);font-family:"Prompt",system-ui,Segoe UI,Roboto,sans-serif;
-}
-header{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:14px 18px;border-bottom:1px solid var(--edge);
-  background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
-}
-.brand{font-weight:800;letter-spacing:.4px;font-size:1.1rem}
-small{display:block;color:var(--muted);font-weight:500;font-size:.8rem}
-main{display:grid;grid-template-columns:360px 1fr;gap:14px;padding:14px}
-@media(max-width:960px){main{grid-template-columns:1fr}}
-.card{
-  background:rgba(255,255,255,.03);border:1px solid var(--edge);
-  border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.25);padding:14px
-}
-label{color:var(--muted);font-size:.9rem}
-input[type="number"]{
-  background:#0e1a3a;border:1px solid var(--edge);border-radius:10px;
-  color:var(--txt);padding:8px;width:100%;
-}
-.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-button{
-  border:none;border-radius:10px;padding:9px 14px;font-weight:700;
-  cursor:pointer;transition:transform .15s ease, filter .2s ease;
-}
-button:hover{transform:translateY(-1px);filter:brightness(1.1)}
-.ok{background:var(--ok);color:#001b0c}
-.ghost{background:transparent;border:1px solid var(--edge);color:var(--txt)}
-.secondary{background:var(--pri);color:white}
-.warn{background:var(--warn);color:black}
-.link{background:#132044;color:#e5e7eb;border:1px solid var(--edge)}
-.droper{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:10px;min-height:150px;border:2px dashed var(--edge);
-  border-radius:14px;background:#0c1633;cursor:pointer;text-align:center;
-}
-.droper.drag{border-color:var(--a1);box-shadow:0 0 0 3px rgba(125,211,252,.2)}
-.grid{--w:180px;display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--w),1fr));gap:10px}
-.item{position:relative;border:1px solid var(--edge);border-radius:14px;overflow:hidden;background:#0e1a3a}
-.thumb{width:100%;aspect-ratio:1/1;object-fit:cover}
-.bar{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;font-size:.8rem;color:var(--muted)}
-.cover{position:absolute;top:8px;right:8px;padding:4px 6px;border-radius:8px;font-size:.75rem;background:rgba(0,0,0,.5);border:1px solid var(--edge);color:var(--txt)}
-.cover.active{background:linear-gradient(90deg,var(--pri),var(--a1));color:black;font-weight:700}
-.del{position:absolute;top:8px;left:8px;width:28px;height:28px;border-radius:999px;border:1px solid var(--edge);background:rgba(239,68,68,.85);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:.8rem}
-.del:hover{filter:brightness(1.1)}
-.toast{
-  position:fixed;right:14px;bottom:14px;padding:10px 14px;border-radius:10px;
-  background:#0d1b36;border:1px solid var(--edge);opacity:0;transform:translateY(10px);
-  transition:opacity .25s,transform .25s;z-index:60
-}
-.toast.show{opacity:1;transform:translateY(0)}
-.status{margin-top:6px;font-size:.85rem}
-#aiStatus{color:var(--warn)} #customStatus{color:var(--muted)}
-.overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(3px);
-  display:none;align-items:center;justify-content:center;z-index:80
-}
-.overlay.show{display:flex}
-.modal{
-  width:min(520px,92vw);background:#0f1830;border:1px solid var(--edge);
-  border-radius:16px;padding:16px;box-shadow:0 12px 40px rgba(0,0,0,.4)
-}
-.modal h3{margin:0 0 6px}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.kbd{border:1px solid var(--edge);border-radius:6px;padding:0 6px;background:#0b1222}
-.progress{
-  height:8px;background:#0b132a;border:1px solid #1b2b4d;border-radius:999px;overflow:hidden
-}
-.progress>span{
-  display:block;height:100%;width:0;background:linear-gradient(90deg,var(--pri),var(--a1));
-  transition:width .2s ease
-}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PHANToM Image Sorter — AI + Condo/House</title>
+  <style>
+    :root{
+      --bg:#0b1220; --panel:#0f1830; --edge:#243353; --txt:#e5e7eb; --muted:#9cb1d9;
+      --pri:#6b8bff; --a1:#8bf5ff; --ok:#22c55e; --warn:#f59e0b; --err:#ef4444;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:radial-gradient(1000px 700px at 15% 15%,#101b3a,#070c18 60%);
+          color:var(--txt);font-family:system-ui,Segoe UI,Roboto,"Prompt",sans-serif}
+    header{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--edge);background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02))}
+    .brand{font-weight:800;letter-spacing:.4px}
+    .brand small{display:block;color:var(--muted);font-weight:500}
+    main{display:grid;grid-template-columns:340px 1fr;gap:12px;padding:12px}
+    @media (max-width:980px){main{grid-template-columns:1fr}}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid var(--edge);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.25)}
+    .left{padding:14px}
+    .right{padding:10px}
+    .droper{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:140px;border:2px dashed var(--edge);border-radius:14px;background:#0c1633; cursor:pointer}
+    .droper.drag{border-color:var(--a1);box-shadow:0 0 0 3px rgba(139,245,255,.15)}
+    input[type="file"]{display:none}
+    .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    button{appearance:none;border:1px solid transparent;border-radius:12px;padding:10px 12px;font-weight:700;cursor:pointer;background:var(--pri);color:white;transition:transform .05s ease, filter .2s ease}
+    button:active{transform:translateY(1px)}
+    button.secondary{background:#132044;border-color:var(--edge)}
+    button.ghost{background:transparent;border-color:var(--edge);color:var(--txt)}
+    button.warn{background:var(--warn);color:black}
+    button.danger{background:var(--err)}
+    button.ok{background:var(--ok)}
+    .small{font-size:.9rem}
+    .grid{--w:180px;display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--w),1fr));gap:10px}
+    .item{position:relative;border:1px solid var(--edge);border-radius:14px;overflow:hidden;background:#0e1a3a}
+    .item.dragging{opacity:.7;outline:2px dashed var(--a1)}
+    .thumb{aspect-ratio:1/1;display:block;width:100%;object-fit:cover}
+    .bar{display:flex;align-items:center;justify-content:space-between;padding:8px;gap:8px;background:rgba(255,255,255,.03)}
+    .idx{font-weight:800;font-size:.95rem;opacity:.9}
+    .tags{display:flex;gap:6px;flex-wrap:wrap}
+    .tag{font-size:.7rem;border:1px solid var(--edge);padding:3px 8px;border-radius:999px;color:var(--muted)}
+    .cover{position:absolute;right:8px;top:8px;background:rgba(0,0,0,.45);border:1px solid var(--edge);padding:4px 6px;border-radius:10px;font-size:.75rem}
+    .cover.active{background:linear-gradient(90deg,var(--pri),var(--a1));color:#001018}
+    .delbtn{position:absolute;left:8px;top:8px;background:rgba(239,68,68,.9);border:0;padding:4px 7px;border-radius:9px;font-size:.75rem;color:#fff}
+    .toast{position:fixed;right:14px;bottom:14px;background:#0d1b36;border:1px solid var(--edge);padding:10px 12px;border-radius:12px;opacity:0;transform:translateY(10px);pointer-events:none;transition:opacity .2s,transform .2s}
+    .toast.show{opacity:1;transform:translateY(0)}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .help{color:var(--muted);font-size:.92rem}
+    .note{margin-top:8px;color:var(--muted)}
+    .hl{color:var(--a1)}
+    .kv{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .kv input[type="text"], .kv input[type="password"]{padding:8px 10px;border:1px solid var(--edge);border-radius:10px;background:#0e1a3a;color:var(--txt)}
+    .radio{display:flex;gap:12px;align-items:center}
+    .radio label{display:inline-flex;gap:6px;align-items:center;color:var(--muted)}
+    .split{display:flex;gap:8px;flex-wrap:wrap}
+    a.link{color:var(--a1);text-decoration:none;border:1px solid var(--edge);padding:8px 12px;border-radius:10px;background:#0d1733}
+  </style>
 </head>
 <body>
-<header>
-  <div class="brand">PHANToM Image Sorter <small>Offline AI + Heuristic + Custom</small></div>
-  <div>by PHANToM</div>
-</header>
-
-<main>
-  <section class="card">
-    <label>คุณภาพ JPG (0.6–0.95)</label>
-    <input id="quality" type="number" min="0.6" max="0.95" step="0.01" value="0.9"/>
-    <div class="status" id="aiStatus">Offline AI: ยังไม่โหลด</div>
-    <div class="status" id="customStatus">Custom Model: ยังไม่โหลด</div>
-
-    <hr style="border:none;border-top:1px solid var(--edge);margin:12px 0"/>
-
-    <div id="drop" class="droper" aria-label="พื้นที่อัปโหลดรูปภาพ">
-      <div>ลากรูปมาวางที่นี่ <span class="muted">หรือ</span> คลิกเพื่อเลือกไฟล์</div>
-      <div class="progress" style="width:70%;max-width:420px;display:none" id="loadBar"><span></span></div>
-      <input id="picker" type="file" accept="image/*" multiple hidden>
+  <header class="card">
+    <div class="brand">PHANToM Image Sorter
+      <small>AI Vision (Offline/Custom) + Drag & Drop + Export JPG/ZIP</small>
     </div>
+    <div>by PHANToM</div>
+  </header>
 
-    <div class="btns">
-      <button id="autoHeu" class="ghost">Heuristic Sort</button>
-      <button id="autoAI" class="secondary">AI Sort (Offline)</button>
-      <button id="autoCustom" class="ok">AI Sort (Custom)</button>
-      <button id="clear" class="warn">ล้างทั้งหมด</button>
-      <a href="PHANToM_Room_Trainer.html" class="link" style="text-decoration:none;display:inline-block">Train AI Model</a>
-    </div>
-    <div class="btns">
-      <button id="exportZip" class="ok" style="width:100%">Export : JPG + Rename (ZIP)</button>
-    </div>
-  </section>
+  <main>
+    <section class="card left">
+      <div class="split">
+        <span class="help" id="aiStatus">Offline AI: ยังไม่โหลด</span>
+        <span class="help" id="customStatus">Custom Model: ยังไม่โหลด</span>
+        <a class="link" href="PHANToM_Room_Trainer.html">เทรนโมเดลใหม่</a>
+      </div>
 
-  <section class="card">
-    <div class="status" style="padding-bottom:8px">ลากสลับตำแหน่งได้ • กด <span class="kbd">Cover</span> เพื่อขึ้นปก • กดปุ่ม 🗑 เพื่อลบรูป</div>
-    <div id="grid" class="grid"></div>
-  </section>
-</main>
+      <hr style="border:none;border-top:1px solid var(--edge);margin:10px 0"/>
 
-<div id="toast" class="toast" role="status" aria-live="polite">พร้อมทำงาน</div>
+      <label class="help">อัปโหลดรูปภาพ (รองรับ .jpg .png .webp)</label>
+      <div id="drop" class="droper" title="คลิกเพื่อเลือกไฟล์ หรือ ลากรูปมาวาง">
+        <div>ลากรูปมาวางที่นี่</div>
+        <div class="small">หรือ คลิกเพื่อเลือกไฟล์…</div>
+      </div>
+      <input id="picker" type="file" accept="image/*" multiple />
 
-<!-- Custom Model Loader Overlay -->
-<div id="overlay" class="overlay" aria-modal="true">
-  <div class="modal">
-    <h3>โหลด Custom Model</h3>
-    <p class="status">เลือกไฟล์ <b>.json</b> และ <b>.bin</b> ของโมเดลที่เทรนจาก PHANToM Room Trainer</p>
-    <div class="row" style="margin-top:8px">
-      <button id="pickJson" class="ghost">เลือก .json</button>
-      <span id="jsonName" class="status">ยังไม่ได้เลือก</span>
-    </div>
-    <div class="row">
-      <button id="pickBin" class="ghost">เลือก .bin</button>
-      <span id="binName" class="status">ยังไม่ได้เลือก</span>
-    </div>
-    <div class="btns" style="justify-content:flex-end">
-      <button id="closeOverlay" class="ghost">ยกเลิก</button>
-      <button id="loadCustom" class="secondary" disabled>โหลดโมเดล</button>
-    </div>
-  </div>
-</div>
+      <div class="btns" style="margin-top:14px">
+        <button id="autoHeu" class="ghost">Auto-sort (Heuristic)</button>
+        <button id="autoAI" class="secondary" title="ใช้ Offline AI (MobileNetV2)">AI Sort (Offline)</button>
+        <button id="autoCustom" class="secondary" title="โหลดโมเดลจาก Room Trainer (model.json + weights.bin)">AI Sort (Custom)</button>
+        <button id="clear" class="warn">ล้างทั้งหมด</button>
+      </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.14.0/dist/tf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
-<script src="js/phantom-image-sorter.js"></script>
+      <hr style="border:none;border-top:1px solid var(--edge);margin:12px 0"/>
+
+      <div class="row">
+        <div>
+          <label class="help">คุณภาพ JPG (0.6–0.95)</label>
+          <input id="quality" type="number" min="0.6" max="0.95" step="0.01" value="0.9" style="width:100%;padding:8px;border-radius:10px;border:1px solid var(--edge);background:#0e1a3a;color:var(--txt)">
+        </div>
+        <div>
+          <label class="help">ภาพปก (เลือกได้สูงสุด 2 ภาพ)</label>
+          <div class="help">กดปุ่ม “Cover” บนรูปเพื่อปักเป็นภาพ 1–2</div>
+        </div>
+      </div>
+
+      <div class="btns">
+        <button id="exportZip" class="ok">Export: JPG + Rename (ZIP)</button>
+      </div>
+    </section>
+
+    <section class="card right">
+      <div class="help" style="padding:6px 6px 10px">ลากสลับตำแหน่งรูปได้ด้วยนิ้ว/เมาส์ • แตะปุ่ม <b>Cover</b> เพื่อขึ้นปก • ปุ่ม <b>ลบ</b> อยู่ที่มุมซ้ายบนแต่ละรูป</div>
+      <div id="grid" class="grid"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast">พร้อมทำงาน</div>
+
+  <!-- libs -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+
+  <!-- app -->
+  <script src="js/phantom-image-sorter.js"></script>
 </body>
 </html>
