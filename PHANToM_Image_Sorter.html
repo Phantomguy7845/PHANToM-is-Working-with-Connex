@@ -84,6 +84,7 @@ button.ghost{background:transparent;border:1px solid var(--edge);color:var(--txt
       <button id="autoAI" class="secondary">AI Sort (Offline)</button>
       <button id="autoCustom" class="ok">AI Sort (Custom)</button>
       <button id="clear" class="warn">ล้างทั้งหมด</button>
+      <button id="openTrainer" class="ghost" style="margin-top:8px;">เทรนโมเดลใหม่ (เปิด Room Trainer)</button>
     </div>
 
     <div class="note" style="margin-top:8px">
@@ -108,5 +109,12 @@ button.ghost{background:transparent;border:1px solid var(--edge);color:var(--txt
 <script src="https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
 <script src="js/phantom-image-sorter.js"></script>
+
+<!-- ปุ่มเปิด Room Trainer -->
+<script>
+document.getElementById("openTrainer").addEventListener("click",()=>{
+  window.open("PHANToM_Room_Trainer.html","_blank");
+});
+</script>
 </body>
 </html>
