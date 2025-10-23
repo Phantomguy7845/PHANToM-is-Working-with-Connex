@@ -1,97 +1,136 @@
-/* PHANToM Image Sorter — TensorFlow v4 Stable (Aurora Edition)
-   - Offline AI: TFHub MobileNetV2 (GraphModel)
-   - Custom Model Loader: Overlay (JSON+BIN) with user activation safe
-   - Heuristic Sort + Drag/Drop + Cover + Delete + Export ZIP
-   - Robust guards, progress, and UI feedback
+/* PHANToM Image Sorter — TensorFlow Edition (Aurora 2025)
+   Offline AI (MobileNetV2) + Custom Model Loader + Heuristic Sort
+   by PHANToM
 */
-(function(){
-  const $ = s => document.querySelector(s);
-  const drop=$("#drop"), picker=$("#picker"), grid=$("#grid"),
-        toast=$("#toast"), aiStatus=$("#aiStatus"), customStatus=$("#customStatus"),
-        btnHeu=$("#autoHeu"), btnAI=$("#autoAI"), btnCustom=$("#autoCustom"),
-        btnClear=$("#clear"), btnExport=$("#exportZip"), qualityEl=$("#quality"),
-        loadBar=$("#loadBar"), overlay=$("#overlay"),
-        btnPickJson=$("#pickJson"), btnPickBin=$("#pickBin"),
-        jsonName=$("#jsonName"), binName=$("#binName"),
-        btnLoadCustom=$("#loadCustom"), btnCloseOverlay=$("#closeOverlay");
+(async function () {
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => Array.from(document.querySelectorAll(s));
 
-  if(!drop || !grid){ console.warn("Missing essential DOM. Abort init."); return; }
+  const drop = $("#drop");
+  const picker = $("#picker");
+  const grid = $("#grid");
+  const toast = $("#toast");
 
-  // ---------------- State ----------------
-  let images=[]; // {src, name, label?, conf?, cover?}
-  let offlineModel=null; let offlineReady=false;
-  let customModel=null;  let customReady=false;
-  let _jsonFile=null, _binFile=null;
+  const aiStatus = $("#aiStatus");
+  const customStatus = $("#customStatus");
 
-  // ------------- Toast -------------
-  function toastMsg(msg, ok=false){
-    if(!toast) return;
-    toast.textContent=msg;
-    toast.style.background = ok ? "#153a1f" : "#0d1b36";
-    toast.classList.add("show");
-    setTimeout(()=>toast.classList.remove("show"), 1800);
+  const btnHeu = $("#autoHeu");
+  const btnAI = $("#autoAI");
+  const btnCustom = $("#autoCustom");
+  const btnClear = $("#clear");
+  const btnExport = $("#exportZip");
+  const qualityEl = $("#quality");
+
+  if (!drop || !grid) {
+    console.warn("Missing essential DOM. Abort init.");
+    return;
   }
 
-  // ------------- Upload -------------
-  drop.addEventListener("click", ()=> picker.click());
-  drop.addEventListener("dragover", e=>{e.preventDefault();drop.classList.add("drag");});
-  drop.addEventListener("dragleave", ()=> drop.classList.remove("drag"));
-  drop.addEventListener("drop", e=>{
-    e.preventDefault(); drop.classList.remove("drag");
+  /** state */
+  let images = []; // {src, name, label?, conf?, cover?}
+  let offlineModel = null;
+  let offlineReady = false;
+
+  let customModel = null;
+  let customReady = false;
+
+  /** toast */
+  function toastMsg(msg, ok = false) {
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.style.background = ok ? "#153a1f" : "#0d1b36";
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 1600);
+  }
+
+  /** upload handlers */
+  drop.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    drop.classList.add("drag");
+  });
+  drop.addEventListener("dragleave", () => drop.classList.remove("drag"));
+  drop.addEventListener("drop", (e) => {
+    e.preventDefault();
+    drop.classList.remove("drag");
     handleFiles(e.dataTransfer.files);
   });
-  picker.addEventListener("change", e=> handleFiles(e.target.files));
+  drop.addEventListener("click", () => picker.click());
+  picker.addEventListener("change", (e) => handleFiles(e.target.files));
 
-  function handleFiles(fs){
-    const arr = Array.from(fs||[]).filter(f=> f.type.startsWith("image/"));
-    if(!arr.length){ toastMsg("ไม่มีไฟล์ภาพ"); return; }
-    if(loadBar){ loadBar.style.display="block"; loadBar.firstElementChild.style.width="0%"; }
-    let done=0;
-    arr.forEach(f=>{
-      const r=new FileReader();
-      r.onload=ev=>{
-        images.push({src:ev.target.result, name:f.name});
-        done++; if(loadBar){ loadBar.firstElementChild.style.width = Math.round(done/arr.length*100)+"%"; }
-        if(done===arr.length){ setTimeout(()=>{ if(loadBar) loadBar.style.display="none"; }, 300); }
+  function handleFiles(fs) {
+    const arr = Array.from(fs || []).filter((f) => f.type.startsWith("image/"));
+    if (!arr.length) {
+      toastMsg("ไม่มีไฟล์ภาพ");
+      return;
+    }
+    arr.forEach((f) => {
+      const r = new FileReader();
+      r.onload = (ev) => {
+        images.push({ src: ev.target.result, name: f.name });
         render();
       };
       r.readAsDataURL(f);
     });
     toastMsg(`เพิ่มรูป ${arr.length} ไฟล์`, true);
+    picker.value = ""; // reset for next choose
   }
 
-  // ------------- Render Grid + Drag + Delete -------------
-  function render(){
-    grid.innerHTML="";
-    images.forEach((x,i)=>{
-      const item=document.createElement("div"); item.className="item"; item.draggable=true;
+  /** render grid */
+  function render() {
+    grid.innerHTML = "";
+    images.forEach((x, i) => {
+      const item = document.createElement("div");
+      item.className = "item";
+      item.draggable = true;
 
-      const im=document.createElement("img"); im.src=x.src; im.className="thumb";
+      const im = document.createElement("img");
+      im.src = x.src;
+      im.className = "thumb";
 
-      const cover=document.createElement("button");
-      cover.className="cover"+(x.cover?" active":""); cover.textContent="Cover";
-      cover.onclick=()=>{ x.cover=!x.cover; cover.classList.toggle("active", x.cover); };
+      // cover toggle
+      const cover = document.createElement("button");
+      cover.className = "cover" + (x.cover ? " active" : "");
+      cover.textContent = "Cover";
+      cover.onclick = () => {
+        x.cover = !x.cover;
+        cover.classList.toggle("active", x.cover);
+      };
 
-      const del=document.createElement("button");
-      del.className="del"; del.title="ลบรูปนี้"; del.textContent="🗑";
-      del.onclick=()=>{ images.splice(i,1); render(); };
+      // delete button
+      const del = document.createElement("button");
+      del.className = "delbtn";
+      del.textContent = "ลบ";
+      del.title = "ลบรูปนี้";
+      del.onclick = () => {
+        images.splice(i, 1);
+        render();
+        toastMsg("ลบรูปแล้ว", true);
+      };
 
-      const bar=document.createElement("div"); bar.className="bar";
-      const idx=document.createElement("div"); idx.textContent=(i+1);
-      const tag=document.createElement("div");
-      tag.textContent = x.label ? `${x.label}${x.conf?` (${Math.round(x.conf*100)}%)`:''}` : "";
+      const bar = document.createElement("div");
+      bar.className = "bar";
+      const idx = document.createElement("div");
+      idx.className = "idx";
+      idx.textContent = i + 1;
+      const tag = document.createElement("div");
+      tag.className = "tag";
+      tag.textContent = x.label
+        ? `${x.label}${x.conf ? ` (${Math.round(x.conf * 100)}%)` : ""}`
+        : "";
       bar.append(idx, tag);
 
-      // Drag reorder
-      item.addEventListener("dragstart", e=> e.dataTransfer.setData("text/plain", i));
-      item.addEventListener("dragover", e=> e.preventDefault());
-      item.addEventListener("drop", e=>{
+      // drag reorder
+      item.addEventListener("dragstart", (e) =>
+        e.dataTransfer.setData("text/plain", i)
+      );
+      item.addEventListener("dragover", (e) => e.preventDefault());
+      item.addEventListener("drop", (e) => {
         e.preventDefault();
         const from = +e.dataTransfer.getData("text/plain");
         const to = i;
-        if(from===to) return;
-        const mv = images.splice(from,1)[0];
-        images.splice(to,0,mv);
+        if (from === to) return;
+        const mv = images.splice(from, 1)[0];
+        images.splice(to, 0, mv);
         render();
       });
 
@@ -100,177 +139,230 @@
     });
   }
 
-  // ------------- Heuristic Sort -------------
-  btnHeu?.addEventListener("click", ()=>{
-    if(!images.length) return toastMsg("ยังไม่มีภาพ");
-    images.sort((a,b)=> (a.name||"").localeCompare(b.name||"", undefined, {numeric:true}));
-    render(); toastMsg("เรียงตามชื่อไฟล์แล้ว", true);
+  /** heuristic sort (by filename) */
+  btnHeu.addEventListener("click", () => {
+    if (!images.length) return toastMsg("ยังไม่มีภาพ");
+    images.sort((a, b) =>
+      (a.name || "").localeCompare(b.name || "", undefined, { numeric: true })
+    );
+    render();
+    toastMsg("เรียงตามชื่อไฟล์แล้ว", true);
   });
 
-  // ------------- Offline AI (TFHub MobileNetV2) -------------
-  async function ensureOffline(){
-    if(offlineReady && offlineModel) return true;
-    try{
-      aiStatus.textContent="Offline AI: กำลังโหลด…";
-      if(typeof tf === "undefined") throw new Error("TensorFlow.js not loaded");
+  /** ensure offline AI (MobileNet V2) */
+  async function ensureOffline() {
+    if (offlineReady && offlineModel) return true;
+    try {
+      aiStatus.textContent = "Offline AI: กำลังโหลด…";
       await tf.ready();
-      offlineModel = await tf.loadGraphModel(
-        "https://tfhub.dev/google/tfjs-model/imagenet/mobilenet_v2_140_224/classification/5",
-        { fromTFHub:true }
-      );
-      offlineReady=true;
-      aiStatus.textContent="Offline AI: พร้อมใช้งาน";
-      aiStatus.style.color="#22c55e";
+
+      // URL ปกติของ MobileNetV2 (หากมีปัญหา 404 จะลองสำรอง)
+      const urls = [
+        "https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v2_1.0_224/model.json",
+        "https://storage.googleapis.com/tfjs-models/savedmodel/mobilenet_v2_1.0_224/model.json"
+      ];
+
+      let loaded = null;
+      let lastErr = null;
+      for (const u of urls) {
+        try {
+          loaded = await tf.loadLayersModel(u);
+          if (loaded) break;
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+      if (!loaded) throw lastErr || new Error("ไม่สามารถโหลด MobileNetV2");
+
+      offlineModel = loaded;
+      offlineReady = true;
+      aiStatus.textContent = "Offline AI: พร้อมใช้งาน";
+      aiStatus.style.color = "#22c55e";
       toastMsg("Offline AI พร้อม", true);
       return true;
-    }catch(e){
+    } catch (e) {
       console.error("Offline AI load error", e);
-      aiStatus.textContent="Offline AI: โหลดไม่สำเร็จ";
-      aiStatus.style.color="#ef4444";
+      aiStatus.textContent = "Offline AI: โหลดไม่สำเร็จ";
+      aiStatus.style.color = "#ef4444";
       toastMsg("โหลด Offline AI ไม่สำเร็จ");
       return false;
     }
   }
 
-  btnAI?.addEventListener("click", async ()=>{
-    if(!images.length) return toastMsg("ยังไม่มีภาพ");
-    const ok = await ensureOffline(); if(!ok) return;
-    toastMsg("กำลังเรียงด้วย Offline AI…");
-    for(let i=0;i<images.length;i++){
-      const t = await dataToTensor(images[i].src, 224);
-      try{
+  /** run offline AI */
+  btnAI.addEventListener("click", async () => {
+    if (!images.length) return toastMsg("ยังไม่มีภาพ");
+    const ok = await ensureOffline();
+    if (!ok) return;
+
+    for (let i = 0; i < images.length; i++) {
+      const t = await dataToTensor(images[i].src);
+      try {
         const pred = offlineModel.predict(t);
         const probs = await pred.data();
-        const idx = argmax(probs);
-        images[i].label = "cls_"+idx; // ไม่ mapping เป็นชื่อห้อง เพราะ model เป็น ImageNet
-        images[i].conf  = probs[idx] || 0;
-        tf.dispose([pred,t]);
-        await tf.nextFrame();
-      }catch(err){
-        console.warn("predict error", err);
+        const labelIndex = argMax(probs);
+        images[i].label = `cls_${labelIndex}`;
+        images[i].conf = probs[labelIndex] || 0;
+        tf.dispose(pred);
+      } catch (e) {
+        console.warn("predict error", e);
+        images[i].label = images[i].label || "other";
+        images[i].conf = images[i].conf || 0;
+      } finally {
         tf.dispose(t);
       }
-    }
-    images.sort((a,b)=> b.conf - a.conf);
-    render(); toastMsg("Offline AI Sort สำเร็จ", true);
-  });
-
-  // ------------- Custom Model Loader (Safe Overlay) -------------
-  btnCustom?.addEventListener("click", ()=>{
-    _jsonFile=null; _binFile=null;
-    jsonName.textContent="ยังไม่ได้เลือก";
-    binName.textContent="ยังไม่ได้เลือก";
-    btnLoadCustom.disabled=true;
-    overlay.classList.add("show");
-  });
-  btnCloseOverlay?.addEventListener("click", ()=> overlay.classList.remove("show"));
-
-  btnPickJson?.addEventListener("click", ()=>{
-    pickFileNative(".json").then(f=>{
-      if(f){ _jsonFile=f; jsonName.textContent=f.name; }
-      btnLoadCustom.disabled = !(_jsonFile && _binFile);
-    });
-  });
-  btnPickBin?.addEventListener("click", ()=>{
-    pickFileNative(".bin").then(f=>{
-      if(f){ _binFile=f; binName.textContent=f.name; }
-      btnLoadCustom.disabled = !(_jsonFile && _binFile);
-    });
-  });
-
-  btnLoadCustom?.addEventListener("click", async ()=>{
-    if(!(_jsonFile && _binFile)) return;
-    try{
-      customStatus.textContent="Custom Model: กำลังโหลด…";
-      const modelURL = URL.createObjectURL(_jsonFile);
-      customModel = await tf.loadLayersModel(modelURL);
-      customReady=true;
-      customStatus.textContent="Custom Model: พร้อมใช้งาน";
-      customStatus.style.color="#22c55e";
-      toastMsg("โหลด Custom Model สำเร็จ", true);
-      overlay.classList.remove("show");
-    }catch(e){
-      console.error(e);
-      customStatus.textContent="Custom Model: โหลดไม่สำเร็จ";
-      customStatus.style.color="#ef4444";
-      toastMsg("โหลดโมเดลไม่สำเร็จ");
+      await tf.nextFrame();
     }
 
-    if(customReady && images.length){
-      toastMsg("กำลังเรียงด้วย Custom Model…");
-      for(let i=0;i<images.length;i++){
-        const t = await dataToTensor(images[i].src, 128);
-        try{
-          const pred = customModel.predict(t);
-          const probs = await pred.data();
-          const idx = argmax(probs);
-          images[i].label = "cls_"+idx;
-          images[i].conf  = probs[idx] || 0;
-          tf.dispose([pred,t]);
-          await tf.nextFrame();
-        }catch(err){
-          console.warn("custom predict error", err);
-          tf.dispose(t);
-        }
+    // simple: sort by confidence desc
+    images.sort((a, b) => (b.conf || 0) - (a.conf || 0));
+    render();
+    toastMsg("Offline AI Sort สำเร็จ", true);
+  });
+
+  /** custom model (model.json + weights.bin) */
+  btnCustom.addEventListener("click", async (evt) => {
+    try {
+      // ต้องกด 1 ครั้งเพื่อเลือก 2 ไฟล์ (multiple)
+      const files = await pickFiles(".json,.bin", true);
+      if (!files || !files.length) return;
+
+      // หา .json และ .bin
+      let jsonFile = null, binFile = null;
+      for (const f of files) {
+        if (f.name.toLowerCase().endsWith(".json")) jsonFile = f;
+        if (f.name.toLowerCase().endsWith(".bin")) binFile = f;
       }
-      images.sort((a,b)=> b.conf - a.conf);
-      render(); toastMsg("Custom Sort สำเร็จ", true);
+      if (!jsonFile || !binFile) {
+        toastMsg("โปรดเลือกทั้งไฟล์ .json และ .bin");
+        return;
+      }
+
+      // โหลดด้วย browserFiles (แก้ปัญหา blob: และ CORS)
+      customModel = await tf.loadLayersModel(tf.io.browserFiles([jsonFile, binFile]));
+      customReady = true;
+      customStatus.textContent = "Custom Model: พร้อมใช้งาน";
+      customStatus.style.color = "#22c55e";
+      toastMsg("โหลด Custom Model สำเร็จ", true);
+    } catch (e) {
+      console.error(e);
+      toastMsg("โหลดโมเดลไม่สำเร็จ");
+      return;
     }
+
+    if (!images.length) return toastMsg("ยังไม่มีภาพ");
+
+    for (let i = 0; i < images.length; i++) {
+      const t = await dataToTensor(images[i].src);
+      try {
+        const pred = customModel.predict(t);
+        const probs = await pred.data();
+        const labelIndex = argMax(probs);
+        images[i].label = `cls_${labelIndex}`;
+        images[i].conf = probs[labelIndex] || 0;
+        tf.dispose(pred);
+      } catch (e) {
+        console.warn("custom predict error", e);
+        images[i].label = images[i].label || "other";
+        images[i].conf = images[i].conf || 0;
+      } finally {
+        tf.dispose(t);
+      }
+      await tf.nextFrame();
+    }
+    images.sort((a, b) => (b.conf || 0) - (a.conf || 0));
+    render();
+    toastMsg("Custom Model Sort สำเร็จ", true);
   });
 
-  // ------------- Export ZIP -------------
-  btnExport?.addEventListener("click", async ()=>{
-    if(!images.length) return toastMsg("ไม่มีภาพสำหรับส่งออก");
-    const q = Math.max(0.6, Math.min(0.95, parseFloat(qualityEl?.value)||0.9));
-    const covers=images.filter(x=>x.cover), rest=images.filter(x=>!x.cover);
-    const list=[...covers, ...rest];
-    const zip=new JSZip();
-    for(let i=0;i<list.length;i++){
+  /** export zip */
+  btnExport.addEventListener("click", async () => {
+    if (!images.length) return toastMsg("ไม่มีภาพสำหรับส่งออก");
+    const q = Math.max(0.6, Math.min(0.95, parseFloat(qualityEl?.value) || 0.9));
+    const covers = images.filter((x) => x.cover);
+    const rest = images.filter((x) => !x.cover);
+    const list = [...covers, ...rest];
+
+    const zip = new JSZip();
+    for (let i = 0; i < list.length; i++) {
       const blob = await dataToJpgBlob(list[i].src, q);
-      zip.file(`${i+1}.jpg`, blob);
+      zip.file(`${i + 1}.jpg`, blob);
     }
-    const out = await zip.generateAsync({type:"blob"});
+    const out = await zip.generateAsync({ type: "blob" });
     saveAs(out, "PHANToM_Sorted.zip");
     toastMsg("ส่งออก ZIP เรียบร้อย", true);
   });
 
-  // ------------- Clear -------------
-  btnClear?.addEventListener("click", ()=>{
-    images=[]; render(); toastMsg("ล้างทั้งหมด", true);
+  /** clear */
+  btnClear.addEventListener("click", () => {
+    images = [];
+    render();
+    toastMsg("ล้างทั้งหมด", true);
   });
 
-  // ------------- Helpers -------------
-  function argmax(arr){ let m=-Infinity, idx=0; for(let i=0;i<arr.length;i++){ if(arr[i]>m){ m=arr[i]; idx=i; } } return idx; }
-
-  function dataToImg(data){ return new Promise(res=>{ const im=new Image(); im.src=data; im.onload=()=>res(im); }); }
-
-  async function dataToJpgBlob(data, q){
-    const im = await dataToImg(data);
-    const c = document.createElement("canvas");
-    c.width = im.naturalWidth; c.height = im.naturalHeight;
-    c.getContext("2d").drawImage(im,0,0);
-    return await new Promise(res=> c.toBlob(res, "image/jpeg", q));
+  /** helpers */
+  function argMax(arr) {
+    let m = -Infinity, idx = 0;
+    for (let i = 0; i < arr.length; i++) {
+      if (arr[i] > m) { m = arr[i]; idx = i; }
+    }
+    return idx;
   }
 
-  function dataToTensor(data, size=224){
-    return new Promise(res=>{
-      const im=new Image(); im.src=data;
-      im.onload=()=>{
-        const t = tf.tidy(()=> tf.image
-          .resizeBilinear(tf.browser.fromPixels(im), [size,size])
-          .toFloat().div(255).expandDims(0));
+  function dataToTensor(data) {
+    return new Promise((res) => {
+      const img = new Image();
+      img.src = data;
+      img.onload = () => {
+        const t = tf.tidy(() =>
+          tf.image
+            .resizeBilinear(tf.browser.fromPixels(img), [224, 224])
+            .expandDims(0)
+            .toFloat()
+            .div(tf.scalar(127))
+            .sub(tf.scalar(1))
+        );
         res(t);
       };
+      img.onerror = () => res(tf.zeros([1, 224, 224, 3]));
     });
   }
 
-  function pickFileNative(accept){
-    return new Promise(res=>{
-      const inp=document.createElement("input");
-      inp.type="file"; inp.accept=accept;
-      inp.addEventListener("change", e=> res(e.target.files[0]||null), {once:true});
-      inp.click(); // ถูกเรียกจากปุ่มใน overlay แล้ว จึงปลอดภัยต่อ user activation
+  async function dataToJpgBlob(data, q) {
+    const im = await dataToImg(data);
+    const c = document.createElement("canvas");
+    c.width = im.naturalWidth;
+    c.height = im.naturalHeight;
+    c.getContext("2d").drawImage(im, 0, 0);
+    return await new Promise((res) => c.toBlob(res, "image/jpeg", q));
+  }
+
+  function dataToImg(data) {
+    return new Promise((r) => {
+      const im = new Image();
+      im.src = data;
+      im.onload = () => r(im);
+      im.onerror = () => r(new Image());
     });
   }
 
+  // show file picker (must be called under user gesture)
+  function pickFiles(accept, multiple = false) {
+    return new Promise((res) => {
+      const inp = document.createElement("input");
+      inp.type = "file";
+      inp.accept = accept;
+      inp.multiple = multiple;
+      inp.onchange = (e) => {
+        const files = Array.from(e.target.files || []);
+        res(files);
+        inp.remove();
+      };
+      document.body.appendChild(inp);
+      inp.click();
+    });
+  }
+
+  // 初期メッセージ
+  console.log("PHANToM Image Sorter Loaded");
 })();
