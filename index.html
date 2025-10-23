@@ -4,68 +4,56 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>PHANToM Tool with Connex</title>
 <style>
-  :root{
-    --bg1:#0a0f1f; --bg2:#111a33; --txt:#e5e7eb; --pri1:#6b8bff; --pri2:#8bf5ff; --pri3:#a76bff;
-  }
-  *{box-sizing:border-box;transition:all .3s ease}
-  body{
-    margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    background:radial-gradient(circle at 20% 20%,var(--bg2),var(--bg1));
-    font-family:'Prompt',system-ui,sans-serif;color:var(--txt);overflow:hidden;
-  }
-  .logo{position:absolute;top:18px;right:24px;font-weight:700;font-size:.9rem;color:var(--pri2);opacity:.8;text-shadow:0 0 6px var(--pri2)}
-  h1{font-size:2rem;margin-bottom:1.5rem;letter-spacing:1px;text-shadow:0 0 8px var(--pri2),0 0 20px rgba(107,139,255,.3);}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;width:90%;max-width:900px;opacity:0;transform:translateY(20px);transition:opacity 1s ease,transform 1s ease}
+  :root{--bg1:#0a0f1f;--bg2:#111a33;--txt:#e5e7eb;--muted:#9db0d6;--p1:#6b8bff;--p2:#8bf5ff;--p3:#a76bff;}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:var(--txt);font-family:'Prompt',system-ui,Segoe UI,Roboto,sans-serif;
+    background:radial-gradient(1200px 800px at 20% 15%,#16224a 0%,#0a1022 55%),linear-gradient(#0a0f1f,#0b1220);}
+  .logo{position:fixed;top:16px;right:20px;color:var(--p2);opacity:.9;font-weight:700}
+  h1{margin:0 0 18px;font-weight:800;letter-spacing:.5px;text-shadow:0 0 10px rgba(139,245,255,.25);}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;width:min(980px,92vw);opacity:0;transform:translateY(10px);transition:opacity .7s,transform .7s}
   .grid.show{opacity:1;transform:translateY(0)}
-  .card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.1);padding:24px;border-radius:18px;text-align:center;
-    box-shadow:0 8px 24px rgba(0,0,0,.25);backdrop-filter:blur(6px)}
-  .card:hover{transform:translateY(-6px);border-color:var(--pri2);box-shadow:0 0 12px var(--pri2)}
-  a.btn{display:inline-block;margin-top:10px;padding:10px 18px;border-radius:10px;text-decoration:none;font-weight:600;background:linear-gradient(90deg,var(--pri1),var(--pri3),var(--pri2));background-size:300% 300%;color:#000;animation:aurora 6s infinite alternate ease-in-out;box-shadow:0 0 14px rgba(139,245,255,.4)}
-  @keyframes aurora{0%{background-position:0% 50%}100%{background-position:100% 50%}}
-  a.btn:hover{filter:brightness(1.15)}
-  footer{margin-top:40px;font-size:.9rem;opacity:.7}
-  .loading{position:fixed;inset:0;background:linear-gradient(135deg,var(--bg1),var(--bg2));display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;animation:bgmove 10s infinite alternate ease-in-out;}
-  .loading h2{font-size:2.4rem;letter-spacing:2px;background:linear-gradient(90deg,var(--pri1),var(--pri3),var(--pri2));-webkit-background-clip:text;color:transparent;font-weight:800;text-shadow:0 0 20px rgba(139,245,255,.3);animation:glow 3s infinite alternate ease-in-out;}
-  @keyframes glow{0%{opacity:.6;text-shadow:0 0 5px var(--pri2)}100%{opacity:1;text-shadow:0 0 25px var(--pri3)}}
-  .bar{width:220px;height:8px;border-radius:10px;margin-top:20px;background:rgba(255,255,255,.1);overflow:hidden;}
-  .bar::before{content:'';display:block;height:100%;width:40%;border-radius:10px;background:linear-gradient(90deg,var(--pri1),var(--pri3),var(--pri2));animation:loadbar 2s infinite ease-in-out;}
-  @keyframes loadbar{0%{margin-left:-40%}100%{margin-left:100%}}
+  .card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:18px;text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.35);backdrop-filter:blur(6px)}
+  .card h3{margin:6px 0 8px}
+  .card p{margin:0 0 12px;color:var(--muted)}
+  a.btn{display:inline-block;text-decoration:none;color:#001018;font-weight:800;padding:10px 16px;border-radius:12px;
+    background:linear-gradient(90deg,var(--p1),var(--p3),var(--p2));background-size:300% 300%;animation:aurora 7s ease-in-out infinite alternate;box-shadow:0 0 18px rgba(139,245,255,.3)}
+  .card:hover{transform:translateY(-4px);border-color:rgba(139,245,255,.35)}
+  footer{margin-top:28px;opacity:.65}
+  .loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#0b1220,#0a0f1f);
+    animation:bg 12s infinite alternate ease-in-out}
+  .loading h2{font-size:2.2rem;background:linear-gradient(90deg,var(--p1),var(--p3),var(--p2));-webkit-background-clip:text;color:transparent;font-weight:900;letter-spacing:1px}
+  @keyframes aurora{0%{background-position:0 50%}100%{background-position:100% 50%}}
+  @keyframes bg{0%{filter:hue-rotate(0)}100%{filter:hue-rotate(25deg)}}
 </style>
 </head>
 <body>
-<div class="loading" id="loading">
-  <h2>PHANToM</h2>
-  <div class="bar"></div>
-</div>
-<div class="logo">by PHANToM</div>
-<h1>PHANToM Tool with Connex</h1>
-<div class="grid" id="grid">
-  <div class="card">
-    <h3>CX Price Editor</h3>
-    <p>จัดการและปรับราคาเช่า/ขายสำหรับระบบ CX</p>
-    <a href="PHANToM_CX_Price_Editor.html" class="btn">เปิดใช้งาน</a>
+  <div class="loading" id="loading"><h2>PHANToM</h2></div>
+  <div class="logo">by PHANToM</div>
+  <h1>PHANToM Tool with Connex</h1>
+  <div class="grid" id="grid">
+    <div class="card">
+      <h3>CX Price Editor</h3>
+      <p>ปรับราคาเช่า/ขายและคัดลอกสคริปต์อัตโนมัติ</p>
+      <a class="btn" href="PHANToM_CX_Price_Editor.html">เปิดใช้งาน</a>
+    </div>
+    <div class="card">
+      <h3>PHANToM Image Sorter</h3>
+      <p>เรียงรูปแบบอัตโนมัติ + AI + Export ZIP</p>
+      <a class="btn" href="PHANToM_Image_Sorter.html">เปิดใช้งาน</a>
+    </div>
+    <div class="card">
+      <h3>PHANToM Room Trainer</h3>
+      <p>เทรน AI จำแนกห้องอย่างรวดเร็ว (ในเบราว์เซอร์)</p>
+      <a class="btn" href="PHANToM_Room_Trainer.html">เปิดใช้งาน</a>
+    </div>
   </div>
-  <div class="card">
-    <h3>PHANToM Image Sorter</h3>
-    <p>จัดเรียงรูปภาพอัตโนมัติ + AI Vision</p>
-    <a href="PHANToM_Image_Sorter.html" class="btn">เปิดใช้งาน</a>
-  </div>
-  <div class="card">
-    <h3>PHANToM Room Trainer</h3>
-    <p>เทรน AI ให้เรียนรู้รูปห้องและโซนต่างๆ</p>
-    <a href="PHANToM_Room_Trainer.html" class="btn">เปิดใช้งาน</a>
-  </div>
-</div>
-<footer>PHANToM Toolkit v3.3 — by PHANToM</footer>
+  <footer>PHANToM Toolkit — Aurora UI</footer>
 <script>
-window.addEventListener('load',()=>{
-  const loader=document.getElementById('loading');
-  const grid=document.getElementById('grid');
-  setTimeout(()=>{
-    loader.style.opacity='0';loader.style.pointerEvents='none';
-    setTimeout(()=>{loader.remove();grid.classList.add('show');},800);
-  },1500);
-});
+  window.addEventListener('load',()=>{
+    const l=document.getElementById('loading'); const g=document.getElementById('grid');
+    setTimeout(()=>{ l.style.opacity='0'; l.style.pointerEvents='none'; setTimeout(()=>{l.remove(); g.classList.add('show');},500); },900);
+  });
 </script>
-</body>
-</html>
+</body></html>
