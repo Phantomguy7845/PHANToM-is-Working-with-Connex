@@ -1,12 +1,4 @@
-/* PHANToM Report Counter — Focus Navigation Edition (Aurora 2025)
-   - Keyboard focus for Main/Sub/Sub-sub nodes: Arrow ↑ ↓ ← →
-   - Focus occurs only when user clicks a node OR presses arrow keys
-   - Text mode: full typing, Enter adds newline, shortcuts not intercepted
-   - Inline number edit (Enter/Escape/Blur commit)
-   - Visual selection synced with focus manager
-   - Indentation levels exposed via data-level for CSS styling
-   - Keeps previous UX and state schema (PHANTOM_REPORT_STATE_V4)
-*/
+/* PHANToM Report Counter — Focus Navigation Edition (Aurora 2025) */
 
 (function () {
   const $ = (s, c = document) => c.querySelector(s);
@@ -22,7 +14,6 @@
   const copyBtn = $("#copyReport");
   const resetCountsBtn = $("#resetCounts");
   const resetAllBtn = $("#resetAll");
-  const manageSumBtn = $("#manageSum"); // (reserved for your modal logic)
   const exportBtn = $("#exportSettings");
   const importInput = $("#importSettings");
   const dailySummaryEl = $("#dailySummary");
@@ -34,7 +25,6 @@
   let state = loadState() || defaultState();
   let focusPath = [];          // e.g. [mainIndex] or [mainIndex, childIndex] ...
   let flatFocusList = [];      // Array of { path:[...], el:HTMLElement }
-  // note: we do not auto focus on render; focus only when user acts.
 
   // ---- Init ----
   initUI();
@@ -63,6 +53,8 @@
 
     addMainBtn.addEventListener("click", onAddMain);
     copyBtn.addEventListener("click", onCopyReport);
+
+    // ✅ ที่หายไป — เพิ่มฟังก์ชันเหล่านี้ให้ทำงานจริง
     resetCountsBtn.addEventListener("click", onResetCounts);
     resetAllBtn.addEventListener("click", onResetAll);
 
@@ -89,8 +81,6 @@
 
     updateDailySummary();
     saveState();
-
-    // reflect current focus highlight (if exists)
     highlightFocus();
   }
 
@@ -99,12 +89,10 @@
     node.dataset.level = "0";
     node.dataset.path = pathKey([mi]);
 
-    // header row
     const title = el("div", "title", main.title);
     title.title = "ดับเบิลคลิกเพื่อแก้ชื่อ";
     title.ondblclick = () => renameNode(main);
 
-    // type select
     const typeSel = el("select");
     typeSel.innerHTML = `<option value="count">Count</option><option value="text">Text</option>`;
     typeSel.value = main.type || "count";
@@ -114,7 +102,6 @@
       render();
     });
 
-    // use-as-call toggle (keep previous behavior)
     const asCall = el("label", "toggle");
     const chk = el("input");
     chk.type = "checkbox";
@@ -125,7 +112,6 @@
     });
     asCall.append(chk, el("span", null, "นับเป็นโทรรวม"));
 
-    // count/text body
     const countWrap = el("div", "countWrap");
     if (main.type === "count") {
       const val = el("div", "count", String(main.count || 0));
@@ -138,20 +124,15 @@
       const ta = el("textarea", "textbox");
       ta.placeholder = "พิมพ์ข้อความ (1 บรรทัด = 1 นับ)";
       ta.value = (main.lines || []).join("\n");
-      ta.addEventListener("keydown", (e) => {
-        // allow typing; do not let global shortcuts interfere
-        e.stopPropagation();
-      });
+      ta.addEventListener("keydown", (e) => e.stopPropagation());
       ta.addEventListener("input", () => {
         main.lines = ta.value.split("\n").map(s => s.trim()).filter(Boolean);
         saveState();
-        updateDailySummary(); // keep summary in-sync while typing
+        updateDailySummary();
       });
       countWrap.append(ta);
     }
 
-    // expand/collapse (optional): we keep simple — always expanded
-    // controls
     const ops = el("div", "ops");
     ops.append(
       ghostBtn("↑", () => moveMain(mi, -1)),
@@ -162,7 +143,6 @@
     const head = el("div", "header");
     head.append(title, typeSel, asCall, countWrap, ops);
 
-    // add sub row
     const addRow = el("div", "row");
     const subName = el("input"); subName.placeholder = "เพิ่มหมวดย่อย…";
     const subType = el("select");
@@ -178,15 +158,11 @@
 
     node.append(head, addRow);
 
-    // children (level 1+)
     if ((main.children || []).length) {
       node.append(renderChildren(main, [mi], 1));
     }
 
-    // register focusable
     registerFocusable(node, [mi]);
-
-    // click to focus
     node.addEventListener("click", (e) => {
       e.stopPropagation();
       setFocusPath([mi], true);
@@ -247,14 +223,11 @@
 
     node.append(head);
 
-    // deeper children
     if ((nodeData.children || []).length) {
       node.append(renderChildren(nodeData, path, level + 1));
     }
 
-    // register focusable
     registerFocusable(node, path);
-
     node.addEventListener("click", (e) => {
       e.stopPropagation();
       setFocusPath(path, true);
@@ -273,7 +246,6 @@
     const typing = tag === "INPUT" || tag === "TEXTAREA";
     if (typing) return; // don't hijack when typing
 
-    // +/- change count only if focused node is count
     if (e.key === "+" || e.key === "=") {
       incFocused(+1); e.preventDefault(); return;
     }
@@ -281,31 +253,22 @@
       incFocused(-1); e.preventDefault(); return;
     }
 
-    // Arrow navigation among all nodes (main + subs)
     if (e.key === "ArrowDown") {
       moveFocusFlat(+1); e.preventDefault(); return;
     }
     if (e.key === "ArrowUp") {
       moveFocusFlat(-1); e.preventDefault(); return;
     }
-
-    // Hierarchical navigation
     if (e.key === "ArrowRight") {
-      // go into first child if exists
       const cur = getNodeByPath(focusPath);
       if (cur && Array.isArray(cur.children) && cur.children.length > 0) {
         setFocusPath([...focusPath, 0], true);
       }
-      e.preventDefault();
-      return;
+      e.preventDefault(); return;
     }
     if (e.key === "ArrowLeft") {
-      // go to parent if exists
-      if (focusPath.length > 1) {
-        setFocusPath(focusPath.slice(0, -1), true);
-      }
-      e.preventDefault();
-      return;
+      if (focusPath.length > 1) setFocusPath(focusPath.slice(0, -1), true);
+      e.preventDefault(); return;
     }
   }
 
@@ -342,8 +305,7 @@
   function incFocused(delta) {
     if (!focusPath.length) return;
     const node = getNodeByPath(focusPath);
-    if (!node) return;
-    if (node.type !== "count") return;
+    if (!node || node.type !== "count") return;
     inc(node, delta);
   }
 
@@ -353,7 +315,7 @@
       userName: "",
       reportDate: isoDate(),
       categories: [],
-      sumRules: state?.sumRules || [] // keep if present
+      sumRules: []
     };
   }
 
@@ -436,6 +398,29 @@
     render();
   }
 
+  // =========================== RESET HANDLERS (NEW) ====================
+  function onResetCounts() {
+    if (!confirm("รีเซ็ตค่าประจำวัน (ล้างตัวเลข/ข้อความ แต่คงโครงสร้าง) ?")) return;
+    state.categories.forEach(resetCountsOnlyNode);
+    saveState();
+    render();
+    toast("รีเซ็ตค่าประจำวันแล้ว");
+  }
+
+  function onResetAll() {
+    if (!confirm("ล้างทุกอย่าง (รวมโครงสร้าง & กฎ SUM) ?")) return;
+    state = defaultState();
+    saveState();
+    render();
+    toast("ล้างทั้งหมดแล้ว");
+  }
+
+  function resetCountsOnlyNode(node) {
+    if (node.type === "count") node.count = 0;
+    else node.lines = [];
+    (node.children || []).forEach(resetCountsOnlyNode);
+  }
+
   // =========================== REPORT & SUMMARY ========================
   function onCopyReport() {
     const t = buildReport();
@@ -443,8 +428,6 @@
   }
 
   function updateDailySummary() {
-    // แสดงสรุปย่อสุด ๆ (ถ้าต้องการปรับเป็นจริงจังค่อยเติม)
-    // ที่นี่จะนับ “รวมทั้งต้นไม้” ต่อหมวดหลักอย่างเร็ว ๆ
     const summaries = state.categories.map(c => `${c.title} ${calcCount(c)}`);
     dailySummaryEl && (dailySummaryEl.textContent = summaries.slice(0, 3).join(" | ") || "—");
   }
@@ -468,7 +451,6 @@
     });
 
     lines.push("//////////SUM//////////");
-    // *ที่นี่คุณสามารถเติม computeSums() หากมี sumRules ใช้งานจริงในเวอร์ชันของคุณ*
     lines.push("โทรรวม " + calcCalls());
     return lines.join("\n");
   }
@@ -494,7 +476,6 @@
   }
 
   function calcCalls() {
-    // โทรรวม: รวมเฉพาะ main ที่ติ๊ก useAsCall + ยอดรวมลูก
     return state.categories
       .filter(m => m.useAsCall)
       .reduce((a, m) => a + calcCount(m), 0);
@@ -541,7 +522,6 @@
     host.appendChild(inp);
     inp.focus();
     inp.select();
-    // do not leak shortcuts
     inp.addEventListener("keydown", (e) => {
       e.stopPropagation();
       if (e.key === "Enter") commit();
@@ -555,24 +535,18 @@
       saveState();
       render();
     }
-    function cancel() {
-      render();
-    }
+    function cancel() { render(); }
   }
 
   // =========================== HELPERS =================================
-  function uid() {
-    return Math.random().toString(36).slice(2, 9);
-  }
+  function uid() { return Math.random().toString(36).slice(2, 9); }
   function el(tag, cls, txt) {
     const x = document.createElement(tag);
     if (cls) x.className = cls;
     if (txt != null) x.textContent = txt;
     return x;
   }
-  function pathKey(path) {
-    return path.join(".");
-  }
+  function pathKey(path) { return path.join("."); }
   function getNodeByPath(path) {
     if (!path || !path.length) return null;
     let cur = state.categories[path[0]];
@@ -582,17 +556,9 @@
     }
     return cur || null;
   }
-  function saveState() {
-    localStorage.setItem(LS_KEY, JSON.stringify(state));
-  }
-  function loadState() {
-    try { return JSON.parse(localStorage.getItem(LS_KEY) || "null"); }
-    catch { return null; }
-  }
-  function isoDate() {
-    const d = new Date();
-    return d.toISOString().split("T")[0];
-  }
+  function saveState() { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+  function loadState() { try { return JSON.parse(localStorage.getItem(LS_KEY) || "null"); } catch { return null; } }
+  function isoDate() { const d = new Date(); return d.toISOString().split("T")[0]; }
   function pad2(n) { return String(n).padStart(2, "0"); }
   function css(s) { return (s || "").replace(/"/g, "&quot;"); }
   function toast(t) {
@@ -602,15 +568,11 @@
     setTimeout(() => toastEl.classList.remove("show"), 1500);
   }
   async function copy(text) {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
+    try { await navigator.clipboard.writeText(text); }
+    catch {
       const ta = document.createElement("textarea");
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      ta.remove();
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      document.execCommand("copy"); ta.remove();
     }
   }
 })();
