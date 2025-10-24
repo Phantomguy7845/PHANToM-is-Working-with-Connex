@@ -443,4 +443,80 @@
       const n = Math.max(0, parseInt(inp.value || "0", 10));
       node.count = n;
       saveState();
-     
+           render();
+    }
+    function cancel() {
+      render();
+    }
+  }
+
+  // =========================== HELPERS ===========================
+  function uid() { return Math.random().toString(36).slice(2, 9); }
+  function el(tag, cls, txt) {
+    const x = document.createElement(tag);
+    if (cls) x.className = cls;
+    if (txt != null) x.textContent = txt;
+    return x;
+  }
+  function pathKey(path) { return path.join("."); }
+  function getNodeByPath(path) {
+    if (!path || !path.length) return null;
+    let cur = state.categories[path[0]];
+    for (let i = 1; i < path.length; i++) {
+      if (!cur || !cur.children) return null;
+      cur = cur.children[path[i]];
+    }
+    return cur || null;
+  }
+  function saveState() { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+  function loadState() { try { return JSON.parse(localStorage.getItem(LS_KEY) || "null"); } catch { return null; } }
+  function isoDate() { const d = new Date(); return d.toISOString().split("T")[0]; }
+  function pad2(n) { return String(n).padStart(2, "0"); }
+  function css(s) { return (s || "").replace(/"/g, "&quot;"); }
+
+  function toast(t) {
+    if (!toastEl) return;
+    toastEl.textContent = t;
+    toastEl.classList.add("show");
+    setTimeout(() => toastEl.classList.remove("show"), 1500);
+  }
+
+  async function copy(text) {
+    try { await navigator.clipboard.writeText(text); }
+    catch {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+    }
+  }
+
+  // ✅ ปุ่มย่อยที่หายไปจากเวอร์ชันก่อนหน้า (แก้ bug miniBtn / ghostBtn / dangerBtn)
+  function miniBtn(txt, fn) {
+    const b = document.createElement("button");
+    b.className = "mini";
+    b.textContent = txt;
+    b.addEventListener("click", (e) => { e.stopPropagation(); fn(); });
+    return b;
+  }
+
+  function ghostBtn(txt, fn) {
+    const b = document.createElement("button");
+    b.className = "btn ghost";
+    b.textContent = txt;
+    b.addEventListener("click", (e) => { e.stopPropagation(); fn(); });
+    return b;
+  }
+
+  function dangerBtn(txt, fn) {
+    const b = document.createElement("button");
+    b.className = "btn danger";
+    b.textContent = txt;
+    b.addEventListener("click", (e) => { e.stopPropagation(); fn(); });
+    return b;
+  }
+
+})();
+
