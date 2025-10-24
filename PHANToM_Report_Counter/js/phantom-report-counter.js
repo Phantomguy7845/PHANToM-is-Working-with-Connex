@@ -1,4 +1,4 @@
-/* PHANToM Report Counter — Focus Navigation Edition (Aurora 2025) */
+/* PHANToM Report Counter — Focus Navigation Edition (Aurora 2025 · Fixed Buttons) */
 
 (function () {
   const $ = (s, c = document) => c.querySelector(s);
@@ -23,29 +23,26 @@
 
   // ---- State ----
   let state = loadState() || defaultState();
-  let focusPath = [];          // e.g. [mainIndex] or [mainIndex, childIndex] ...
-  let flatFocusList = [];      // Array of { path:[...], el:HTMLElement }
+  let focusPath = [];
+  let flatFocusList = [];
 
   // ---- Init ----
   initUI();
   render();
 
-  // =========================== INIT & EVENTS ===========================
+  // =========================== INIT ===========================
   function initUI() {
-    // Header bindings
     userNameEl.value = state.userName || "";
     userNameEl.addEventListener("input", () => {
       state.userName = userNameEl.value.trim();
       saveState();
     });
 
-    // Date default
     if (!state.reportDate) {
       dateEl.value = isoDate();
       state.reportDate = dateEl.value;
-    } else {
-      dateEl.value = state.reportDate;
-    }
+    } else dateEl.value = state.reportDate;
+
     dateEl.addEventListener("change", () => {
       state.reportDate = dateEl.value || isoDate();
       saveState();
@@ -53,32 +50,23 @@
 
     addMainBtn.addEventListener("click", onAddMain);
     copyBtn.addEventListener("click", onCopyReport);
-
-    // ✅ ที่หายไป — เพิ่มฟังก์ชันเหล่านี้ให้ทำงานจริง
     resetCountsBtn.addEventListener("click", onResetCounts);
     resetAllBtn.addEventListener("click", onResetAll);
-
-    // Export/Import (ตั้งค่า)
     exportBtn?.addEventListener("click", onExportSettings);
     importInput?.addEventListener("change", onImportSettings);
 
-    // Keyboard navigation — only when NOT typing in input/textarea
     document.addEventListener("keydown", onGlobalKeyDown, true);
-
-    // Allow clicking the board to set focus
     treeEl.addEventListener("click", () => treeEl.focus());
   }
 
-  // =========================== RENDERING ===============================
+  // =========================== RENDER ===========================
   function render() {
     treeEl.innerHTML = "";
     flatFocusList = [];
-
     state.categories.forEach((main, mi) => {
       const mainEl = renderMain(main, mi);
       treeEl.appendChild(mainEl);
     });
-
     updateDailySummary();
     saveState();
     highlightFocus();
@@ -90,7 +78,6 @@
     node.dataset.path = pathKey([mi]);
 
     const title = el("div", "title", main.title);
-    title.title = "ดับเบิลคลิกเพื่อแก้ชื่อ";
     title.ondblclick = () => renameNode(main);
 
     const typeSel = el("select");
@@ -158,9 +145,7 @@
 
     node.append(head, addRow);
 
-    if ((main.children || []).length) {
-      node.append(renderChildren(main, [mi], 1));
-    }
+    if ((main.children || []).length) node.append(renderChildren(main, [mi], 1));
 
     registerFocusable(node, [mi]);
     node.addEventListener("click", (e) => {
@@ -185,7 +170,6 @@
     node.dataset.path = pathKey(path);
 
     const title = el("div", "title", nodeData.title);
-    title.title = "ดับเบิลคลิกเพื่อแก้ชื่อ";
     title.ondblclick = () => renameNode(nodeData);
 
     const badge = el("span", "mtype", nodeData.type === "text" ? "Text" : "Count");
@@ -193,7 +177,6 @@
     const countWrap = el("div", "countWrap");
     if (nodeData.type === "count") {
       const val = el("div", "count", String(nodeData.count || 0));
-      val.title = "คลิกเพื่อแก้ไขตัวเลขโดยตรง";
       val.addEventListener("click", () => inlineNumberEdit(val, nodeData));
       const minus = miniBtn("−", () => inc(nodeData, -1));
       const plus = miniBtn("+", () => inc(nodeData, +1));
@@ -220,12 +203,9 @@
 
     const head = el("div", "sub-header");
     head.append(title, badge, countWrap, ops);
-
     node.append(head);
 
-    if ((nodeData.children || []).length) {
-      node.append(renderChildren(nodeData, path, level + 1));
-    }
+    if ((nodeData.children || []).length) node.append(renderChildren(nodeData, path, level + 1));
 
     registerFocusable(node, path);
     node.addEventListener("click", (e) => {
@@ -236,34 +216,23 @@
     return node;
   }
 
+  // =========================== FOCUS ===========================
   function registerFocusable(elm, path) {
     flatFocusList.push({ path: path.slice(), el: elm });
   }
 
-  // =========================== FOCUS & KEYBOARD ========================
   function onGlobalKeyDown(e) {
     const tag = (document.activeElement && document.activeElement.tagName) || "";
     const typing = tag === "INPUT" || tag === "TEXTAREA";
-    if (typing) return; // don't hijack when typing
+    if (typing) return;
 
-    if (e.key === "+" || e.key === "=") {
-      incFocused(+1); e.preventDefault(); return;
-    }
-    if (e.key === "-" || e.key === "_") {
-      incFocused(-1); e.preventDefault(); return;
-    }
-
-    if (e.key === "ArrowDown") {
-      moveFocusFlat(+1); e.preventDefault(); return;
-    }
-    if (e.key === "ArrowUp") {
-      moveFocusFlat(-1); e.preventDefault(); return;
-    }
+    if (e.key === "+" || e.key === "=") { incFocused(+1); e.preventDefault(); return; }
+    if (e.key === "-" || e.key === "_") { incFocused(-1); e.preventDefault(); return; }
+    if (e.key === "ArrowDown") { moveFocusFlat(+1); e.preventDefault(); return; }
+    if (e.key === "ArrowUp") { moveFocusFlat(-1); e.preventDefault(); return; }
     if (e.key === "ArrowRight") {
       const cur = getNodeByPath(focusPath);
-      if (cur && Array.isArray(cur.children) && cur.children.length > 0) {
-        setFocusPath([...focusPath, 0], true);
-      }
+      if (cur && Array.isArray(cur.children) && cur.children.length > 0) setFocusPath([...focusPath, 0], true);
       e.preventDefault(); return;
     }
     if (e.key === "ArrowLeft") {
@@ -296,9 +265,7 @@
       idx = flatFocusList.findIndex(x => pathKey(x.path) === curKey);
       if (idx < 0) idx = 0;
     }
-    let ni = idx + delta;
-    if (ni < 0) ni = 0;
-    if (ni >= flatFocusList.length) ni = flatFocusList.length - 1;
+    let ni = Math.max(0, Math.min(flatFocusList.length - 1, idx + delta));
     setFocusPath(flatFocusList[ni].path, true);
   }
 
@@ -309,14 +276,9 @@
     inc(node, delta);
   }
 
-  // =========================== DATA OPS ================================
+  // =========================== DATA OPS ===========================
   function defaultState() {
-    return {
-      userName: "",
-      reportDate: isoDate(),
-      categories: [],
-      sumRules: []
-    };
+    return { userName: "", reportDate: isoDate(), categories: [], sumRules: [] };
   }
 
   function addChild(parent, title, type) {
@@ -329,102 +291,69 @@
       lines: [],
       children: []
     });
-    saveState();
-    render();
+    saveState(); render();
   }
 
   function onAddMain() {
     const t = (newMainTitleEl.value || "").trim();
     if (!t) return toast("กรุณาใส่ชื่อหมวดหลัก");
-    state.categories.push({
-      id: uid(),
-      title: t,
-      type: "count",
-      count: 0,
-      lines: [],
-      useAsCall: false,
-      children: []
-    });
-    newMainTitleEl.value = "";
-    saveState();
-    render();
+    state.categories.push({ id: uid(), title: t, type: "count", count: 0, lines: [], useAsCall: false, children: [] });
+    newMainTitleEl.value = ""; saveState(); render();
   }
 
   function moveMain(i, dir) {
-    const ni = i + dir;
-    if (ni < 0 || ni >= state.categories.length) return;
+    const ni = i + dir; if (ni < 0 || ni >= state.categories.length) return;
     const x = state.categories.splice(i, 1)[0];
     state.categories.splice(ni, 0, x);
-    saveState();
-    render();
+    saveState(); render();
   }
 
   function moveChild(parent, path, dir) {
-    const idx = path[path.length - 1];
-    const ni = idx + dir;
+    const idx = path[path.length - 1]; const ni = idx + dir;
     if (ni < 0 || ni >= (parent.children || []).length) return;
     const x = parent.children.splice(idx, 1)[0];
     parent.children.splice(ni, 0, x);
-    saveState();
-    render();
+    saveState(); render();
   }
 
   function delMain(i) {
     if (!confirm(`ลบหมวด "${state.categories[i].title}" ?`)) return;
-    state.categories.splice(i, 1);
-    saveState();
-    render();
+    state.categories.splice(i, 1); saveState(); render();
   }
 
   function delChild(parent, path) {
     const idx = path[path.length - 1];
     if (!confirm(`ลบ "${parent.children[idx].title}" ?`)) return;
-    parent.children.splice(idx, 1);
-    saveState();
-    render();
+    parent.children.splice(idx, 1); saveState(); render();
   }
 
   function renameNode(node) {
     const nv = prompt("แก้ไขชื่อ:", node.title);
-    if (!nv) return;
-    node.title = nv.trim();
-    saveState();
-    render();
+    if (!nv) return; node.title = nv.trim(); saveState(); render();
   }
 
-  function inc(node, delta) {
-    node.count = Math.max(0, (node.count || 0) + delta);
-    saveState();
-    render();
-  }
+  function inc(node, delta) { node.count = Math.max(0, (node.count || 0) + delta); saveState(); render(); }
 
-  // =========================== RESET HANDLERS (NEW) ====================
+  // =========================== RESET ===========================
   function onResetCounts() {
-    if (!confirm("รีเซ็ตค่าประจำวัน (ล้างตัวเลข/ข้อความ แต่คงโครงสร้าง) ?")) return;
+    if (!confirm("รีเซ็ตค่าประจำวัน ?")) return;
     state.categories.forEach(resetCountsOnlyNode);
-    saveState();
-    render();
-    toast("รีเซ็ตค่าประจำวันแล้ว");
+    saveState(); render(); toast("รีเซ็ตค่าประจำวันแล้ว");
   }
 
   function onResetAll() {
-    if (!confirm("ล้างทุกอย่าง (รวมโครงสร้าง & กฎ SUM) ?")) return;
-    state = defaultState();
-    saveState();
-    render();
-    toast("ล้างทั้งหมดแล้ว");
+    if (!confirm("ล้างทุกอย่าง ?")) return;
+    state = defaultState(); saveState(); render(); toast("ล้างทั้งหมดแล้ว");
   }
 
   function resetCountsOnlyNode(node) {
-    if (node.type === "count") node.count = 0;
-    else node.lines = [];
+    if (node.type === "count") node.count = 0; else node.lines = [];
     (node.children || []).forEach(resetCountsOnlyNode);
   }
 
-  // =========================== REPORT & SUMMARY ========================
+  // =========================== REPORT ===========================
   function onCopyReport() {
-    const t = buildReport();
-    copy(t).then(() => toast("คัดลอก Report แล้ว"));
+    const t = buildReport(); copy(t).then(() => toast("คัดลอก Report แล้ว"));
   }
 
   function updateDailySummary() {
@@ -434,22 +363,16 @@
 
   function buildReport() {
     const name = (state.userName || "PHANToM").trim();
-    const d = dateEl.value ? new Date(dateEl.value) : new Date();
-    const header = `${name} ${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;
-
-    const lines = [];
-    lines.push(header, "");
-
+    const d = new Date(dateEl.value);
+    const header = `${name} ${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
+    const lines = [header, ""];
     state.categories.forEach(main => {
       const total = calcCount(main);
       lines.push(`//${main.title}${total > 0 ? ` ${total}` : ""}`);
       appendSubLines(lines, main);
-      if (main.type === "text" && (main.lines || []).length) {
-        main.lines.forEach(t => lines.push(t));
-      }
+      if (main.type === "text" && (main.lines || []).length) main.lines.forEach(t => lines.push(t));
       lines.push("");
     });
-
     lines.push("//////////SUM//////////");
     lines.push("โทรรวม " + calcCalls());
     return lines.join("\n");
@@ -459,26 +382,18 @@
     (node.children || []).forEach(ch => {
       const cnt = calcCount(ch);
       lines.push(`${ch.title} ${cnt}`);
-      if (ch.type === "text" && (ch.lines || []).length) {
-        ch.lines.forEach(t => lines.push(t));
-      }
-      if ((ch.children || []).length) {
-        appendSubLines(lines, ch);
-      }
+      if (ch.type === "text" && (ch.lines || []).length) ch.lines.forEach(t => lines.push(t));
+      if ((ch.children || []).length) appendSubLines(lines, ch);
     });
   }
 
   function calcCount(node) {
     const own = node.type === "count" ? (node.count || 0) : (node.lines?.length || 0);
-    let sum = own;
-    (node.children || []).forEach(ch => sum += calcCount(ch));
-    return sum;
+    return (node.children || []).reduce((a, c) => a + calcCount(c), own);
   }
 
   function calcCalls() {
-    return state.categories
-      .filter(m => m.useAsCall)
-      .reduce((a, m) => a + calcCount(m), 0);
+    return state.categories.filter(m => m.useAsCall).reduce((a, m) => a + calcCount(m), 0);
   }
 
   // =========================== EXPORT / IMPORT =========================
@@ -500,19 +415,14 @@
       try {
         const obj = JSON.parse(String(ev.target.result || "{}"));
         if (!obj || !Array.isArray(obj.categories)) throw new Error("invalid");
-        state = obj;
-        saveState();
-        render();
-        toast("Import เรียบร้อย");
-      } catch (err) {
-        toast("ไฟล์ .txt ไม่ถูกต้อง");
-      }
+        state = obj; saveState(); render(); toast("Import เรียบร้อย");
+      } catch { toast("ไฟล์ .txt ไม่ถูกต้อง"); }
       importInput.value = "";
     };
     r.readAsText(f);
   }
 
-  // =========================== INLINE EDITORS ==========================
+  // =========================== INLINE EDIT =========================
   function inlineNumberEdit(host, node) {
     const old = node.count || 0;
     const inp = el("input");
@@ -533,46 +443,4 @@
       const n = Math.max(0, parseInt(inp.value || "0", 10));
       node.count = n;
       saveState();
-      render();
-    }
-    function cancel() { render(); }
-  }
-
-  // =========================== HELPERS =================================
-  function uid() { return Math.random().toString(36).slice(2, 9); }
-  function el(tag, cls, txt) {
-    const x = document.createElement(tag);
-    if (cls) x.className = cls;
-    if (txt != null) x.textContent = txt;
-    return x;
-  }
-  function pathKey(path) { return path.join("."); }
-  function getNodeByPath(path) {
-    if (!path || !path.length) return null;
-    let cur = state.categories[path[0]];
-    for (let i = 1; i < path.length; i++) {
-      if (!cur || !cur.children) return null;
-      cur = cur.children[path[i]];
-    }
-    return cur || null;
-  }
-  function saveState() { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
-  function loadState() { try { return JSON.parse(localStorage.getItem(LS_KEY) || "null"); } catch { return null; } }
-  function isoDate() { const d = new Date(); return d.toISOString().split("T")[0]; }
-  function pad2(n) { return String(n).padStart(2, "0"); }
-  function css(s) { return (s || "").replace(/"/g, "&quot;"); }
-  function toast(t) {
-    if (!toastEl) return;
-    toastEl.textContent = t;
-    toastEl.classList.add("show");
-    setTimeout(() => toastEl.classList.remove("show"), 1500);
-  }
-  async function copy(text) {
-    try { await navigator.clipboard.writeText(text); }
-    catch {
-      const ta = document.createElement("textarea");
-      ta.value = text; document.body.appendChild(ta); ta.select();
-      document.execCommand("copy"); ta.remove();
-    }
-  }
-})();
+     
