@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>PHANToM Web Dialer</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/phantom-web-dialer.css"/>
+
+  <!-- ESM CDN (ตรึงเวอร์ชัน) สำหรับ ya-webadb -->
+  <script type="module">
+    // preload modules (hint the browser)
+    import "https://esm.sh/@yume-chan/adb@0.13.2?external=whatwg-streams,web-streams-polyfill";
+    import "https://esm.sh/@yume-chan/adb-backend-webusb@0.13.2";
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">PHANToM</div>
+      <small>Web Dialer — WebUSB ADB • Auto-connect • History • Push Text</small>
+    </div>
+    <div class="actions">
+      <button id="btnConnect" class="btn">เชื่อมต่อ USB</button>
+      <button id="btnReconnect" class="btn ghost" title="Auto-connect อุปกรณ์ที่เคยอนุญาต">Auto-connect</button>
+      <button id="btnWifi" class="btn ghost" title="โหมด Wi-Fi Debug (เตรียมไว้พัฒนาต่อ)">Wi-Fi (Soon)</button>
+      <div class="menu">
+        <button id="btnSettings" class="icon">⚙️</button>
+        <div id="settingsPane" class="dropdown">
+          <label class="row">
+            <input id="optAutoConnect" type="checkbox" checked/>
+            <span>พยายาม Auto-connect เมื่อโหลดหน้า</span>
+          </label>
+          <label class="row">
+            <input id="optLog" type="checkbox" checked/>
+            <span>แสดง Console Log</span>
+          </label>
+          <label class="row">
+            <input id="optHaptics" type="checkbox" checked/>
+            <span>แอนิเมชัน & สั่น (UI feedback)</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="dialer card">
+      <div class="number-row">
+        <input id="phoneNumber" type="tel" inputmode="tel" placeholder="ใส่หมายเลข แล้วกด Enter เพื่อโทร" autocomplete="off"/>
+        <button id="btnClear" class="btn ghost">ล้าง</button>
+      </div>
+      <div class="controls">
+        <button id="btnCall" class="btn ok">โทรออก</button>
+        <button id="btnHang" class="btn danger">วางสาย</button>
+        <button id="btnAnswer" class="btn ghost">รับสาย</button>
+      </div>
+
+      <div class="quickpad">
+        <button class="pad">1</button><button class="pad">2</button><button class="pad">3</button>
+        <button class="pad">4</button><button class="pad">5</button><button class="pad">6</button>
+        <button class="pad">7</button><button class="pad">8</button><button class="pad">9</button>
+        <button class="pad">*</button><button class="pad">0</button><button class="pad">#</button>
+      </div>
+
+      <div class="tool-strip">
+        <button id="btnPushTextToggle" class="btn ghost">Push Text</button>
+      </div>
+      <div id="pushTextPanel" class="pushtext hidden">
+        <textarea id="pushTextInput" rows="2" placeholder="พิมพ์ข้อความสั้น ๆ เพื่อส่งไปไว้ในคลิปบอร์ดอุปกรณ์"></textarea>
+        <div class="push-actions">
+          <button id="btnPushText" class="btn">Push</button>
+          <button id="btnPushTextClear" class="btn ghost">ล้าง</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="side card">
+      <div class="device-info">
+        <div class="title">อุปกรณ์</div>
+        <div id="deviceName">—</div>
+        <div id="deviceSerial" class="muted">—</div>
+      </div>
+
+      <div class="history">
+        <div class="row">
+          <div class="title">โทรล่าสุด</div>
+          <button id="btnAllHistory" class="btn ghost">ดูทั้งหมด</button>
+        </div>
+        <ul id="recentList" class="recent-list"></ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- History Modal -->
+  <dialog id="historyModal" class="modal">
+    <form method="dialog" class="modal-card">
+      <header class="modal-head">
+        <h3>ประวัติการโทรทั้งหมด</h3>
+        <button class="icon" value="cancel">✖</button>
+      </header>
+      <section class="modal-body">
+        <div class="row">
+          <input id="historySearch" type="text" placeholder="ค้นหาเบอร์ (พิมพ์บางส่วนแล้วกรองทันที)"/>
+          <label class="row right">
+            <input id="filterDedup" type="checkbox"/>
+            <span>ซ่อนเบอร์ซ้ำ (แสดงเฉพาะรายการล่าสุด)</span>
+          </label>
+        </div>
+        <div id="historyList" class="history-list"></div>
+      </section>
+    </form>
+  </dialog>
+
+  <footer class="statusbar">
+    <div id="status">USB: ยังไม่ได้เชื่อมต่อ</div>
+  </footer>
+
+  <div id="toast" class="toast">พร้อมทำงาน</div>
+
+  <!-- แอปหลัก -->
+  <script type="module" src="js/phantom-web-dialer.js"></script>
+</body>
+</html>
