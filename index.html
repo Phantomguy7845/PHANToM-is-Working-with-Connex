@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PHANToM Tool with Connex</title>
+<title>PHANToM Toolkit — Launcher</title>
 <style>
 :root{
   --bg1:#0a0f1f;--bg2:#111a33;--txt:#e5e7eb;--pri1:#6b8bff;--pri2:#8bf5ff;--pri3:#a76bff;
@@ -31,8 +31,15 @@ footer{margin-top:40px;font-size:.9rem;opacity:.7}
 </head>
 <body>
 <div class="loading" id="loading"><h2>PHANToM</h2><div class="bar"></div></div>
-<h1>PHANToM Tool with Connex</h1>
+<h1>PHANToM Toolkit</h1>
 <div class="grid" id="grid">
+
+  <div class="card">
+    <h3>PHANToM Web Dialer</h3>
+    <p>เครื่องมือโทรออก/รับสายผ่าน WebUSB หรือ Wi-Fi Debug สำหรับอุปกรณ์ Android</p>
+    <a href="PHANToM_Web_Dialer/PHANToM_Web_Dialer.html" class="btn">เปิดใช้งาน</a>
+  </div>
+
   <div class="card">
     <h3>CX Price Editor</h3>
     <p>ตัวช่วยจัดการและปรับราคาเช่า/ขายสำหรับระบบ CX</p>
@@ -63,6 +70,12 @@ window.addEventListener('load',()=>{
     setTimeout(()=>{loader.remove();grid.classList.add('show');},800);
   },1600);
 });
+
+// ✅ ตัวเลือก auto redirect (เปิดอัตโนมัติถ้ามีเพียงโปรเจกต์เดียว)
+const autoRedirect = false; // <— ถ้าอยากให้เปิด Dialer ทันทีเปลี่ยนเป็น true
+if (autoRedirect) {
+  window.location.href = "PHANToM_Web_Dialer/PHANToM_Web_Dialer.html";
+}
 </script>
 </body>
 </html>
