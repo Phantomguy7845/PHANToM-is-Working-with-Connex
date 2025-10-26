@@ -1,243 +1,401 @@
-/* PHANToM Web Dialer — no dialpad, keyboard-first UX */
-(() => {
-  // ---------- DOM ----------
-  const devSel = $("#deviceSelect");
-  const btnConnect = $("#btnConnect");
+/* PHANToM Web Dialer — Phase 1 (WebUSB-first, ADB-ready scaffolding)
+   - No keypad; autfocus number input
+   - Keyboard: Enter=call, Esc=hangup, Space=answer
+   - WebUSB connect/disconnect; auto-reconnect when possible
+   - Call logs (latest 5 + full history modal with search & dedupe)
+   - Push Text: tries device clipboard via ADB shell; fallback to PC clipboard
+*/
+
+(function(){
+  const $  = (s,c=document)=>c.querySelector(s);
+  const $$ = (s,c=document)=>Array.from(c.querySelectorAll(s));
+
+  // DOM
+  const devStatus     = $("#devStatus");
+  const btnConnect    = $("#btnConnect");
   const btnDisconnect = $("#btnDisconnect");
-  const statePill = $("#connState");
 
-  const numberInput = $("#numberInput");
-  const btnCall = $("#btnCall");
-  const btnAnswer = $("#btnAnswer");
-  const btnHangup = $("#btnHangup");
+  const phoneInput = $("#phoneInput");
+  const btnCall    = $("#btnCall");
+  const btnAnswer  = $("#btnAnswer");
+  const btnHangup  = $("#btnHangup");
 
-  const btnPushToggle = $("#btnPushTextToggle");
-  const pushPanel = $("#pushTextPanel");
-  const pushInput = $("#pushTextInput");
-  const btnPush = $("#btnPushText");
+  const pushPanel  = $("#pushTextPanel");
+  const btnPushNow = $("#btnPushNow");
+  const pushText   = $("#pushText");
 
   const recentList = $("#recentList");
-  const statusLog = $("#statusLog");
+  const btnShowAll = $("#btnShowAll");
+  const btnClearLogs= $("#btnClearLogs");
 
-  const histModal = $("#historyModal");
-  const btnHistoryOpen = $("#btnHistoryOpen");
-  const btnHistoryClose = $("#btnHistoryClose");
-  const histSearch = $("#histSearch");
-  const histDedup = $("#histDedup");
-  const histTable = $("#histTable tbody");
-  const btnHistExport = $("#btnHistoryExport");
-  const histImport = $("#historyImport");
+  const historyModal = $("#historyModal");
+  const closeHistory = $("#closeHistory");
+  const searchLogs   = $("#searchLogs");
+  const filterDup    = $("#filterDup");
+  const historyList  = $("#historyList");
 
   const toastEl = $("#toast");
 
-  // ---------- State ----------
-  const LS_HIST = "PHANTOM_WEB_DIALER_HISTORY_V1";
-  let history = loadHistory();
-  let connected = false;
+  // Storage
+  const LS_LOGS = "PHANTOM_DIALER_LOGS_V1";
+  const LS_DEV  = "PHANTOM_DIALER_LAST_DEVICE"; // for future auto-reconnect metadata
+  let logs = loadLogs();
 
-  // ---------- Bridge (stub) ----------
-  // จุดเชื่อมต่อกับ WebUSB / ADB-over-Web: แยกเป็น abstract API ไว้ก่อน
-  const bridge = {
-    async enumerate() {
-      // TODO: เชื่อมจริงผ่าน WebUSB; ตอนนี้ mock รายการเดียวสำหรับเดโม
-      return [{ id: "mock1", label: "Android (mock)" }];
-    },
-    async connect(id) {
-      // TODO: connectจริง
-      await delay(200);
-      return true;
-    },
-    async disconnect() {
-      await delay(100);
-      return true;
-    },
-    async dial(number) {
-      await delay(250);
-      return { ok: true, result: "dialing" };
-    },
-    async answer() {
-      await delay(120);
-      return { ok: true, result: "answered" };
-    },
-    async hangup() {
-      await delay(100);
-      return { ok: true, result: "hungup" };
-    },
-    async pushClipboard(text) {
-      // ต้องใช้ ADB: `cmd clipboard set <text>`
-      await delay(120);
-      return { ok: true };
-    },
-  };
+  // WebUSB Device (ADB interface)
+  let adbDevice = null;
+  let adbOpened = false;
 
-  // ---------- Init ----------
-  initDevices();
-  initUI();
+  // ADB USB interface filter (class/subclass/protocol = 0xff/0x42/0x01 is common for adb)
+  const ADB_FILTERS = [{ usbClass: 0xff, usbSubclass: 0x42, usbProtocol: 0x01 }];
+
+  init();
   renderRecent();
-  log("พร้อมทำงาน — เชื่อมต่ออุปกรณ์เพื่อเริ่มใช้งาน");
 
-  // ---------- Devices ----------
-  async function initDevices() {
-    const items = await bridge.enumerate();
-    devSel.innerHTML = items.map(d => `<option value="${esc(d.id)}">${esc(d.label)}</option>`).join("") || `<option value="">(ไม่พบอุปกรณ์)</option>`;
+  function init(){
+    // Autofocus phone input on load
+    window.addEventListener("load", ()=> { phoneInput?.focus(); });
+
+    // Connect / Disconnect
+    btnConnect.addEventListener("click", requestDevice);
+    btnDisconnect.addEventListener("click", disconnectDevice);
+
+    // Primary actions
+    btnCall.addEventListener("click", makeCall);
+    btnHangup.addEventListener("click", hangupCall);
+    btnAnswer.addEventListener("click", answerCall);
+
+    // Keyboard shortcuts (when not inside textarea)
+    document.addEventListener("keydown", (e)=>{
+      const tag = (document.activeElement && document.activeElement.tagName) || "";
+      const typing = tag === "TEXTAREA";
+      if(typing) return;
+
+      if(e.key === "Enter"){ e.preventDefault(); makeCall(); }
+      if(e.key === "Escape"){ e.preventDefault(); hangupCall(); }
+      if(e.code === "Space"){ e.preventDefault(); answerCall(); }
+    });
+
+    // Push text
+    btnPushNow.addEventListener("click", pushClipboardToDevice);
+
+    // Logs
+    btnShowAll.addEventListener("click", openHistory);
+    closeHistory.addEventListener("click", ()=> historyModal.close());
+    btnClearLogs.addEventListener("click", clearLogs);
+    searchLogs.addEventListener("input", renderHistory);
+    filterDup.addEventListener("change", renderHistory);
+
+    // Device disconnect event (if supported)
+    if(navigator.usb){
+      navigator.usb.addEventListener("disconnect", e=>{
+        if(adbDevice && e.device === adbDevice){
+          adbDevice = null; adbOpened = false;
+          setDeviceStatus(false, "อุปกรณ์ตัดการเชื่อมต่อ");
+        }
+      });
+    }
+
+    // Try to remember user device (placeholder for future auto reconnect)
+    tryAutoReconnect();
   }
 
-  btnConnect.addEventListener("click", async () => {
-    const id = devSel.value;
-    if (!id) return tip("ไม่พบอุปกรณ์");
-    const ok = await bridge.connect(id);
-    connected = !!ok;
-    setState(connected);
-    tip(connected ? "เชื่อมต่อแล้ว" : "เชื่อมต่อไม่สำเร็จ");
-    if (connected) numberInput.focus();
-  });
-
-  btnDisconnect.addEventListener("click", async () => {
-    await bridge.disconnect();
-    connected = false;
-    setState(false);
-    tip("ตัดการเชื่อมต่อแล้ว");
-  });
-
-  function setState(ok) {
-    statePill.textContent = ok ? "Connected" : "Disconnected";
-    statePill.style.borderColor = ok ? "var(--ok)" : "#334";
-    statePill.style.color = ok ? "#bfffd2" : "var(--muted)";
+  // -------------------- WebUSB Connect --------------------
+  async function requestDevice(){
+    if(!navigator.usb){
+      tip("เบราว์เซอร์นี้ไม่รองรับ WebUSB", false);
+      return;
+    }
+    try{
+      const device = await navigator.usb.requestDevice({ filters: ADB_FILTERS });
+      adbDevice = device;
+      await openDevice();
+    }catch(err){
+      // user canceled or not found
+      tip("ยกเลิกการเชื่อมต่อ หรือไม่พบอุปกรณ์", false);
+    }
   }
 
-  // ---------- Call Controls ----------
-  btnCall.addEventListener("click", callNow);
-  btnAnswer.addEventListener("click", answerNow);
-  btnHangup.addEventListener("click", hangupNow);
+  async function openDevice(){
+    if(!adbDevice) return;
+    try{
+      if(!adbDevice.opened) await adbDevice.open();
+      // Some devices require selecting configuration & claim interface
+      if(adbDevice.configuration === null) await adbDevice.selectConfiguration(1);
 
-  async function callNow() {
-    const num = numberInput.value.trim();
-    if (!num) return tip("ใส่หมายเลขก่อน");
-    if (!connected) return tip("ยังไม่ได้เชื่อมต่ออุปกรณ์");
-    const r = await bridge.dial(num);
-    log(`โทรไปยัง ${num} → ${r.result}`);
-    addHistory({ number: num, at: Date.now(), result: "outgoing" });
+      // Find ADB interface
+      const adbIf = findAdbInterface(adbDevice);
+      if(!adbIf){
+        tip("ไม่พบบริการ ADB บนอุปกรณ์นี้", false);
+        return;
+      }
+      await adbDevice.claimInterface(adbIf.interfaceNumber);
+      adbOpened = true;
+      btnDisconnect.disabled = false;
+      setDeviceStatus(true, "เชื่อมต่อแล้ว");
+      // Save minimal metadata
+      localStorage.setItem(LS_DEV, JSON.stringify({vendorId: adbDevice.vendorId, productId: adbDevice.productId}));
+    }catch(err){
+      console.error(err);
+      tip("เชื่อมต่ออุปกรณ์ไม่สำเร็จ", false);
+    }
+  }
+
+  function findAdbInterface(device){
+    const cfg = device.configuration;
+    if(!cfg) return null;
+    for(const iface of cfg.interfaces){
+      for(const alt of iface.alternates){
+        if(alt.interfaceClass === 0xff && alt.interfaceSubclass === 0x42 && alt.interfaceProtocol === 0x01){
+          // Claim this
+          return { interfaceNumber: iface.interfaceNumber, alternate: alt };
+        }
+      }
+    }
+    return null;
+  }
+
+  async function disconnectDevice(){
+    try{
+      if(!adbDevice) return;
+      if(adbDevice.opened) await adbDevice.close();
+    }catch(e){}
+    adbDevice = null; adbOpened = false;
+    btnDisconnect.disabled = true;
+    setDeviceStatus(false, "ตัดการเชื่อมต่อแล้ว");
+  }
+
+  async function tryAutoReconnect(){
+    // In Phase 1, browsers require user gesture for requestDevice
+    // We can only gently hint the user if navigator.usb.getDevices() returns known devices
+    if(!navigator.usb) return;
+    const devs = await navigator.usb.getDevices();
+    if(devs && devs.length){
+      // Pick the first with ADB profile
+      const target = devs.find(d=>{
+        const cfg = d.configuration;
+        if(!cfg) return false;
+        return cfg.interfaces.some(ifc =>
+          ifc.alternates.some(alt=> alt.interfaceClass===0xff && alt.interfaceSubclass===0x42 && alt.interfaceProtocol===0x01)
+        );
+      });
+      if(target){
+        adbDevice = target;
+        openDevice();
+      }
+    }
+  }
+
+  function setDeviceStatus(connected, text){
+    devStatus.textContent = text || (connected? "เชื่อมต่อแล้ว" : "ไม่ได้เชื่อมต่อ");
+    devStatus.classList.toggle("muted", !connected);
+    if(connected) tip("เชื่อมต่ออุปกรณ์สำเร็จ", true);
+  }
+
+  // -------------------- Call Controls --------------------
+  async function makeCall(){
+    const number = (phoneInput.value || "").trim();
+    if(!number){ tip("กรอกหมายเลขก่อน", false); phoneInput.focus(); return; }
+
+    // Phase 1: If ADB opened, try to send shell to start ACTION_CALL
+    // Modern Android usually allows `adb shell am start -a android.intent.action.CALL -d tel:NUMBER`
+    // NOTE: Requires CALL permissions. On many devices via shell it works; otherwise show fallback.
+    let success = false;
+    if(adbOpened){
+      try{
+        success = await adbShell(`am start -a android.intent.action.CALL -d tel:${escapeShell(number)}`);
+      }catch(e){ success = false; }
+    }
+    if(!success){
+      tip("สั่งโทรผ่าน ADB ไม่ได้ - ตรวจสิทธิ์/เปิด USB debugging หรือใช้งานด้วยสาย USB", false);
+    }else{
+      tip(`กำลังโทร: ${number}`, true);
+      addLog("CALL", number);
+    }
+  }
+
+  async function hangupCall(){
+    // Many devices support: adb shell input keyevent KEYCODE_ENDCALL (6) or telecom hangup
+    let success = false;
+    if(adbOpened){
+      try{
+        success = await adbShell(`input keyevent KEYCODE_ENDCALL`);
+      }catch(e){ success = false; }
+    }
+    tip(success? "วางสายแล้ว" : "สั่งวางสายไม่สำเร็จ", success);
+    if(success) addLog("HANGUP", "");
+  }
+
+  async function answerCall(){
+    // Often: adb shell input keyevent KEYCODE_CALL (5)
+    let success = false;
+    if(adbOpened){
+      try{
+        success = await adbShell(`input keyevent KEYCODE_CALL`);
+      }catch(e){ success = false; }
+    }
+    tip(success? "รับสายแล้ว" : "สั่งรับสายไม่สำเร็จ", success);
+    if(success) addLog("ANSWER", "");
+  }
+
+  // -------------------- Push Text to Device Clipboard --------------------
+  async function pushClipboardToDevice(){
+    const text = (pushText.value || "").trim();
+    if(!text){ tip("พิมพ์ข้อความก่อน", false); return; }
+
+    let success = false;
+    if(adbOpened){
+      // Android 13+: `cmd clipboard set "text"`
+      // For older: need a helper app/broadcast. Phase 1: try cmd; if fails, fallback to PC clipboard.
+      try{
+        success = await adbShell(`cmd clipboard set "${escapeQuotes(text)}"`);
+      }catch(e){ success = false; }
+    }
+    if(!success){
+      // Fallback to PC clipboard
+      try{
+        await navigator.clipboard.writeText(text);
+        tip("คัดลอกข้อความไว้บนคอมพ์แล้ว (อุปกรณ์ไม่รองรับ ADB Clipboard)", true);
+      }catch(e){
+        tip("ไม่สามารถคัดลอกได้", false);
+      }
+    }else{
+      tip("ส่งข้อความไป Clipboard ของอุปกรณ์แล้ว", true);
+    }
+    // clear input
+    pushText.value = "";
+  }
+
+  // -------------------- Logs --------------------
+  function addLog(type, number){
+    const rec = {
+      id: uid(),
+      type,            // CALL / HANGUP / ANSWER
+      number: number || "",
+      at: Date.now()
+    };
+    logs.unshift(rec);
+    saveLogs();
     renderRecent();
   }
-  async function answerNow() {
-    if (!connected) return tip("ยังไม่ได้เชื่อมต่ออุปกรณ์");
-    const r = await bridge.answer();
-    log(`รับสาย → ${r.result}`);
-  }
-  async function hangupNow() {
-    if (!connected) return tip("ยังไม่ได้เชื่อมต่ออุปกรณ์");
-    const r = await bridge.hangup();
-    log(`วางสาย → ${r.result}`);
-  }
 
-  // ---------- Push Text ----------
-  btnPushToggle.addEventListener("click", () => {
-    pushPanel.classList.toggle("hide");
-    if (!pushPanel.classList.contains("hide")) pushInput.focus();
-  });
-  btnPush.addEventListener("click", pushNow);
-  async function pushNow() {
-    const text = pushInput.value;
-    if (!text) return tip("พิมพ์ข้อความก่อน");
-    if (!connected) return tip("ยังไม่ได้เชื่อมต่ออุปกรณ์");
-    const r = await bridge.pushClipboard(text);
-    if (r.ok) {
-      tip("ส่งข้อความไปยังคลิปบอร์ดของอุปกรณ์แล้ว");
-      pushInput.value = "";
+  function renderRecent(){
+    recentList.innerHTML = "";
+    const recent = logs.slice(0,5);
+    if(!recent.length){
+      recentList.innerHTML = `<div class="log-item"><div class="meta">ยังไม่มีประวัติ</div></div>`;
+      return;
     }
+    recent.forEach(r=>{
+      recentList.appendChild(logRow(r));
+    });
   }
 
-  // ---------- Recent ----------
-  function renderRecent() {
-    const last5 = [...history].reverse().slice(0, 5);
-    recentList.innerHTML = last5.map(h => `<li data-num="${esc(h.number)}">${esc(h.number)}</li>`).join("") || `<li class="muted">—</li>`;
-    $$(`#recentList li`).forEach(li => li.addEventListener("click", () => {
-      numberInput.value = li.dataset.num || "";
-      numberInput.focus();
-    }));
+  function openHistory(){
+    historyModal.showModal();
+    renderHistory();
   }
 
-  function addHistory(item) {
-    history.push(item);
-    saveHistory();
-  }
+  function renderHistory(){
+    const q = (searchLogs.value || "").trim();
+    const dedupe = filterDup.checked;
 
-  // ---------- History Modal ----------
-  btnHistoryOpen.addEventListener("click", () => { renderHistory(); histModal.showModal(); });
-  btnHistoryClose.addEventListener("click", () => histModal.close());
-  histSearch.addEventListener("input", renderHistory);
-  histDedup.addEventListener("change", renderHistory);
-  btnHistExport.addEventListener("click", exportHistory);
-  histImport.addEventListener("change", importHistory);
-
-  function renderHistory() {
-    const q = histSearch.value.trim();
-    let list = [...history];
-    if (q) list = list.filter(h => h.number.includes(q));
-    if (histDedup.checked) {
-      // เก็บล่าสุดของแต่ละเบอร์
-      const map = new Map();
-      for (let i = list.length - 1; i >= 0; i--) {
-        const k = list[i].number;
-        if (!map.has(k)) map.set(k, list[i]);
+    let data = logs.slice();
+    if(q){
+      const qq = q.toLowerCase();
+      data = data.filter(x=> (x.number||"").toLowerCase().includes(qq));
+    }
+    if(dedupe){
+      const map = new Map(); // number -> first seen (already newest order)
+      const out = [];
+      for(const x of data){
+        const k = x.number || "";
+        if(!map.has(k)){
+          map.set(k, true);
+          out.push(x);
+        }
       }
-      list = Array.from(map.values()).sort((a,b)=>a.at-b.at);
+      data = out;
     }
-    histTable.innerHTML = list
-      .map(h => `<tr><td>${fmtTime(h.at)}</td><td>${esc(h.number)}</td><td>${h.result}</td></tr>`)
-      .join("") || `<tr><td colspan="3" class="muted">— ไม่มีข้อมูล —</td></tr>`;
+    historyList.innerHTML = "";
+    if(!data.length){
+      historyList.innerHTML = `<div class="hist"><div class="meta">ไม่พบข้อมูล</div></div>`;
+      return;
+    }
+    data.forEach(r=> historyList.appendChild(histRow(r)));
   }
 
-  function exportHistory() {
-    const blob = new Blob([JSON.stringify(history, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "PHANToM_Web_Dialer_History.json";
-    a.click();
-    setTimeout(()=>URL.revokeObjectURL(a.href), 500);
-    tip("Export ประวัติแล้ว");
+  function clearLogs(){
+    if(!confirm("ล้างประวัติการโทรทั้งหมด ?")) return;
+    logs = [];
+    saveLogs();
+    renderRecent();
+    if(historyModal.open) renderHistory();
+    tip("ล้างประวัติแล้ว", true);
   }
 
-  function importHistory(e) {
-    const f = e.target.files && e.target.files[0];
-    if (!f) return;
-    const r = new FileReader();
-    r.onload = (ev) => {
-      try {
-        const obj = JSON.parse(String(ev.target.result||"[]"));
-        if (!Array.isArray(obj)) throw 0;
-        history = obj;
-        saveHistory(); renderRecent(); renderHistory();
-        tip("Import ประวัติแล้ว");
-      } catch { tip("ไฟล์ไม่ถูกต้อง"); }
-      histImport.value = "";
-    };
-    r.readAsText(f);
+  function logRow(r){
+    const div = document.createElement("div");
+    div.className = "log-item";
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    const label = typeLabel(r.type);
+    meta.textContent = `${label}${r.number? " • "+r.number:""}`;
+    const when = document.createElement("div");
+    when.className = "when";
+    when.textContent = formatTime(r.at);
+    div.append(meta, when);
+    return div;
+    function typeLabel(t){
+      if(t==="CALL") return "โทรออก";
+      if(t==="HANGUP") return "วางสาย";
+      if(t==="ANSWER") return "รับสาย";
+      return t;
+    }
+  }
+  function histRow(r){
+    const div = document.createElement("div");
+    div.className = "hist";
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = `${r.number || "—"}`;
+    const when = document.createElement("div");
+    when.className = "when";
+    when.textContent = `${formatTime(r.at)} · ${r.type}`;
+    div.append(meta, when);
+    return div;
   }
 
-  // ---------- Keyboard shortcuts ----------
-  // โฟกัสอัตโนมัติทุกครั้งที่โหลด
-  window.addEventListener("load", () => numberInput.focus());
+  // -------------------- ADB Shell (Scaffold) --------------------
+  // NOTE: Implementing full ADB protocol in-browser is non-trivial.
+  // Phase 1: This is a placeholder that always RETURNS false.
+  // When you later add an ADB transport (e.g., tiny JS ADB client),
+  // replace this with real control transfer / bulk transfer to ADB endpoints.
+  async function adbShell(cmd){
+    console.log("[ADB SHELL] ->", cmd);
+    if(!adbDevice || !adbOpened) return false;
 
-  document.addEventListener("keydown", (e) => {
-    const tag = (document.activeElement && document.activeElement.tagName) || "";
-    // ถ้าพิมพ์อยู่ในช่องข้อความ push-panel ให้ไม่ intercept
-    if (tag === "INPUT" && document.activeElement === pushInput) return;
+    // TODO (Phase 2): implement minimal ADB handshake + OPEN/WRTE/OKAY/CLSE
+    // For now, pretend fail to keep UX honest
+    return false;
+  }
 
-    if (e.key === "Enter") { e.preventDefault(); callNow(); }
-    if (e.key === "Escape") { e.preventDefault(); hangupNow(); }
-    if (e.key === " " || e.code === "Space") { e.preventDefault(); answerNow(); }
-  });
-
-  // ---------- Utils ----------
-  function $(s, c=document){ return c.querySelector(s); }
-  function $$(s, c=document){ return Array.from(c.querySelectorAll(s)); }
-  function esc(s=""){ return String(s).replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m])); }
-  function delay(ms){ return new Promise(r=>setTimeout(r,ms)); }
-  function fmtTime(t){ const d=new Date(t); return d.toLocaleString(); }
-  function tip(t){ toastEl.textContent=t; toastEl.classList.add("show"); setTimeout(()=>toastEl.classList.remove("show"),1400); }
-  function log(t){ statusLog.innerHTML += `<div>${esc(t)}</div>`; statusLog.scrollTop = statusLog.scrollHeight; }
-
-  function loadHistory(){ try{ return JSON.parse(localStorage.getItem(LS_HIST)||"[]"); }catch{ return []; } }
-  function saveHistory(){ localStorage.setItem(LS_HIST, JSON.stringify(history)); }
+  // -------------------- Utils --------------------
+  function tip(t, ok=false){
+    if(!toastEl) return;
+    toastEl.textContent = t;
+    toastEl.style.borderColor = ok ? "rgba(60,200,120,.6)" : "#2b3a5a";
+    toastEl.classList.add("show");
+    clearTimeout(tip._t);
+    tip._t = setTimeout(()=> toastEl.classList.remove("show"), 1600);
+  }
+  function formatTime(ts){
+    const d = new Date(ts);
+    const pad2 = n=> String(n).padStart(2,"0");
+    return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())} ${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`;
+    }
+  function uid(){ return Math.random().toString(36).slice(2,9); }
+  function saveLogs(){ localStorage.setItem(LS_LOGS, JSON.stringify(logs)); }
+  function loadLogs(){ try{ return JSON.parse(localStorage.getItem(LS_LOGS)||"[]"); }catch{ return []; } }
+  function escapeQuotes(s){ return s.replace(/"/g,'\\"'); }
+  function escapeShell(s){ return s.replace(/(["\s'$`\\])/g,'\\$1'); }
 })();
