@@ -2,95 +2,73 @@
 <html lang="th">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>PHANToM Web Dialer</title>
+  <link rel="stylesheet" href="css/phantom-web-dialer.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/phantom-web-dialer.css">
 </head>
 <body>
-  <!-- Top Bar -->
   <header class="topbar">
     <div class="brand">
       <div class="logo">PHANToM</div>
-      <small>Web Dialer — WebUSB (Phase 1) • Keyboard • Logs • Push Text</small>
+      <small>Web Dialer — Sim Mode for GitHub Pages</small>
     </div>
-    <div class="cluster">
-      <button id="btnConnect" class="btn ghost">เชื่อมต่ออุปกรณ์</button>
-      <button id="btnDisconnect" class="btn ghost" disabled>ตัดการเชื่อม</button>
-      <span id="devStatus" class="badge muted">ไม่ได้เชื่อมต่อ</span>
+    <div class="status">
+      <span id="connStatus" class="badge">กำลังตรวจสภาพ…</span>
+      <button id="btnConnect" class="btn ghost" title="เชื่อมต่ออุปกรณ์">เชื่อมต่อ</button>
+      <button id="btnDisconnect" class="btn ghost" title="ยกเลิกการเชื่อมต่อ" disabled>ตัดการเชื่อมต่อ</button>
+      <label class="remember"><input id="autoConnect" type="checkbox"> Auto-connect</label>
     </div>
   </header>
 
-  <!-- Main Layout -->
   <main class="wrap">
-    <!-- Left: Dial Pad (no keypad), number input + primary controls -->
-    <section class="dial card">
-      <label class="num-label" for="phoneInput">หมายเลขที่จะโทร</label>
-      <input id="phoneInput" type="tel" inputmode="tel" autocomplete="off" placeholder="เช่น 0901234567" />
-
-      <div class="row primary-actions">
-        <button id="btnCall" class="btn ok" title="Enter = โทรออก">📞 โทรออก</button>
-        <button id="btnAnswer" class="btn ghost" title="Space = รับสาย">✅ รับสาย</button>
-        <button id="btnHangup" class="btn danger" title="Esc = วางสาย">⛔ วางสาย</button>
+    <section class="dialer card">
+      <div class="row">
+        <input id="numberInput" type="tel" inputmode="tel" placeholder="กรอกเบอร์โทร" autocomplete="off" />
+        <div class="btns">
+          <button id="btnCall" class="btn ok" title="โทรออก (Enter)">โทรออก</button>
+          <button id="btnAnswer" class="btn" title="รับสาย (Space)">รับสาย</button>
+          <button id="btnHangup" class="btn danger" title="วางสาย (Esc)" disabled>วางสาย</button>
+        </div>
       </div>
 
-      <details id="pushTextPanel" class="push-panel">
-        <summary id="togglePush" class="btn ghost">⬇ Push Text</summary>
-        <div class="push-body">
-          <textarea id="pushText" placeholder="พิมพ์ข้อความสั้น ๆ ที่ต้องการส่งไป Clipboard ของอุปกรณ์"></textarea>
-          <div class="row">
-            <button id="btnPushNow" class="btn">Push</button>
-            <span class="hint">* ถ้าอุปกรณ์ไม่รองรับจะคัดลอกไว้บน Clipboard ของคอมพ์แทน</span>
+      <div class="tools">
+        <button id="togglePushText" class="btn ghost" aria-expanded="false">Push Text</button>
+        <div id="pushTextArea" class="pusharea" hidden>
+          <textarea id="pushText" rows="2" placeholder="พิมพ์ข้อความที่จะส่งไปคลิปบอร์ดอุปกรณ์ (โหมดจำลอง: คัดลอกลงคลิปบอร์ดเครื่องนี้)"></textarea>
+          <div class="pushrow">
+            <button id="btnPush" class="btn">ส่งข้อความ</button>
           </div>
         </div>
-      </details>
-
-      <div class="hline"></div>
-
-      <div class="about">
-        <p><b>คีย์ลัด</b> — Enter: โทรออก • Esc: วางสาย • Space: รับสาย</p>
-        <p>รองรับ WebUSB (ADB) — หากเบราว์เซอร์/อุปกรณ์ไม่รองรับ จะมี Toast แจ้ง</p>
       </div>
     </section>
 
-    <!-- Right: Logs -->
-    <section class="logs card">
-      <div class="logs-head">
-        <h3>บันทึกการโทร</h3>
-        <div class="cluster">
-          <button id="btnShowAll" class="btn ghost">ดูทั้งหมด</button>
-          <button id="btnClearLogs" class="btn ghost">ล้างประวัติ</button>
+    <section class="history card">
+      <header class="hhead">
+        <div class="title">ประวัติการโทร</div>
+        <div class="controls">
+          <input id="searchBox" type="text" placeholder="ค้นหาเบอร์/หมายเหตุแบบเรียลไทม์…" />
+          <label class="checkbox"><input id="dedupe" type="checkbox"> ซ่อนเบอร์ซ้ำ (แสดงรายการล่าสุด)</label>
+          <button id="btnClearHistory" class="btn danger ghost">ล้างประวัติ</button>
         </div>
+      </header>
+
+      <div id="recentWrap">
+        <div class="subtitle">5 รายการล่าสุด</div>
+        <ul id="recentList" class="list"></ul>
       </div>
 
-      <div id="recentList" class="recent-list">
-        <!-- ล่าสุด 5 รายการ จะถูกเติมด้วย JS -->
+      <div class="allwrap">
+        <div class="subtitle row-between">
+          <span>ทุกรายการ</span>
+          <span class="muted small">กด Enter=โทรออก / Esc=วางสาย / Space=รับสาย</span>
+        </div>
+        <ul id="allList" class="list"></ul>
       </div>
     </section>
   </main>
 
-  <!-- Modal: All History -->
-  <dialog id="historyModal" class="modal">
-    <form method="dialog" class="modal-card" id="historyForm">
-      <header class="modal-head">
-        <h3>ประวัติการโทรทั้งหมด</h3>
-        <button class="icon" id="closeHistory" value="cancel" type="button">✖</button>
-      </header>
-      <section class="modal-body">
-        <div class="row">
-          <input id="searchLogs" type="text" placeholder="ค้นหาเบอร์ (พิมพ์บางส่วนแบบ realtime)">
-          <label class="chk">
-            <input id="filterDup" type="checkbox">
-            <span>ซ่อนเบอร์ซ้ำ (แสดงเฉพาะล่าสุด)</span>
-          </label>
-        </div>
-        <div id="historyList" class="history-list"></div>
-      </section>
-    </form>
-  </dialog>
-
-  <!-- Toast -->
   <div id="toast" class="toast">พร้อมทำงาน</div>
 
   <script src="js/phantom-web-dialer.js"></script>
