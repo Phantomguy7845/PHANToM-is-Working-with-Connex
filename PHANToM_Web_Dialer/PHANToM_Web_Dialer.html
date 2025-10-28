@@ -15,10 +15,21 @@
 <section id="statusPanel">
   <div id="bridgeStatus" class="status offline">Bridge: Offline</div>
   <div id="deviceStatus" class="status">Device: —</div>
+
   <div class="row">
     <button id="probeBridge">ตรวจสอบ Bridge</button>
-    <button id="openInstall">ติดตั้ง / เปิด Bridge</button>
+
+    <!-- ✅ เปลี่ยนจาก <button> เป็น <a> พร้อมลิงก์จริง -->
+    <a href="../PHANToM_Web_Dialer/BRIDGE_INSTALL.html" 
+       id="openInstall" 
+       class="btn" 
+       target="_blank" 
+       style="display:inline-block;padding:6px 12px;background:#3b82f6;color:#fff;
+              border-radius:6px;text-decoration:none;">
+      ติดตั้ง / เปิด Bridge
+    </a>
   </div>
+
   <div class="row">
     <button id="listDevices">ดึงรายชื่ออุปกรณ์</button>
     <select id="deviceSelect"></select>
