@@ -12,59 +12,115 @@
   <header class="topbar">
     <div class="brand">
       <div class="logo">PHANToM</div>
-      <small>Web Dialer — WebUSB Live + (Optional) Wi-Fi via Relay</small>
+      <small>Web Dialer — WebUI + Local Bridge (ADB)</small>
     </div>
-    <div class="conn">
-      <button id="btnConnectUsb" class="btn">🔌 Connect USB</button>
-      <div class="split"></div>
-      <input id="relayUrl" type="url" placeholder="ADB Relay URL (เช่น wss://relay.example.com)" />
-      <input id="wifiTarget" type="text" placeholder="IP:Port (เช่น 192.168.1.50:5555)" />
-      <button id="btnConnectWifi" class="btn ghost" title="ต้องมี ADB Relay">📡 Connect Wi-Fi</button>
+    <div class="status">
+      <span id="bridgeStatus" class="chip offline">Bridge: Offline</span>
+      <span id="deviceStatus" class="chip">Device: —</span>
     </div>
   </header>
 
   <main class="wrap">
+    <!-- 左พาเนล: การเชื่อมต่อ -->
+    <aside class="panel card">
+      <h3>การเชื่อมต่อ</h3>
 
-    <section class="dial card">
       <div class="row">
-        <input id="number" type="tel" inputmode="tel" placeholder="ใส่เบอร์โทร…" />
-        <button id="callBtn" class="btn ok">📞 โทรออก (Enter)</button>
-        <button id="hangBtn" class="btn warn">⛔ วางสาย (Esc)</button>
-        <button id="answerBtn" class="btn ghost">✅ รับสาย (Space)</button>
+        <button id="probeBridge" class="btn ghost">ตรวจสอบ Bridge</button>
+        <button id="openInstall" class="btn">ติดตั้ง/เปิด Bridge</button>
       </div>
-      <details class="tools">
-        <summary>เครื่องมือเสริม</summary>
+
+      <div class="row">
+        <button id="listDevices" class="btn ghost">ค้นหาอุปกรณ์ (USB)</button>
+        <select id="deviceSelect" class="w-full">
+          <option value="">— ยังไม่เลือกอุปกรณ์ —</option>
+        </select>
+      </div>
+
+      <details class="wifi">
+        <summary>เชื่อมต่อ Wireless Debug</summary>
         <div class="row">
-          <button id="togglePush" class="btn ghost">⬇ Push Text</button>
-        </div>
-        <div id="pushArea" class="row hide">
-          <input id="pushText" type="text" placeholder="พิมพ์ข้อความที่จะส่งไปเป็นคลิปบอร์ด" />
-          <button id="pushDo" class="btn">ส่ง</button>
+          <input id="wifiHost" type="text" placeholder="เช่น 192.168.1.123:5555" />
+          <button id="wifiConnect" class="btn ghost">เชื่อมต่อ</button>
         </div>
       </details>
-      <div id="status" class="status muted">ยังไม่ได้เชื่อมต่อ</div>
-    </section>
 
-    <section class="history card">
-      <header>
-        <h3>ประวัติการโทร</h3>
-        <div class="row">
-          <input id="search" type="search" placeholder="ค้นหาเบอร์… (อัปเดตแบบเรียลไทม์)" />
-          <label class="chk">
-            <input id="dedupe" type="checkbox" />
-            เอาเบอร์ซ้ำออก (แสดงเพียงรายการล่าสุด)
-          </label>
-          <button id="showAll" class="btn ghost">ดูทั้งหมด</button>
+      <div class="hint">
+        <b>Tips:</b> เปิด Developer options → เปิด USB/Wireless debugging<br>
+        ถ้า Bridge ไม่ขึ้น ให้คลิก “ติดตั้ง/เปิด Bridge”
+      </div>
+    </aside>
+
+    <!-- ขวาพาเนล: Dialer -->
+    <section class="board card">
+      <div class="dialer">
+        <label for="numberInput" class="label">หมายเลข</label>
+        <input id="numberInput" class="number" type="tel" inputmode="tel" autocomplete="off" placeholder="กรอกหมายเลข แล้วกด Enter เพื่อโทร" />
+
+        <div class="actions">
+          <button id="callBtn" class="btn ok">โทรออก</button>
+          <button id="answerBtn" class="btn ghost">รับสาย</button>
+          <button id="hangupBtn" class="btn danger">วางสาย (Esc)</button>
         </div>
-      </header>
-      <div class="last5" id="last5"></div>
-    </section>
 
+        <div class="kbd">
+          <span>Enter=โทร</span>
+          <span>Space=รับสาย</span>
+          <span>Esc=วางสาย</span>
+          <span>Ctrl+Z=ย้อนกลับ</span>
+        </div>
+      </div>
+
+      <!-- Push Text -->
+      <div class="pushbar">
+        <button id="togglePush" class="btn ghost">Push Text</button>
+        <div id="pushArea" class="push-area">
+          <input id="pushInput" type="text" placeholder="ข้อความที่จะส่งไป Clipboard ของอุปกรณ์…" />
+          <button id="pushSend" class="btn">ส่ง</button>
+        </div>
+      </div>
+
+      <!-- Preview 5 ล่าสุด -->
+      <div class="history-mini">
+        <div class="head">
+          <h4>5 รายการล่าสุด</h4>
+          <button id="openHistory" class="btn ghost">ดูทั้งหมด</button>
+        </div>
+        <ul id="lastFive" class="list"></ul>
+      </div>
+    </section>
   </main>
 
-  <div id="toast" class="toast">พร้อมทำงาน</div>
+  <!-- History Modal -->
+  <dialog id="historyModal" class="modal">
+    <div class="modal-card">
+      <header class="modal-head">
+        <h3>ประวัติการโทรทั้งหมด</h3>
+        <button id="closeHistory" class="icon">✖</button>
+      </header>
 
-  <script src="js/phantom-webadb.js" type="module"></script>
-  <script src="js/phantom-web-dialer.js" type="module"></script>
+      <section class="modal-body">
+        <div class="history-toolbar">
+          <input id="historySearch" type="text" placeholder="ค้นหาเบอร์ (อัปเดตทันที)" />
+          <label class="chk">
+            <input id="dedupeToggle" type="checkbox" />
+            แสดงเพียงเบอร์ล่าสุด (ตัดซ้ำ)
+          </label>
+          <button id="clearHistory" class="btn danger">ล้างประวัติ</button>
+        </div>
+        <div class="history-table-wrap">
+          <table class="history-table">
+            <thead>
+              <tr><th>เวลา</th><th>การกระทำ</th><th>หมายเลข</th></tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast">พร้อมทำงาน</div>
+  <script src="js/phantom-web-dialer.js"></script>
 </body>
 </html>
