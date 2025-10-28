@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PHANToM Web Bridge — คู่มือติดตั้ง</title>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1220;--panel:#121b33;--txt:#e5e7eb;--pri:#6b8bff;--pri2:#8bf5ff;
+}
+body{
+  margin:0;background:radial-gradient(circle at 30% 20%,var(--panel),var(--bg));
+  font-family:'Prompt',sans-serif;color:var(--txt);padding:20px;line-height:1.6;
+}
+h1{font-size:1.8rem;text-align:center;margin-bottom:10px;}
+h2{color:var(--pri);margin-top:2rem;}
+a{color:var(--pri2);text-decoration:none}
+a:hover{text-decoration:underline}
+.card{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
+  border-radius:14px;padding:20px;max-width:800px;margin:0 auto;box-shadow:0 0 20px rgba(0,0,0,.3)
+}
+.btn{
+  display:inline-block;background:linear-gradient(90deg,var(--pri),var(--pri2));
+  color:#000;padding:10px 18px;border-radius:10px;font-weight:700;margin:10px 0;text-align:center;
+  text-decoration:none;box-shadow:0 0 16px rgba(139,245,255,.3)
+}
+pre{background:#0f1830;border-radius:10px;padding:12px;overflow:auto;}
+ol{margin-left:1.2rem;}
+footer{text-align:center;margin-top:40px;opacity:.6;}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🧩 คู่มือติดตั้ง PHANToM Web Bridge</h1>
+  <p>Bridge คือโปรแกรมสำหรับเชื่อมต่อ <b>PHANToM Web Dialer</b> กับอุปกรณ์ Android ผ่าน ADB (USB/Wi-Fi)</p>
+  <hr>
+
+  <h2>1️⃣ ดาวน์โหลดตัวติดตั้ง</h2>
+  <p>คลิกเพื่อดาวน์โหลดไฟล์ EXE จาก GitHub ของคุณ:</p>
+  <a href="https://github.com/Phantomguy7845/PHANToM-is-Working-with-Connex/raw/main/PHANToM_Web_Bridge/PHANToM-Web-Bridge.exe" class="btn">⬇ ดาวน์โหลด PHANToM-Web-Bridge.exe</a>
+  <p>หรือคัดลอกลิงก์ตรงนี้:  
+    <code>https://github.com/Phantomguy7845/PHANToM-is-Working-with-Connex/raw/main/PHANToM_Web_Bridge/PHANToM-Web-Bridge.exe</code></p>
+
+  <h2>2️⃣ เปิดใช้งาน Bridge</h2>
+  <ol>
+    <li>ดับเบิลคลิก <code>PHANToM-Web-Bridge.exe</code> เพื่อเปิดใช้งาน</li>
+    <li>หากมี Windows SmartScreen ขึ้น ให้คลิก <b>More info → Run anyway</b></li>
+    <li>จะมีหน้าต่างสีดำขึ้น พร้อมข้อความ:  
+      <pre>PHANToM Web Bridge Server listening at http://127.0.0.1:9223</pre>
+      แสดงว่า Bridge พร้อมทำงาน ✅
+    </li>
+  </ol>
+
+  <h2>3️⃣ กลับไปที่ Web Dialer</h2>
+  <p>เปิดหน้า <b>PHANToM Web Dialer</b> อีกครั้ง:</p>
+  <a href="PHANToM_Web_Dialer.html" class="btn">เปิด PHANToM Web Dialer</a>
+  <p>สถานะจะเปลี่ยนเป็น <b style="color:#22c55e">Bridge: Online</b> โดยอัตโนมัติ</p>
+
+  <h2>4️⃣ การแก้ไขปัญหาที่พบบ่อย</h2>
+  <ul>
+    <li>🔴 <b>Bridge: Offline</b> — ยังไม่ได้เปิดโปรแกรม Bridge.exe</li>
+    <li>⚠️ <b>ERR_CONNECTION_REFUSED</b> — เปิดเว็บจาก GitHub Pages (https://...) แล้วเบราว์เซอร์บล็อกการเชื่อมต่อ local;  
+      ให้เปิดไฟล์ <code>PHANToM_Web_Dialer.html</code> ในเครื่องแทน (file://)</li>
+    <li>🔌 <b>ADB ไม่เห็นอุปกรณ์</b> — ตรวจสอบว่าเปิด <b>USB Debugging</b> แล้ว, และอนุญาต RSA บนอุปกรณ์</li>
+  </ul>
+
+  <h2>5️⃣ Advanced (สำหรับผู้พัฒนา)</h2>
+  <p>หากต้องการเปลี่ยนพอร์ต Bridge:</p>
+  <pre>// main.js (ภายในโปรเจกต์ Bridge)
+const PORT = 9223; // ← เปลี่ยนเป็นพอร์ตอื่นได้
+</pre>
+  <p>และในไฟล์ <code>phantom-web-dialer.js</code> ให้แก้บรรทัดบนสุดเป็น:</p>
+  <pre>const BRIDGE = "http://127.0.0.1:พอร์ตใหม่";</pre>
+
+  <h2>🧠 Tips</h2>
+  <ul>
+    <li>สามารถเปิด Bridge พร้อมกันได้หลายเครื่องในวง LAN โดยเปลี่ยนพอร์ตให้ไม่ซ้ำ</li>
+    <li>ในอนาคตสามารถเพิ่ม AI Voice หรือ ADB automation อื่น ๆ ผ่าน Bridge ตัวเดียวกันได้</li>
+  </ul>
+</div>
+
+<footer>© 2025 PHANToM Toolkit — All Rights Reserved</footer>
+</body>
+</html>
