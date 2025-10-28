@@ -1,17 +1,23 @@
 /* PHANToM Web Dialer — Web UI + Local Bridge (ADB)
-   - Bridge base: http://127.0.0.1:9223 (configurable)
-   - Auto-detect bridge (auto-retry)
-   - Device list (USB / Wi-Fi debug), pick specific device
-   - Dial / Answer / Hangup
-   - Push Text to device clipboard
-   - History (preview 5, full modal with search + dedupe)
-   - Keyboard: Enter(dial), Space(answer), Esc(hangup), Ctrl+Z(undo)
+   v1.2 — Stable release
+   - Auto Bridge detect (with retry)
+   - Device select (USB/Wi-Fi)
+   - Push Text / History / Undo / Hotkeys
+   - Custom Bridge URL via ?bridge= / localStorage
 */
 
 (function(){
-  const BRIDGE = "http://127.0.0.1:9223";
+  // ================== CONFIG ==================
+  const DEFAULT_BRIDGE = "http://127.0.0.1:9223";
+  const LS_BRIDGE = "PHANTOM_WEB_DIALER_BRIDGE";
+  const LS_HISTORY = "PHANTOM_DIAL_HISTORY_V1";
+  const LS_LAST_DEVICE = "PHANTOM_DIAL_LAST_DEVICE";
 
-  // ---- DOM
+  const urlBridge = new URLSearchParams(location.search).get("bridge");
+  if (urlBridge) localStorage.setItem(LS_BRIDGE, urlBridge);
+  const BRIDGE = localStorage.getItem(LS_BRIDGE) || DEFAULT_BRIDGE;
+
+  // ================== DOM ==================
   const bridgeStatusEl = $("#bridgeStatus");
   const deviceStatusEl = $("#deviceStatus");
   const probeBridgeBtn = $("#probeBridge");
@@ -42,27 +48,24 @@
 
   const toastEl = $("#toast");
 
-  // ---- State
-  const LS_HISTORY = "PHANTOM_DIAL_HISTORY_V1";
-  const LS_LAST_DEVICE = "PHANTOM_DIAL_LAST_DEVICE";
+  // ================== STATE ==================
   let bridgeOnline = false;
   let devices = [];
   let selectedSerial = localStorage.getItem(LS_LAST_DEVICE) || "";
-  let undoStack = []; // simple undo for last action text/number replace
+  let undoStack = [];
   let pingTimer = null;
 
-  // ---- Init
+  // ================== INIT ==================
   initUI();
-  autoRetryBridge(); // start polling
+  autoRetryBridge();
   focusNumberInput();
   renderLastFive();
   if (selectedSerial) updateDeviceStatus();
 
-  // ================== INIT & EVENTS ==================
+  // ================== UI & EVENTS ==================
   function initUI(){
     probeBridgeBtn.addEventListener("click", probeBridge);
     openInstallBtn.addEventListener("click", onOpenInstallBridge);
-
     listDevicesBtn.addEventListener("click", listDevices);
     deviceSelect.addEventListener("change", onPickDevice);
     wifiConnectBtn.addEventListener("click", onConnectWifi);
@@ -85,79 +88,57 @@
 
     // Keyboard shortcuts
     document.addEventListener("keydown", (e)=>{
-      // typing inside inputs
       const tag = (document.activeElement && document.activeElement.tagName) || "";
       const typing = tag === "INPUT" || tag === "TEXTAREA";
-
-      // Ctrl+Z undo (only for numberInput & pushInput text change)
       if (e.ctrlKey && (e.key === "z" || e.key === "Z")){
-        e.preventDefault();
-        performUndo();
-        return;
+        e.preventDefault(); performUndo(); return;
       }
-
       if (typing){
-        // allow default typing
-        // (Enter on number input => dial)
         if (document.activeElement === numberInput && e.key === "Enter"){
           e.preventDefault(); dialNow(); return;
         }
         return;
       }
-
       if (e.key === "Enter"){ e.preventDefault(); dialNow(); return; }
       if (e.key === " "){ e.preventDefault(); answerNow(); return; }
       if (e.key === "Escape"){ e.preventDefault(); hangupNow(); return; }
     });
 
-    // Track changes for undo
     trackUndo(numberInput);
     trackUndo(pushInput);
   }
 
-  function focusNumberInput(){
-    numberInput.focus();
-    numberInput.select();
-  }
+  function focusNumberInput(){ numberInput.focus(); numberInput.select(); }
 
   // ================== BRIDGE ==================
   async function probeBridge(){
     try{
       const r = await fetchJSON("/health");
       if (r && (r.status==="ok" || r.ok)){
-        setBridgeOnline(true, r.version ? `v${r.version}`:"OK");
+        setBridgeOnline(true, r.version ? `v${r.version}` : "OK");
         return true;
       }
     }catch{}
     setBridgeOnline(false);
     return false;
   }
+
   function setBridgeOnline(ok, info=""){
     bridgeOnline = !!ok;
-    if (ok){
-      bridgeStatusEl.classList.remove("offline");
-      bridgeStatusEl.classList.add("online");
-      bridgeStatusEl.textContent = `Bridge: Online ${info?`(${info})`:""}`;
-    }else{
-      bridgeStatusEl.classList.remove("online");
-      bridgeStatusEl.classList.add("offline");
-      bridgeStatusEl.textContent = "Bridge: Offline";
-    }
+    bridgeStatusEl.classList.toggle("online", ok);
+    bridgeStatusEl.classList.toggle("offline", !ok);
+    bridgeStatusEl.textContent = ok ? `Bridge: Online ${info?`(${info})`:""}` : "Bridge: Offline";
   }
 
   function autoRetryBridge(){
-    // immediate check
     probeBridge();
-    // then poll with fixed interval (10s)
     safeClearInterval(pingTimer);
     pingTimer = setInterval(probeBridge, 10000);
   }
 
-  async function onOpenInstallBridge(){
-    // แนวทาง: เปิดลิงก์ README/ตัวติดตั้งของคุณเอง (ภายใน repo) หรือ deep-link ไปที่ exe ในเครื่องไม่ได้
-    // ที่นี่เราจะเปิดหน้าชี้แนะการติดตั้งใน repo เดิม (คุณสามารถสร้างเพจคู่มือได้แล้วชี้ลิงก์ตรงนี้)
-    // ถ้าคุณนำไฟล์ .exe ไว้ใน repo ให้เปลี่ยน URL ข้างล่างนี้
-    window.open("../README_BRIDGE_SETUP.html", "_blank");
+  function onOpenInstallBridge(){
+    // 🔗 ชี้ไปยังเพจแนะนำการติดตั้งภายใน repo (แก้ให้ตรงกับไฟล์จริง)
+    window.open("../BRIDGE_INSTALL.html", "_blank");
   }
 
   // ================== DEVICES ==================
@@ -168,16 +149,13 @@
       devices = Array.isArray(res?.devices) ? res.devices : [];
       renderDeviceOptions();
       toast(`พบอุปกรณ์ ${devices.length} เครื่อง`);
-      // auto-pick if single
       if (devices.length === 1){
         selectedSerial = devices[0].serial;
         deviceSelect.value = selectedSerial;
         localStorage.setItem(LS_LAST_DEVICE, selectedSerial);
         updateDeviceStatus();
       }
-    }catch(e){
-      toast("ดึงรายการอุปกรณ์ไม่ได้");
-    }
+    }catch(e){ toast("ดึงรายการอุปกรณ์ไม่ได้"); }
   }
 
   function renderDeviceOptions(){
@@ -190,7 +168,7 @@
     });
     if (selectedSerial){
       const found = devices.find(d=>d.serial===selectedSerial);
-      if (found) deviceSelect.value = selectedSerial;
+      if (found){ deviceSelect.value = selectedSerial; updateDeviceStatus(); }
     }
   }
 
@@ -209,24 +187,18 @@
       if (res?.ok){
         toast("เชื่อมต่อ Wi-Fi Debug แล้ว");
         await listDevices();
-        // เลือกเครื่องที่เพิ่งเชื่อมต่อ (ถ้า serial คืนมา)
         if (res.serial){
           selectedSerial = res.serial;
           deviceSelect.value = selectedSerial;
           localStorage.setItem(LS_LAST_DEVICE, selectedSerial);
           updateDeviceStatus();
         }
-      }else{
-        toast(res?.error || "เชื่อมต่อ Wi-Fi Debug ไม่สำเร็จ");
-      }
+      }else{ toast(res?.error || "เชื่อมต่อ Wi-Fi Debug ไม่สำเร็จ"); }
     }catch(e){ toast("เชื่อมต่อ Wi-Fi Debug ไม่สำเร็จ"); }
   }
 
   function updateDeviceStatus(){
-    if (!selectedSerial){
-      deviceStatusEl.textContent = "Device: —";
-      return;
-    }
+    if (!selectedSerial){ deviceStatusEl.textContent = "Device: —"; return; }
     const meta = devices.find(d=>d.serial===selectedSerial);
     const nick = meta ? (meta.model||meta.serial) : selectedSerial;
     deviceStatusEl.textContent = `Device: ${nick}`;
@@ -240,15 +212,9 @@
     if (!selectedSerial){ toast("ยังไม่ได้เลือกอุปกรณ์"); return; }
     try{
       const res = await fetchJSON("/dial", {method:"POST", body:{serial:selectedSerial, number}});
-      if (res?.ok){
-        addHistory({act:"dial", number});
-        toast("กำลังโทรออก…");
-      }else{
-        toast(res?.error || "สั่งโทรผ่าน ADB ไม่ได้");
-      }
-    }catch(e){
-      toast("สั่งโทรผ่าน ADB ไม่ได้ - ตรวจสอบ Bridge/ADB/สิทธิ์");
-    }
+      if (res?.ok){ addHistory({act:"dial", number}); toast("กำลังโทรออก…"); }
+      else toast(res?.error || "สั่งโทรผ่าน ADB ไม่ได้");
+    }catch(e){ toast("สั่งโทรผ่าน ADB ไม่ได้ - ตรวจสอบ Bridge/ADB/สิทธิ์"); }
   }
 
   async function hangupNow(){
@@ -256,15 +222,9 @@
     if (!selectedSerial){ toast("ยังไม่ได้เลือกอุปกรณ์"); return; }
     try{
       const res = await fetchJSON("/hangup", {method:"POST", body:{serial:selectedSerial}});
-      if (res?.ok){
-        addHistory({act:"hangup"});
-        toast("วางสายแล้ว");
-      }else{
-        toast(res?.error || "สั่งวางสายไม่ได้");
-      }
-    }catch(e){
-      toast("สั่งวางสายไม่ได้");
-    }
+      if (res?.ok){ addHistory({act:"hangup"}); toast("วางสายแล้ว"); }
+      else toast(res?.error || "สั่งวางสายไม่ได้");
+    }catch(e){ toast("สั่งวางสายไม่ได้"); }
   }
 
   async function answerNow(){
@@ -272,15 +232,9 @@
     if (!selectedSerial){ toast("ยังไม่ได้เลือกอุปกรณ์"); return; }
     try{
       const res = await fetchJSON("/answer", {method:"POST", body:{serial:selectedSerial}});
-      if (res?.ok){
-        addHistory({act:"answer"});
-        toast("รับสายแล้ว");
-      }else{
-        toast(res?.error || "สั่งรับสายไม่ได้");
-      }
-    }catch(e){
-      toast("สั่งรับสายไม่ได้");
-    }
+      if (res?.ok){ addHistory({act:"answer"}); toast("รับสายแล้ว"); }
+      else toast(res?.error || "สั่งรับสายไม่ได้");
+    }catch(e){ toast("สั่งรับสายไม่ได้"); }
   }
 
   async function pushTextNow(){
@@ -294,159 +248,79 @@
         addHistory({act:"push_text", meta:text});
         pushInput.value = "";
         toast("ส่งข้อความไป Clipboard บนอุปกรณ์แล้ว");
-      }else{
-        toast(res?.error || "สั่ง Push Text ไม่ได้");
-      }
-    }catch(e){
-      toast("สั่ง Push Text ไม่ได้");
-    }
+      }else toast(res?.error || "สั่ง Push Text ไม่ได้");
+    }catch(e){ toast("สั่ง Push Text ไม่ได้"); }
   }
 
   // ================== HISTORY ==================
   function addHistory(item){
     const hist = loadHistory();
-    hist.unshift({
-      ts: Date.now(),
-      act: item.act,
-      number: item.number||"",
-      meta: item.meta||""
-    });
-    saveHistory(hist.slice(0, 2000)); // cap
+    hist.unshift({ ts: Date.now(), act: item.act, number: item.number||"", meta: item.meta||"" });
+    saveHistory(hist.slice(0, 2000));
     renderLastFive();
     if (historyModal.open) renderHistory();
   }
 
   function renderLastFive(){
-    const hist = loadHistory();
-    const five = hist.slice(0,5);
+    const hist = loadHistory().slice(0,5);
     lastFiveEl.innerHTML = "";
-    five.forEach(h=>{
+    hist.forEach(h=>{
       const li = document.createElement("li");
-      const left = document.createElement("div");
-      left.textContent = labelOf(h);
-      const right = document.createElement("div");
-      right.className = "ts";
-      right.textContent = fmtTime(h.ts);
-      li.append(left, right);
-      lastFiveEl.appendChild(li);
+      const left = document.createElement("div"); left.textContent = labelOf(h);
+      const right = document.createElement("div"); right.className="ts"; right.textContent=fmtTime(h.ts);
+      li.append(left, right); lastFiveEl.appendChild(li);
     });
   }
 
-  function openHistory(){
-    historyModal.showModal();
-    historySearch.value = "";
-    dedupeToggle.checked = false;
-    renderHistory();
-  }
+  function openHistory(){ historyModal.showModal(); historySearch.value=""; dedupeToggle.checked=false; renderHistory(); }
   function closeHistory(){ historyModal.close(); }
 
   function renderHistory(){
-    const q = (historySearch.value||"").trim();
-    const dedupe = dedupeToggle.checked;
-    let hist = loadHistory();
-
-    if (q){
-      const qq = q.toLowerCase();
-      hist = hist.filter(h => (h.number||"").toLowerCase().includes(qq));
-    }
-    if (dedupe){
-      const seen = new Set();
-      const uniq = [];
-      for (const h of hist){
-        const key = h.number||"";
-        if (key && !seen.has(key)){
-          uniq.push(h);
-          seen.add(key);
-        }
-      }
-      hist = uniq;
-    }
-
-    historyBody.innerHTML = "";
+    const q=(historySearch.value||"").trim(), dedupe=dedupeToggle.checked;
+    let hist=loadHistory();
+    if (q){ const qq=q.toLowerCase(); hist=hist.filter(h=>(h.number||"").toLowerCase().includes(qq)); }
+    if (dedupe){ const seen=new Set(),uniq=[]; for(const h of hist){ const key=h.number||""; if(key&&!seen.has(key)){ uniq.push(h); seen.add(key); } } hist=uniq; }
+    historyBody.innerHTML="";
     hist.forEach(h=>{
-      const tr = document.createElement("tr");
-      const td1 = document.createElement("td"); td1.textContent = fmtTime(h.ts);
-      const td2 = document.createElement("td"); td2.textContent = actName(h.act);
-      const td3 = document.createElement("td"); td3.textContent = h.number || (h.meta||"");
-      tr.append(td1, td2, td3);
-      historyBody.appendChild(tr);
+      const tr=document.createElement("tr");
+      const td1=document.createElement("td");td1.textContent=fmtTime(h.ts);
+      const td2=document.createElement("td");td2.textContent=actName(h.act);
+      const td3=document.createElement("td");td3.textContent=h.number||(h.meta||"");
+      tr.append(td1,td2,td3);historyBody.appendChild(tr);
     });
   }
 
-  function clearHistory(){
-    if (!confirm("ล้างประวัติทั้งหมด ?")) return;
-    saveHistory([]);
-    renderLastFive();
-    renderHistory();
-  }
-
-  function loadHistory(){
-    try{ return JSON.parse(localStorage.getItem(LS_HISTORY)||"[]"); }catch{return []}
-  }
-  function saveHistory(arr){
-    localStorage.setItem(LS_HISTORY, JSON.stringify(arr||[]));
-  }
-  function actName(act){
-    if (act==="dial") return "โทรออก";
-    if (act==="hangup") return "วางสาย";
-    if (act==="answer") return "รับสาย";
-    if (act==="push_text") return "Push Text";
-    return act;
-    }
-  function labelOf(h){
-    if (h.act==="dial") return `โทร: ${h.number}`;
-    if (h.act==="hangup") return `วางสาย`;
-    if (h.act==="answer") return `รับสาย`;
-    if (h.act==="push_text") return `Push: ${limit(h.meta, 18)}`;
-    return `${h.act}`;
-  }
+  function clearHistory(){ if(!confirm("ล้างประวัติทั้งหมด ?"))return; saveHistory([]); renderLastFive(); renderHistory(); }
+  function loadHistory(){ try{return JSON.parse(localStorage.getItem(LS_HISTORY)||"[]");}catch{return []} }
+  function saveHistory(arr){ localStorage.setItem(LS_HISTORY, JSON.stringify(arr||[])); }
+  function actName(act){ return {dial:"โทรออก",hangup:"วางสาย",answer:"รับสาย",push_text:"Push Text"}[act]||act; }
+  function labelOf(h){ return {dial:`โทร: ${h.number}`,hangup:"วางสาย",answer:"รับสาย",push_text:`Push: ${limit(h.meta,18)}`}[h.act]||h.act; }
 
   // ================== UNDO ==================
-  function trackUndo(inp){
-    if (!inp) return;
-    let last = inp.value;
-    inp.addEventListener("input", ()=>{
-      undoStack.push({el:inp, from:last, to:inp.value});
-      if (undoStack.length>50) undoStack.shift();
-      last = inp.value;
-    });
+  function trackUndo(inp){ if(!inp)return; let last=inp.value;
+    inp.addEventListener("input",()=>{ undoStack.push({el:inp,from:last,to:inp.value});
+      if(undoStack.length>50)undoStack.shift(); last=inp.value; });
   }
-  function performUndo(){
-    const last = undoStack.pop();
-    if (!last) return;
-    last.el.value = last.from;
-    last.el.focus();
-    last.el.selectionStart = last.el.selectionEnd = last.el.value.length;
-    toast("ย้อนกลับแล้ว");
-  }
+  function performUndo(){ const last=undoStack.pop(); if(!last)return;
+    last.el.value=last.from; last.el.focus(); last.el.selectionStart=last.el.selectionEnd=last.el.value.length; toast("ย้อนกลับแล้ว"); }
 
   // ================== HELPERS ==================
-  function $(s, ctx=document){ return ctx.querySelector(s); }
-  function fmtTime(ts){
-    const d = new Date(ts);
-    const dd = pad2(d.getDate())+"/"+pad2(d.getMonth()+1)+"/"+d.getFullYear();
-    const tt = pad2(d.getHours())+":"+pad2(d.getMinutes());
-    return `${dd} ${tt}`;
-  }
-  function pad2(n){ return String(n).padStart(2,"0"); }
-  function limit(s, n){ s = s||""; return s.length>n ? s.slice(0,n-1)+"…" : s; }
+  function $(s,ctx=document){return ctx.querySelector(s);}
+  function fmtTime(ts){const d=new Date(ts);return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;}
+  function pad2(n){return String(n).padStart(2,"0");}
+  function limit(s,n){s=s||"";return s.length>n?s.slice(0,n-1)+"…":s;}
+  function toast(msg){ if(!toastEl)return; toastEl.textContent=msg; toastEl.classList.add("show"); setTimeout(()=>toastEl.classList.remove("show"),1600);}
+  function safeClearInterval(t){if(t)clearInterval(t);}
 
-  function toast(msg){
-    if (!toastEl) return;
-    toastEl.textContent = msg;
-    toastEl.classList.add("show");
-    setTimeout(()=> toastEl.classList.remove("show"), 1600);
-  }
-
-  function safeClearInterval(t){ if (t) clearInterval(t); }
-
-  async function fetchJSON(path, opts={}){
-    const url = BRIDGE + path;
-    const opt = { method: opts.method||"GET", headers: { "Content-Type":"application/json" } };
-    if (opts.body) opt.body = JSON.stringify(opts.body);
-    const res = await fetch(url, opt);
-    const txt = await res.text();
-    try{ return JSON.parse(txt); }catch{ return { ok:false, error: txt||"bad json" }; }
+  async function fetchJSON(path,opts={}){
+    const url=BRIDGE+path;
+    const opt={method:opts.method||"GET",headers:{"Content-Type":"application/json"}};
+    if(opts.body)opt.body=JSON.stringify(opts.body);
+    try{
+      const res=await fetch(url,opt);
+      const txt=await res.text();
+      try{return JSON.parse(txt);}catch{return{ok:false,error:txt||"bad json"};}
+    }catch(e){return{ok:false,error:(e&&e.message)||"network error"};}
   }
 
 })();
