@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ติดตั้ง PHANToM Bridge</title>
+<style>
+:root{
+  --bg:#0b1220;--txt:#e5e7eb;--pri:#3b82f6;--ok:#22c55e;--warn:#f59e0b;
+}
+body{
+  background:radial-gradient(circle at 20% 20%,#111b33,#0a0f1f);
+  color:var(--txt);font-family:'Prompt',system-ui,sans-serif;
+  margin:0;min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:flex-start;padding:24px;
+}
+h1{color:var(--pri);text-shadow:0 0 8px var(--pri);margin-bottom:8px;}
+p{max-width:600px;text-align:center;line-height:1.6;}
+.step{margin:20px 0;padding:16px 22px;border-radius:12px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);}
+button,a.btn{
+  display:inline-block;background:var(--pri);color:#fff;
+  padding:10px 18px;margin-top:8px;border-radius:8px;
+  text-decoration:none;font-weight:600;transition:.25s;
+}
+a.btn:hover{opacity:.85;transform:translateY(-1px);}
+code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:6px;font-family:monospace;}
+footer{margin-top:auto;opacity:.6;}
+</style>
+</head>
+<body>
+<h1>ติดตั้ง PHANToM Bridge</h1>
+<p>Bridge เป็นโปรแกรมเล็กๆ ที่ทำหน้าที่เชื่อมต่อระหว่าง <b>เบราว์เซอร์</b> และ <b>อุปกรณ์ Android</b> ผ่าน ADB หรือ Wi-Fi Debug เพื่อให้ PHANToM Web Dialer ทำงานได้เต็มรูปแบบ</p>
+
+<div class="step">
+  <h3>ขั้นตอน 1 : ดาวน์โหลด Bridge</h3>
+  <p>คลิกปุ่มด้านล่างเพื่อดาวน์โหลดไฟล์ ติดตั้ง (สำหรับ Windows เท่านั้น)</p>
+  <!-- 🔗 เปลี่ยน URL ด้านล่างเป็นลิงก์ release จริง -->
+  <a href="https://github.com/Phantomguy7845/PHANToM-is-Working-with-Connex/releases/latest/download/PHANToM_Bridge.exe" class="btn">⬇ ดาวน์โหลด Bridge (.exe)</a>
+</div>
+
+<div class="step">
+  <h3>ขั้นตอน 2 : ติดตั้งและเปิดใช้งาน</h3>
+  <ul>
+    <li>ดับเบิลคลิกไฟล์ <code>PHANToM_Bridge.exe</code></li>
+    <li>เมื่อเปิดขึ้น จะเห็นข้อความ <code>Listening on 127.0.0.1:9223</code></li>
+    <li>อย่าปิด Bridge ขณะใช้งาน Web Dialer</li>
+  </ul>
+</div>
+
+<div class="step">
+  <h3>ขั้นตอน 3 : เปิด Web Dialer อีกครั้ง</h3>
+  <p>กลับไปที่หน้า <a href="PHANToM_Web_Dialer.html">PHANToM Web Dialer</a> และกด <b>ตรวจสอบ Bridge</b> อีกครั้ง สถานะจะเปลี่ยนเป็น “Online”</p>
+</div>
+
+<div class="step">
+  <h3>ขั้นสูง (แก้ไขค่า พอร์ต)</h3>
+  <p>หากต้องการเปลี่ยนพอร์ต ให้แก้ไฟล์ <code>bridge_config.json</code> ในโฟลเดอร์เดียวกับ Bridge และระบุ พอร์ต ที่ต้องการ เช่น <code>9224</code> จากนั้นเปิด Web Dialer ด้วย URL :</p>
+  <code>?bridge=http://127.0.0.1:9224</code>
+</div>
+
+<footer>PHANToM Bridge Installer Guide — by PHANToM</footer>
+</body>
+</html>
