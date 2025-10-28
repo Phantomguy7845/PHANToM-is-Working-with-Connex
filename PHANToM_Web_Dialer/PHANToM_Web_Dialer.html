@@ -1,126 +1,76 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PHANToM Web Dialer</title>
-  <link rel="stylesheet" href="css/phantom-web-dialer.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PHANToM Web Dialer</title>
+<link rel="stylesheet" href="css/phantom-web-dialer.css">
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="logo">PHANToM</div>
-      <small>Web Dialer — WebUI + Local Bridge (ADB)</small>
-    </div>
-    <div class="status">
-      <span id="bridgeStatus" class="chip offline">Bridge: Offline</span>
-      <span id="deviceStatus" class="chip">Device: —</span>
-    </div>
-  </header>
+<header>
+  <h1>📞 PHANToM Web Dialer</h1>
+  <p>เชื่อมต่ออุปกรณ์ Android ผ่าน Bridge / ADB / Wi-Fi Debug</p>
+</header>
 
-  <main class="wrap">
-    <!-- 左พาเนล: การเชื่อมต่อ -->
-    <aside class="panel card">
-      <h3>การเชื่อมต่อ</h3>
+<section id="statusPanel">
+  <div id="bridgeStatus" class="status offline">Bridge: Offline</div>
+  <div id="deviceStatus" class="status">Device: —</div>
+  <div class="row">
+    <button id="probeBridge">ตรวจสอบ Bridge</button>
+    <button id="openInstall">ติดตั้ง / เปิด Bridge</button>
+  </div>
+  <div class="row">
+    <button id="listDevices">ดึงรายชื่ออุปกรณ์</button>
+    <select id="deviceSelect"></select>
+  </div>
+  <div class="row">
+    <input id="wifiHost" placeholder="IP:PORT เช่น 192.168.1.50:5555">
+    <button id="wifiConnect">เชื่อมต่อ Wi-Fi Debug</button>
+  </div>
+</section>
 
-      <div class="row">
-        <button id="probeBridge" class="btn ghost">ตรวจสอบ Bridge</button>
-        <button id="openInstall" class="btn">ติดตั้ง/เปิด Bridge</button>
-      </div>
+<section id="dialPanel">
+  <input id="numberInput" placeholder="กรอกหมายเลขโทรศัพท์">
+  <div class="btns">
+    <button id="callBtn" class="pri">โทรออก (Enter)</button>
+    <button id="answerBtn">รับสาย (Space)</button>
+    <button id="hangupBtn" class="warn">วางสาย (Esc)</button>
+  </div>
+</section>
 
-      <div class="row">
-        <button id="listDevices" class="btn ghost">ค้นหาอุปกรณ์ (USB)</button>
-        <select id="deviceSelect" class="w-full">
-          <option value="">— ยังไม่เลือกอุปกรณ์ —</option>
-        </select>
-      </div>
+<section id="pushPanel">
+  <button id="togglePush">📤 Push Text</button>
+  <div id="pushArea">
+    <input id="pushInput" placeholder="ข้อความที่จะส่งไป Clipboard">
+    <button id="pushSend">ส่งข้อความ</button>
+  </div>
+</section>
 
-      <details class="wifi">
-        <summary>เชื่อมต่อ Wireless Debug</summary>
-        <div class="row">
-          <input id="wifiHost" type="text" placeholder="เช่น 192.168.1.123:5555" />
-          <button id="wifiConnect" class="btn ghost">เชื่อมต่อ</button>
-        </div>
-      </details>
+<section id="historyPanel">
+  <h2>ประวัติล่าสุด</h2>
+  <ul id="lastFive"></ul>
+  <button id="openHistory">ดูประวัติทั้งหมด</button>
+</section>
 
-      <div class="hint">
-        <b>Tips:</b> เปิด Developer options → เปิด USB/Wireless debugging<br>
-        ถ้า Bridge ไม่ขึ้น ให้คลิก “ติดตั้ง/เปิด Bridge”
-      </div>
-    </aside>
+<footer>PHANToM Web Dialer — powered by PHANToM</footer>
 
-    <!-- ขวาพาเนล: Dialer -->
-    <section class="board card">
-      <div class="dialer">
-        <label for="numberInput" class="label">หมายเลข</label>
-        <input id="numberInput" class="number" type="tel" inputmode="tel" autocomplete="off" placeholder="กรอกหมายเลข แล้วกด Enter เพื่อโทร" />
+<!-- 🔹 Modal: ประวัติทั้งหมด -->
+<dialog id="historyModal">
+  <h3>ประวัติทั้งหมด</h3>
+  <div class="row">
+    <input id="historySearch" placeholder="ค้นหาเบอร์โทร...">
+    <label><input type="checkbox" id="dedupeToggle"> ลบเบอร์ซ้ำ</label>
+    <button id="clearHistory">ล้างประวัติ</button>
+  </div>
+  <table>
+    <thead><tr><th>เวลา</th><th>การกระทำ</th><th>ข้อมูล</th></tr></thead>
+    <tbody id="historyBody"></tbody>
+  </table>
+  <button id="closeHistory">ปิด</button>
+</dialog>
 
-        <div class="actions">
-          <button id="callBtn" class="btn ok">โทรออก</button>
-          <button id="answerBtn" class="btn ghost">รับสาย</button>
-          <button id="hangupBtn" class="btn danger">วางสาย (Esc)</button>
-        </div>
+<div id="toast"></div>
 
-        <div class="kbd">
-          <span>Enter=โทร</span>
-          <span>Space=รับสาย</span>
-          <span>Esc=วางสาย</span>
-          <span>Ctrl+Z=ย้อนกลับ</span>
-        </div>
-      </div>
-
-      <!-- Push Text -->
-      <div class="pushbar">
-        <button id="togglePush" class="btn ghost">Push Text</button>
-        <div id="pushArea" class="push-area">
-          <input id="pushInput" type="text" placeholder="ข้อความที่จะส่งไป Clipboard ของอุปกรณ์…" />
-          <button id="pushSend" class="btn">ส่ง</button>
-        </div>
-      </div>
-
-      <!-- Preview 5 ล่าสุด -->
-      <div class="history-mini">
-        <div class="head">
-          <h4>5 รายการล่าสุด</h4>
-          <button id="openHistory" class="btn ghost">ดูทั้งหมด</button>
-        </div>
-        <ul id="lastFive" class="list"></ul>
-      </div>
-    </section>
-  </main>
-
-  <!-- History Modal -->
-  <dialog id="historyModal" class="modal">
-    <div class="modal-card">
-      <header class="modal-head">
-        <h3>ประวัติการโทรทั้งหมด</h3>
-        <button id="closeHistory" class="icon">✖</button>
-      </header>
-
-      <section class="modal-body">
-        <div class="history-toolbar">
-          <input id="historySearch" type="text" placeholder="ค้นหาเบอร์ (อัปเดตทันที)" />
-          <label class="chk">
-            <input id="dedupeToggle" type="checkbox" />
-            แสดงเพียงเบอร์ล่าสุด (ตัดซ้ำ)
-          </label>
-          <button id="clearHistory" class="btn danger">ล้างประวัติ</button>
-        </div>
-        <div class="history-table-wrap">
-          <table class="history-table">
-            <thead>
-              <tr><th>เวลา</th><th>การกระทำ</th><th>หมายเลข</th></tr>
-            </thead>
-            <tbody id="historyBody"></tbody>
-          </table>
-        </div>
-      </section>
-    </div>
-  </dialog>
-
-  <div id="toast" class="toast">พร้อมทำงาน</div>
-  <script src="js/phantom-web-dialer.js"></script>
+<script src="js/phantom-web-dialer.js"></script>
 </body>
 </html>
