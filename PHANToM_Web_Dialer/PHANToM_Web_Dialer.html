@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PHANToM Web Dialer</title>
+<title>📞 PHANToM Web Dialer</title>
 <link rel="stylesheet" href="css/phantom-web-dialer.css">
 </head>
 <body>
@@ -17,53 +17,52 @@
   <div id="deviceStatus" class="status">Device: —</div>
 
   <div class="row">
-    <button id="probeBridge">ตรวจสอบ Bridge</button>
-
-    <!-- ✅ เปลี่ยนจาก <button> เป็น <a> พร้อมลิงก์จริง -->
-    <a href="../PHANToM_Web_Dialer/BRIDGE_INSTALL.html" 
-       id="openInstall" 
-       class="btn" 
-       target="_blank" 
-       style="display:inline-block;padding:6px 12px;background:#3b82f6;color:#fff;
-              border-radius:6px;text-decoration:none;">
-      ติดตั้ง / เปิด Bridge
-    </a>
+    <input id="bridgeHost" placeholder="Host เช่น 127.0.0.1">
+    <input id="bridgePort" placeholder="Port เช่น 9223" value="9223">
+  </div>
+  <div class="row">
+    <button id="probeBridge" class="btn pri">ตรวจสอบ Bridge</button>
+    <a id="openInstall" href="https://github.com/Phantomguy7845/PHANToM-is-Working-with-Connex/releases/latest/download/PHANTOM-Web-Bridge.exe"
+       class="btn ok" target="_blank">ติดตั้ง / เปิด Bridge</a>
   </div>
 
   <div class="row">
-    <button id="listDevices">ดึงรายชื่ออุปกรณ์</button>
+    <button id="listDevices" class="btn">ดึงรายชื่ออุปกรณ์</button>
     <select id="deviceSelect"></select>
   </div>
+
   <div class="row">
     <input id="wifiHost" placeholder="IP:PORT เช่น 192.168.1.50:5555">
-    <button id="wifiConnect">เชื่อมต่อ Wi-Fi Debug</button>
+    <button id="wifiConnect" class="btn pri">เชื่อมต่อ Wi-Fi Debug</button>
   </div>
 </section>
 
 <section id="dialPanel">
   <input id="numberInput" placeholder="กรอกหมายเลขโทรศัพท์">
   <div class="btns">
-    <button id="callBtn" class="pri">โทรออก (Enter)</button>
-    <button id="answerBtn">รับสาย (Space)</button>
-    <button id="hangupBtn" class="warn">วางสาย (Esc)</button>
+    <button id="callBtn" class="btn pri">โทรออก (Enter)</button>
+    <button id="answerBtn" class="btn ok">รับสาย (Space)</button>
+    <button id="hangupBtn" class="btn warn">วางสาย (Esc)</button>
   </div>
 </section>
 
 <section id="pushPanel">
-  <button id="togglePush">📤 Push Text</button>
+  <button id="togglePush" class="btn sub">📤 Push Text</button>
   <div id="pushArea">
     <input id="pushInput" placeholder="ข้อความที่จะส่งไป Clipboard">
-    <button id="pushSend">ส่งข้อความ</button>
+    <button id="pushSend" class="btn">ส่งข้อความ</button>
   </div>
 </section>
 
 <section id="historyPanel">
   <h2>ประวัติล่าสุด</h2>
   <ul id="lastFive"></ul>
-  <button id="openHistory">ดูประวัติทั้งหมด</button>
+  <button id="openHistory" class="btn">ดูประวัติทั้งหมด</button>
 </section>
 
-<footer>PHANToM Web Dialer — powered by PHANToM</footer>
+<footer>
+  PHANToM Web Dialer — powered by <strong>PHANToM</strong>
+</footer>
 
 <!-- 🔹 Modal: ประวัติทั้งหมด -->
 <dialog id="historyModal">
@@ -71,13 +70,13 @@
   <div class="row">
     <input id="historySearch" placeholder="ค้นหาเบอร์โทร...">
     <label><input type="checkbox" id="dedupeToggle"> ลบเบอร์ซ้ำ</label>
-    <button id="clearHistory">ล้างประวัติ</button>
+    <button id="clearHistory" class="btn warn">ล้างประวัติ</button>
   </div>
   <table>
     <thead><tr><th>เวลา</th><th>การกระทำ</th><th>ข้อมูล</th></tr></thead>
     <tbody id="historyBody"></tbody>
   </table>
-  <button id="closeHistory">ปิด</button>
+  <button id="closeHistory" class="btn">ปิด</button>
 </dialog>
 
 <div id="toast"></div>
