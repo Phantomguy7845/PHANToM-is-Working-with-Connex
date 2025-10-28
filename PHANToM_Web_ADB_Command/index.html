@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PHANToM Web ADB Command Center</title>
+<link rel="stylesheet" href="css/phantom-adb-center.css">
+</head>
+<body>
+<header>
+  <h1>PHANToM Web ADB Command Center</h1>
+  <div id="bridgeStatus">🔴 กำลังตรวจสอบ Bridge...</div>
+</header>
+
+<main>
+  <section>
+    <h2>Device Control</h2>
+    <input id="number" placeholder="ใส่เบอร์โทร">
+    <button onclick="adbCall()">โทร</button>
+    <button onclick="adbHangup()">วางสาย</button>
+    <button onclick="adbAnswer()">รับสาย</button>
+    <button onclick="adbScreenshot()">📸 Screenshot</button>
+  </section>
+
+  <section>
+    <h2>Custom Command</h2>
+    <input id="customCmd" placeholder="adb shell ...">
+    <button onclick="adbCustom()">Run</button>
+  </section>
+
+  <section>
+    <h2>Output</h2>
+    <pre id="output"></pre>
+  </section>
+</main>
+
+<script src="js/phantom-adb-center.js"></script>
+</body>
+</html>
