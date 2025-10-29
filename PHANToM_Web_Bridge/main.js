@@ -1,182 +1,198 @@
-/**
- * PHANToM Web Bridge — Node.js Local ADB Bridge
- * ----------------------------------------------
- * รองรับ:
- *   /health
- *   /devices
- *   /dial
- *   /hangup
- *   /answer
- *   /wifi/connect
- *   /push_text
- *
- * พร้อม CORS สำหรับ GitHub Pages (phantomguy7845.github.io)
- */
+// PHANToM Web Bridge — Device Manager + ADB Relay (Express)
+// Focus: เลือกอุปกรณ์ที่ Bridge (ล็อก 1 เครื่อง), Wi-Fi connect, คำสั่ง ADB ทั้งหมดส่งเข้า “เครื่องที่เลือกไว้เท่านั้น”
 
-const http = require("http");
-const { exec } = require("child_process");
+// Install once (dev): npm i express cors adbkit
+// Build (pkg): pkg main.js --targets win --output PHANToM-Web-Bridge.exe
+
+const express = require("express");
+const cors = require("cors");
+const adb = require("adbkit");
 const os = require("os");
+const fs = require("fs");
+const path = require("path");
 
-const PORT = 8765; // ปรับได้ตามต้องการ
-const ADB_PATH = "./adb/adb.exe"; // path ไปยัง adb.exe ภายในโฟลเดอร์โปรเจกต์
+// -------- Config --------
+const PORT = Number(process.env.BRIDGE_PORT || process.argv[2] || 8765);
+const STATE_FILE = path.join(process.cwd(), "bridge_state.json");
 
-// ===== Helper: Run ADB Command =====
-function runADB(cmd) {
-  return new Promise((resolve, reject) => {
-    exec(`"${ADB_PATH}" ${cmd}`, (err, stdout, stderr) => {
-      if (err) reject(stderr || err.message);
-      else resolve(stdout.trim());
-    });
-  });
+// -------- State --------
+let state = loadState() || { selectedSerial: "", lastWiFiHost: "" };
+const client = adb.createClient();
+
+// -------- Utils --------
+function saveState() {
+  try { fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2)); } catch {}
 }
-
-// ===== Helper: JSON Response =====
-function sendJSON(res, data, code = 200) {
-  res.writeHead(code, {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  });
-  res.end(JSON.stringify(data));
+function loadState() {
+  try { return JSON.parse(fs.readFileSync(STATE_FILE, "utf8")); } catch { return null; }
 }
-
-// ===== Server =====
-const server = http.createServer(async (req, res) => {
-  if (req.method === "OPTIONS") {
-    sendJSON(res, { ok: true });
-    return;
+async function listAllDevices() {
+  const list = await client.listDevices(); // [{id, type}]
+  const out = [];
+  for (const d of list) {
+    const serial = d.id;
+    let model = "";
+    try { model = (await client.getProperties(serial))["ro.product.model"] || ""; } catch {}
+    out.push({ serial, model, transport: d.type || "usb" });
   }
-
-  if (req.url === "/health") {
-    sendJSON(res, { ok: true, status: "ok", version: "1.1.0" });
-    return;
-  }
-
-  if (req.url === "/devices") {
-    try {
-      const out = await runADB("devices -l");
-      const lines = out.split("\n").slice(1).filter(l => l.trim());
-      const devices = lines.map(l => {
-        const [serial, status] = l.split("\t");
-        return { serial, status, transport: "usb", model: serial };
-      });
-      sendJSON(res, { ok: true, devices });
-    } catch (e) {
-      sendJSON(res, { ok: false, error: e.toString() }, 500);
+  return out;
+}
+function getLocalIPs() {
+  const nets = os.networkInterfaces();
+  const addrs = [];
+  for (const k of Object.keys(nets)) {
+    for (const n of nets[k] || []) {
+      if (n.family === "IPv4" && !n.internal) addrs.push(n.address);
     }
-    return;
   }
-
-  if (req.url === "/dial" && req.method === "POST") {
-    let body = "";
-    req.on("data", chunk => (body += chunk));
-    req.on("end", async () => {
-      try {
-        const { serial, number } = JSON.parse(body || "{}");
-        if (!serial || !number)
-          return sendJSON(res, { ok: false, error: "Missing serial or number" }, 400);
-        await runADB(`-s ${serial} shell am start -a android.intent.action.CALL -d tel:${number}`);
-        sendJSON(res, { ok: true });
-      } catch (e) {
-        sendJSON(res, { ok: false, error: e.toString() }, 500);
-      }
-    });
-    return;
+  return addrs.length ? addrs : ["127.0.0.1"];
+}
+async function ensureSelectedConnected() {
+  if (!state.selectedSerial) throw new Error("NO_SELECTED_DEVICE");
+  // ตรวจว่ามีใน list จริงไหม
+  const list = await listAllDevices();
+  if (!list.find(d => d.serial === state.selectedSerial)) {
+    throw new Error("SELECTED_DEVICE_NOT_FOUND");
   }
+  return state.selectedSerial;
+}
+async function shell(serial, cmd) {
+  const r = await client.shell(serial, cmd);
+  return await adb.util.readAll(r);
+}
 
-  if (req.url === "/hangup" && req.method === "POST") {
-    let body = "";
-    req.on("data", chunk => (body += chunk));
-    req.on("end", async () => {
-      try {
-        const { serial } = JSON.parse(body || "{}");
-        if (!serial)
-          return sendJSON(res, { ok: false, error: "Missing serial" }, 400);
-        await runADB(`-s ${serial} shell input keyevent KEYCODE_ENDCALL`);
-        sendJSON(res, { ok: true });
-      } catch (e) {
-        sendJSON(res, { ok: false, error: e.toString() }, 500);
-      }
-    });
-    return;
-  }
+// -------- Server --------
+const app = express();
+app.use(express.json({ limit: "1mb" }));
+app.use(cors({
+  origin: true,
+  methods: "GET,POST,OPTIONS",
+  allowedHeaders: "Content-Type",
+  credentials: false,
+}));
+app.options("*", cors());
 
-  if (req.url === "/answer" && req.method === "POST") {
-    let body = "";
-    req.on("data", chunk => (body += chunk));
-    req.on("end", async () => {
-      try {
-        const { serial } = JSON.parse(body || "{}");
-        if (!serial)
-          return sendJSON(res, { ok: false, error: "Missing serial" }, 400);
-        await runADB(`-s ${serial} shell input keyevent KEYCODE_CALL`);
-        sendJSON(res, { ok: true });
-      } catch (e) {
-        sendJSON(res, { ok: false, error: e.toString() }, 500);
-      }
-    });
-    return;
-  }
-
-  if (req.url === "/push_text" && req.method === "POST") {
-    let body = "";
-    req.on("data", chunk => (body += chunk));
-    req.on("end", async () => {
-      try {
-        const { serial, text } = JSON.parse(body || "{}");
-        if (!serial || !text)
-          return sendJSON(res, { ok: false, error: "Missing serial or text" }, 400);
-        await runADB(`-s ${serial} shell am broadcast -a clipper.set -e text "${text}"`);
-        sendJSON(res, { ok: true });
-      } catch (e) {
-        sendJSON(res, { ok: false, error: e.toString() }, 500);
-      }
-    });
-    return;
-  }
-
-  if (req.url === "/wifi/connect" && req.method === "POST") {
-    let body = "";
-    req.on("data", chunk => (body += chunk));
-    req.on("end", async () => {
-      try {
-        const { host } = JSON.parse(body || "{}");
-        if (!host)
-          return sendJSON(res, { ok: false, error: "Missing host" }, 400);
-        const out = await runADB(`connect ${host}`);
-        sendJSON(res, { ok: true, result: out });
-      } catch (e) {
-        sendJSON(res, { ok: false, error: e.toString() }, 500);
-      }
-    });
-    return;
-  }
-
-  sendJSON(res, { ok: false, error: "Unknown endpoint" }, 404);
+// Health
+app.get("/health", (req, res) => {
+  res.json({ ok: true, status: "ok", version: "1.1.0" });
 });
 
-// ===== Helper: Detect Host =====
-function getLocalIP() {
-  const nets = os.networkInterfaces();
-  for (const name of Object.keys(nets)) {
-    for (const net of nets[name]) {
-      if (net.family === "IPv4" && !net.internal) {
-        return net.address;
-      }
-    }
-  }
-  return "127.0.0.1";
-}
+// Info (ให้หน้าเว็บโชว์ host+port+selected)
+app.get("/info", (req, res) => {
+  res.json({
+    ok: true,
+    hostCandidates: getLocalIPs(),
+    port: PORT,
+    selectedSerial: state.selectedSerial || "",
+    lastWiFiHost: state.lastWiFiHost || ""
+  });
+});
 
-// ===== Start Server =====
-server.listen(PORT, () => {
-  const ip = getLocalIP();
+// รายการอุปกรณ์ (เพื่อให้ผู้ใช้เลือกที่ฝั่ง Bridge app)
+app.get("/devices", async (req, res) => {
+  try {
+    const devices = await listAllDevices();
+    res.json({ ok: true, devices, selectedSerial: state.selectedSerial || "" });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e) });
+  }
+});
+
+// เลือกอุปกรณ์ (ล็อก 1 เครื่อง)
+app.post("/select", async (req, res) => {
+  try {
+    const { serial } = req.body || {};
+    if (!serial) return res.status(400).json({ ok: false, error: "serial required" });
+    const devs = await listAllDevices();
+    if (!devs.find(d => d.serial === serial)) {
+      return res.status(404).json({ ok: false, error: "device not found" });
+    }
+    state.selectedSerial = serial;
+    saveState();
+    res.json({ ok: true, selectedSerial: serial });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e) });
+  }
+});
+
+// เชื่อมต่อ Wi-Fi debugging (adb connect ip:port)
+app.post("/wifi/connect", async (req, res) => {
+  try {
+    const { host } = req.body || {};
+    if (!host) return res.status(400).json({ ok: false, error: "host (ip:port) required" });
+    await client.connect(host); // อาจโยน error หากไม่ได้เปิด wireless debugging
+    state.lastWiFiHost = host;
+    // หลัง connect สำเร็จ เลือกเครื่องนี้ให้เป็น selected ด้วย
+    state.selectedSerial = host;
+    saveState();
+    res.json({ ok: true, serial: state.selectedSerial });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e) });
+  }
+});
+
+// โทรออก (เครื่องที่เลือกไว้เท่านั้น)
+app.post("/dial", async (req, res) => {
+  try {
+    const { number } = req.body || {};
+    if (!number) return res.status(400).json({ ok: false, error: "number required" });
+    const serial = await ensureSelectedConnected();
+    // เปิดโทรออก
+    await shell(serial, `am start -a android.intent.action.CALL -d tel:${number}`);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e) });
+  }
+});
+
+// รับสาย
+app.post("/answer", async (req, res) => {
+  try {
+    const serial = await ensureSelectedConnected();
+    // วิธีทั่วไป (บางรุ่นอาจต้องใช้ service call telecom)
+    await shell(serial, "input keyevent KEYCODE_CALL");
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e) });
+  }
+});
+
+// วางสาย
+app.post("/hangup", async (req, res) => {
+  try {
+    const serial = await ensureSelectedConnected();
+    await shell(serial, "input keyevent KEYCODE_ENDCALL");
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e) });
+  }
+});
+
+// ส่งข้อความไป Clipboard
+app.post("/push_text", async (req, res) => {
+  try {
+    const { text } = req.body || {};
+    if (!text) return res.status(400).json({ ok: false, error: "text required" });
+    const serial = await ensureSelectedConnected();
+    // ใช้ service เพื่อใส่คลิปบอร์ด (ต้องมี set-clipboard utility ในเครื่อง? ใช้มาตรฐาน input text แทน)
+    // วิธีทั่วไป: ตั้งค่าใน primary clip ผ่าน am broadcast (บางรุ่นไม่รองรับ)
+    // ทางเลือก fallback: ส่งผ่าน 'input text', ให้ผู้ใช้วางเอง
+    await shell(serial, `am broadcast -a clipper.set -e text '${text.replace(/'/g,"\\'")}' || input text '${text.replace(/'/g,"\\'")}'`);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: String(e) });
+  }
+});
+
+// Start
+app.listen(PORT, () => {
+  const ips = getLocalIPs();
   console.log("=========================================");
-  console.log("✅ PHANToM Web Bridge started successfully!");
-  console.log(`🌐 Local access : http://127.0.0.1:${PORT}`);
-  console.log(`📡 LAN access   : http://${ip}:${PORT}`);
-  console.log("-----------------------------------------");
-  console.log("Use this Host + Port in your PHANToM Web Dialer UI");
+  console.log(" PHANToM Web Bridge is running");
+  console.log(` Host candidates: ${ips.join(", ")}`);
+  console.log(` Port: ${PORT}`);
+  console.log(" Open this in Web Dialer:");
+  console.log(`  Host: 127.0.0.1   Port: ${PORT}`);
+  console.log(" Or use your LAN IP above as Host");
   console.log("=========================================");
 });
