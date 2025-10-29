@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <title>PHANToM Web Bridge</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header>
+    <h1>PHANToM Web Bridge</h1>
+    <p>เลือกอุปกรณ์ & ตั้งค่า Port ของ Bridge</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <div class="row">
+        <label>Bridge Port</label>
+        <input id="port" type="number" min="1" max="65535" placeholder="8765">
+        <button id="savePort" class="btn">บันทึก & รีสตาร์ทเซิร์ฟเวอร์</button>
+      </div>
+      <div class="row">
+        <button id="openReleases" class="btn ghost">หน้า Releases (ดาวน์โหลด .exe)</button>
+        <label><input id="autoStart" type="checkbox"> เปิดพร้อม Windows</label>
+      </div>
+      <div class="hint">* หน้า Web Dialer ให้ใช้ Host = 127.0.0.1 (หรือ LAN IP) และ Port ตามนี้</div>
+    </section>
+
+    <section class="card">
+      <h3>อุปกรณ์ (เลือกได้ 1 เครื่อง)</h3>
+      <div class="row">
+        <button id="refresh" class="btn">รีเฟรชรายการ</button>
+      </div>
+      <ul id="deviceList"></ul>
+
+      <div class="row">
+        <input id="wifiHost" placeholder="IP:PORT (เช่น 192.168.1.50:5555)">
+        <button id="wifiConnect" class="btn">เชื่อมต่อ Wi-Fi Debug</button>
+      </div>
+
+      <div class="info" id="selectedInfo">Selected: —</div>
+      <div class="info" id="bridgeInfo">Bridge: —</div>
+    </section>
+  </main>
+
+  <footer>Tray: แอปยังทำงานแม้ปิดหน้าต่าง — PHANToM</footer>
+
+  <script src="./renderer.js"></script>
+</body>
+</html>
