@@ -1,0 +1,40 @@
+{
+  "name": "phantom-web-bridge",
+  "version": "1.2.0",
+  "description": "PHANToM Web Bridge (Electron + Tray + ADB)",
+  "main": "main.js",
+  "author": "PHANToM",
+  "license": "MIT",
+  "scripts": {
+    "dev": "electron .",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "adbkit": "^2.12.2",
+    "cors": "^2.8.5",
+    "electron-store": "^8.2.0",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "electron": "^31.3.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.phantom.webbridge",
+    "productName": "PHANToM Web Bridge",
+    "asar": true,
+    "win": {
+      "target": "nsis",
+      "artifactName": "PHANToM-Web-Bridge-${version}-win.exe"
+    },
+    "files": [
+      "main.js",
+      "server.js",
+      "store.js",
+      "preload.js",
+      "renderer/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ]
+  }
+}
