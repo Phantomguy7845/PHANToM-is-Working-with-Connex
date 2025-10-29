@@ -1,76 +1,62 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>📞 PHANToM Web Dialer</title>
-<link rel="stylesheet" href="css/phantom-web-dialer.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PHANToM Web Dialer</title>
+<link rel="stylesheet" href="css/phantom-web-dialer.css" />
 </head>
 <body>
 <header>
   <h1>📞 PHANToM Web Dialer</h1>
-  <p>เชื่อมต่ออุปกรณ์ Android ผ่าน Bridge / ADB / Wi-Fi Debug</p>
+  <p>เชื่อมต่อกับ Bridge แล้วสั่ง ADB ไปยัง “อุปกรณ์ที่เลือกไว้ใน Bridge”</p>
 </header>
 
-<section id="statusPanel">
-  <div id="bridgeStatus" class="status offline">Bridge: Offline</div>
-  <div id="deviceStatus" class="status">Device: —</div>
-
+<section id="statusPanel" class="card">
   <div class="row">
-    <input id="bridgeHost" placeholder="Host เช่น 127.0.0.1">
-    <input id="bridgePort" placeholder="Port เช่น 9223" value="9223">
+    <input id="bridgeHost" placeholder="Bridge Host (เช่น 127.0.0.1)" />
+    <input id="bridgePort" placeholder="Port (เช่น 8765)" />
   </div>
   <div class="row">
-    <button id="probeBridge" class="btn pri">ตรวจสอบ Bridge</button>
-    <a id="openInstall" href="https://github.com/Phantomguy7845/PHANToM-is-Working-with-Connex/releases/latest/download/PHANTOM-Web-Bridge.exe"
-       class="btn ok" target="_blank">ติดตั้ง / เปิด Bridge</a>
+    <button id="probeBridge" class="btn">ตรวจสอบ Bridge</button>
+    <a id="openInstall" class="btn ghost" target="_blank" rel="noopener">ติดตั้ง / เปิด Bridge</a>
   </div>
-
   <div class="row">
-    <button id="listDevices" class="btn">ดึงรายชื่ออุปกรณ์</button>
-    <select id="deviceSelect"></select>
+    <div id="bridgeStatus" class="badge offline">Bridge: Offline</div>
   </div>
-
-  <div class="row">
-    <input id="wifiHost" placeholder="IP:PORT เช่น 192.168.1.50:5555">
-    <button id="wifiConnect" class="btn pri">เชื่อมต่อ Wi-Fi Debug</button>
-  </div>
+  <div class="hint">* อุปกรณ์ต้องถูก “เลือก” ที่ตัว Bridge.exe แล้วเท่านั้น</div>
 </section>
 
-<section id="dialPanel">
-  <input id="numberInput" placeholder="กรอกหมายเลขโทรศัพท์">
+<section id="dialPanel" class="card">
+  <input id="numberInput" placeholder="หมายเลขโทรศัพท์" />
   <div class="btns">
     <button id="callBtn" class="btn pri">โทรออก (Enter)</button>
-    <button id="answerBtn" class="btn ok">รับสาย (Space)</button>
+    <button id="answerBtn" class="btn">รับสาย (Space)</button>
     <button id="hangupBtn" class="btn warn">วางสาย (Esc)</button>
   </div>
-</section>
-
-<section id="pushPanel">
-  <button id="togglePush" class="btn sub">📤 Push Text</button>
-  <div id="pushArea">
-    <input id="pushInput" placeholder="ข้อความที่จะส่งไป Clipboard">
-    <button id="pushSend" class="btn">ส่งข้อความ</button>
+  <div class="tools">
+    <button id="togglePush" class="btn ghost">📤 Push Text</button>
+    <div id="pushArea" class="push hide">
+      <input id="pushInput" placeholder="ข้อความที่จะส่งไปคลิปบอร์ด" />
+      <button id="pushSend" class="btn small">ส่ง</button>
+    </div>
   </div>
 </section>
 
-<section id="historyPanel">
-  <h2>ประวัติล่าสุด</h2>
+<section id="historyPanel" class="card">
+  <h3>ประวัติล่าสุด</h3>
   <ul id="lastFive"></ul>
-  <button id="openHistory" class="btn">ดูประวัติทั้งหมด</button>
+  <button id="openHistory" class="btn small">ดูประวัติทั้งหมด</button>
 </section>
 
-<footer>
-  PHANToM Web Dialer — powered by <strong>PHANToM</strong>
-</footer>
+<footer>PHANToM Web Dialer — powered by PHANToM</footer>
 
-<!-- 🔹 Modal: ประวัติทั้งหมด -->
 <dialog id="historyModal">
   <h3>ประวัติทั้งหมด</h3>
   <div class="row">
-    <input id="historySearch" placeholder="ค้นหาเบอร์โทร...">
-    <label><input type="checkbox" id="dedupeToggle"> ลบเบอร์ซ้ำ</label>
-    <button id="clearHistory" class="btn warn">ล้างประวัติ</button>
+    <input id="historySearch" placeholder="ค้นหาเบอร์…" />
+    <label><input type="checkbox" id="dedupeToggle" /> ลบเบอร์ซ้ำ</label>
+    <button id="clearHistory" class="btn small warn">ล้างประวัติ</button>
   </div>
   <table>
     <thead><tr><th>เวลา</th><th>การกระทำ</th><th>ข้อมูล</th></tr></thead>
