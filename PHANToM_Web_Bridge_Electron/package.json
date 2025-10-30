@@ -1,11 +1,16 @@
 {
   "name": "phantom-web-bridge",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "PHANToM Web Bridge (Electron + Tray + ADB)",
-  "main": "main.js",
   "author": "PHANToM",
   "license": "MIT",
+  "main": "main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Phantomguy7845/PHANToM-is-Working-with-Connex.git"
+  },
   "scripts": {
+    "start": "electron .",
     "dev": "electron .",
     "build": "electron-builder"
   },
@@ -23,9 +28,8 @@
     "appId": "com.phantom.webbridge",
     "productName": "PHANToM Web Bridge",
     "asar": true,
-    "win": {
-      "target": "nsis",
-      "artifactName": "PHANToM-Web-Bridge-${version}-win.exe"
+    "directories": {
+      "output": "dist"
     },
     "files": [
       "main.js",
@@ -35,6 +39,35 @@
       "renderer/**/*",
       "node_modules/**/*",
       "package.json"
-    ]
+    ],
+    "extraResources": [
+      {
+        "from": "node_modules/electron/dist/",
+        "to": ".",
+        "filter": ["**/*.dll"]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        },
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "PHANToM-Web-Bridge-${version}-win.${ext}",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "PHANToM Web Bridge",
+      "artifactName": "PHANToM-Web-Bridge-Setup-${version}.exe"
+    }
   }
 }
