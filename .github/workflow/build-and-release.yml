@@ -1,0 +1,46 @@
+name: Build and Release PHANToM Web Bridge
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    name: Build Electron App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          cd PHANToM_Web_Bridge_Electron
+          npm install
+
+      - name: Build Electron app
+        run: |
+          cd PHANToM_Web_Bridge_Electron
+          npm run build
+
+      - name: Archive dist files
+        run: |
+          cd PHANToM_Web_Bridge_Electron/dist
+          zip -r PHANToM-Web-Bridge-${{ github.ref_name }}.zip ./
+
+      - name: Upload Release Artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            PHANToM_Web_Bridge_Electron/dist/PHANToM-Web-Bridge-${{ github.ref_name }}.zip
+            PHANToM_Web_Bridge_Electron/dist/*.exe
+            PHANToM_Web_Bridge_Electron/dist/*.AppImage
+            PHANToM_Web_Bridge_Electron/dist/*.snap
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
