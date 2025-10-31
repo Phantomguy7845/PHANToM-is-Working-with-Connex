@@ -1,0 +1,48 @@
+name: Build and Release PHANToM Web Bridge
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    name: Build Electron App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: |
+          cd PHANToM_Web_Bridge_Electron
+          npm install
+
+      - name: Install Wine for Windows build
+        run: sudo apt-get update && sudo apt-get install -y wine64
+
+      - name: Build Electron app (cross-platform)
+        run: |
+          cd PHANToM_Web_Bridge_Electron
+          npx electron-builder --win nsis --linux AppImage
+
+      - name: Archive dist files
+        run: |
+          cd PHANToM_Web_Bridge_Electron/dist
+          zip -r PHANToM-Web-Bridge-${{ github.ref_name }}.zip ./
+
+      - name: Upload Release Artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            PHANToM_Web_Bridge_Electron/dist/PHANToM-Web-Bridge-${{ github.ref_name }}.zip
+            PHANToM_Web_Bridge_Electron/dist/*.exe
+            PHANToM_Web_Bridge_Electron/dist/*.AppImage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
