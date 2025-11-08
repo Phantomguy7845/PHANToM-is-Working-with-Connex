@@ -80,18 +80,34 @@ footer{margin:40px 0;font-size:.9rem;opacity:.7;text-align:center}
 @media (min-width:901px){
   .grid{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
 }
+
+/* Extra */
+.link-hint{font-size:.85rem;opacity:.75;margin-top:8px}
+.badge-warn{display:inline-block;border:1px solid rgba(255,255,255,.25);padding:2px 8px;border-radius:999px;font-size:.75rem;opacity:.8}
+.is-disabled{opacity:.6;filter:grayscale(60%);pointer-events:none;cursor:not-allowed}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:#0b1120;border:1px solid rgba(255,255,255,.15);color:#e5e7eb;padding:.45rem .75rem;border-radius:999px;z-index:2000}
 </style>
 </head>
 <body>
+
+<!-- ⬇️ ใส่ลิงก์ของคุณตรงนี้ (แก้บรรทัดเดียวพอ) -->
+<script>
+  const DIALER_URL = 'https://your.link/phantom-dialer.zip'; /* ⬅️ เปลี่ยนเป็นลิงก์ดาวน์โหลดจริงของคุณ */
+</script>
+
 <div class="loading" id="loading"><h2>PHANToM</h2><div class="bar"></div></div>
 <h1>PHANToM Toolkit</h1>
 
 <div class="grid" id="grid">
 
+  <!-- ✅ CARD #1: Dialer (Download ใช้ลิงก์จาก DIALER_URL เท่านั้น) -->
   <div class="card">
-    <h3>PHANToM Web Dialer</h3>
-    <p>เครื่องมือโทรออก/รับสายผ่าน WebUSB หรือ Wi-Fi Debug สำหรับอุปกรณ์ Android</p>
-    <a href="PHANToM_Web_Dialer/PHANToM_Web_Dialer.html" class="btn">เปิดใช้งาน</a>
+    <h3>PHANToM Dialer</h3>
+    <p>เครื่องมือ Dialer สำหรับงานของคุณ — ดาวน์โหลดเพื่อติดตั้ง/ใช้งาน</p>
+    <a id="dialerBtn" href="#" class="btn" rel="noopener">Download</a>
+    <div class="link-hint">
+      <span class="badge-warn" id="dialerStatus">ยังไม่ตั้งลิงก์ใน index.html</span>
+    </div>
   </div>
 
   <div class="card">
@@ -112,7 +128,6 @@ footer{margin:40px 0;font-size:.9rem;opacity:.7;text-align:center}
     <a href="PHANToM_Report_Counter/PHANToM_Report_Counter.html" class="btn">เปิดใช้งาน</a>
   </div>
 
-  <!-- ⭐ NEW: PHANToM Script Pad -->
   <div class="card">
     <h3>PHANToM Script Pad</h3>
     <p>ปุ่มสคริปต์พร้อมคัดลอกทันที • เพิ่ม/ลบด้วยป๊อปอัปใหญ่ • ลากจัดเรียง • Import/Export .txt</p>
@@ -124,13 +139,41 @@ footer{margin:40px 0;font-size:.9rem;opacity:.7;text-align:center}
 <footer>PHANToM Toolkit — by PHANToM</footer>
 
 <script>
+const loader=document.getElementById('loading');
+const grid=document.getElementById('grid');
+
+function updateDialerBtn(){
+  const a = document.getElementById('dialerBtn');
+  const badge = document.getElementById('dialerStatus');
+  const url = (typeof DIALER_URL==='string' ? DIALER_URL.trim() : '');
+  const isValid = /^https?:\\/\\//i.test(url);
+
+  if(isValid){
+    a.href = url;
+    a.target = '_blank';
+    a.classList.remove('is-disabled');
+    a.setAttribute('aria-disabled','false');
+    a.title = '';
+    badge.textContent = 'ลิงก์จาก index.html พร้อมใช้งาน';
+    badge.style.opacity = .9;
+  }else{
+    a.href = '#';
+    a.removeAttribute('target');
+    a.classList.add('is-disabled');
+    a.setAttribute('aria-disabled','true');
+    a.title = 'ตั้งค่า DIALER_URL ใน index.html';
+    badge.textContent = 'ยังไม่ตั้งลิงก์ใน index.html';
+    badge.style.opacity = .75;
+  }
+}
+
 window.addEventListener('load',()=>{
-  const loader=document.getElementById('loading');
-  const grid=document.getElementById('grid');
   setTimeout(()=>{
     loader.style.opacity='0';loader.style.pointerEvents='none';
     setTimeout(()=>{loader.remove();grid.classList.add('show');},800);
   },1600);
+
+  updateDialerBtn();
 });
 </script>
 </body>
