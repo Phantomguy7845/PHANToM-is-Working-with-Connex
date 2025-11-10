@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PHANToM Script Board — Copy on Tap</title>
-  <meta name="description" content="กระดานสคริปต์/ประโยคสำเร็จรูป กดครั้งเดียวคัดลอก · เพิ่ม/แก้ไข/ลบ · ลากย้ายตำแหน่ง · นำเข้า/ส่งออก .txt · โทน PHANToM พร้อมแอนิเมชัน · เก็บข้อมูลถาวรในเบราว์เซอร์" />
+  <title>PHANToM Script Board — Copy on Tap + Variables</title>
+  <meta name="description" content="กระดานสคริปต์/ประโยคสำเร็จรูป: คัดลอกครั้งเดียว, เพิ่ม/แก้ไข/ลบ, ลากย้ายตำแหน่ง, นำเข้า/ส่งออก .txt/JSON, ตัวแปร {like_this} แทนค่าได้จากแผงด้านบน, โทน PHANToM" />
   <style>
     :root{
       --bg:#060a14; --panel:#0b1220; --edge:#1b2743; --txt:#e5e7eb; --muted:#9fb3d1;
@@ -15,7 +15,7 @@
     html,body{margin:0;height:100%;background:radial-gradient(1200px 900px at 15% -10%, rgba(59,130,246,.18), transparent),
                               radial-gradient(1000px 800px at 100% 0%, rgba(124,58,237,.12), transparent),
                               var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,Segoe UI,Arial}
-    header{position:sticky;top:0;z-index:50;backdrop-filter:blur(8px);background:rgba(10,16,32,.6);border-bottom:1px solid rgba(255,255,255,.08)}
+    header{position:sticky;top:0;z-index:60;backdrop-filter:blur(8px);background:rgba(10,16,32,.6);border-bottom:1px solid rgba(255,255,255,.08)}
     .wrap{max-width:1100px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:10px}
     .tag{border:1px solid var(--edge);padding:.25rem .5rem;border-radius:999px;background:#0e1730;color:#cfe0ff;font-size:.8rem}
     .btn{cursor:pointer;border:1px solid var(--edge);background:#0e1730;color:#cfe0ff;border-radius:12px;padding:.55rem .8rem;transition:.2s;user-select:none}
@@ -25,6 +25,20 @@
     .grow{flex:1}
 
     main{max-width:1100px;margin:0 auto;padding:16px}
+
+    /* Variables bar */
+    .varbar{border:1px solid var(--edge);background:linear-gradient(180deg,rgba(16,26,52,.6),rgba(9,14,26,.8));border-radius:16px;padding:12px;margin-bottom:12px}
+    .var-title{font-weight:700;margin:0 0 6px 2px;opacity:.9}
+    .var-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+    .var-item{border:1px solid var(--edge);background:#0c162b;border-radius:12px;padding:10px}
+    .var-label{font-size:.85rem;opacity:.85;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+    .var-actions{margin-left:auto;display:flex;gap:6px}
+    .var-mini{width:22px;height:22px;display:grid;place-items:center;border:1px solid var(--edge);background:#0a1430;border-radius:8px;opacity:.9}
+    .var-mini:hover{background:#1a2547}
+    .var-input{width:100%;border:1px solid #223456;background:#0a1530;color:#e5e7eb;border-radius:10px;padding:8px}
+    .var-choices{display:flex;flex-wrap:wrap;gap:6px}
+    .chip{border:1px solid #223456;background:#0a1530;padding:6px 10px;border-radius:999px;cursor:pointer}
+    .chip[data-active="true"]{background:linear-gradient(90deg,var(--pri),var(--sec));color:#020617;border-color:#415aa0}
 
     .board{position:relative;min-height:62vh;border:1px solid var(--edge);background:linear-gradient(180deg,rgba(16,26,52,.6),rgba(9,14,26,.8));
            border-radius:18px;overflow:hidden;padding:14px}
@@ -36,6 +50,7 @@
       cursor:grab;user-select:none;transition:transform .08s ease;
     }
     .script-btn:active{cursor:grabbing}
+    .script-btn.dragging{z-index:20}
     .script-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
     .mini{width:22px;height:22px;display:grid;place-items:center;border:1px solid var(--edge);
       background:#0a1430;border-radius:8px;opacity:.9}
@@ -44,8 +59,8 @@
 
     .tip{font-size:.85rem;opacity:.8}
 
-    /* Floating Add Button */
-    .fab{position:fixed;right:18px;bottom:18px;z-index:60;display:flex;align-items:center;gap:10px}
+    /* Floating Add Buttons */
+    .fab{position:fixed;right:18px;bottom:18px;z-index:70;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
     .fab .btn{border-radius:999px;padding:.9rem 1rem;font-weight:600;box-shadow:var(--glow)}
     .pulse{animation:pulse 2.2s infinite}
     @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(124,58,237,.5)}70%{box-shadow:0 0 0 16px rgba(124,58,237,0)}100%{box-shadow:0 0 0 0 rgba(124,58,237,0)}}
@@ -53,13 +68,15 @@
     /* Modal */
     .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:80}
     .modal.show{display:flex}
-    .sheet{width:min(92vw,780px);max-height:88vh;overflow:auto;background:linear-gradient(180deg,#111a33,#0b1224);
+    .sheet{width:min(92vw,820px);max-height:88vh;overflow:auto;background:linear-gradient(180deg,#111a33,#0b1224);
            border:1px solid var(--edge);border-radius:16px;box-shadow:0 30px 70px rgba(0,0,0,.45)}
     .sheet h3{margin:0;padding:14px 16px;border-bottom:1px solid var(--edge)}
     .sheet .body{padding:16px}
     .sheet label{display:block;margin:.5rem 0 .25rem}
     .sheet input[type="text"], .sheet textarea{width:100%;background:#0c162b;border:1px solid #223456;color:#e5e7eb;border-radius:10px;padding:10px}
     .sheet textarea{min-height:220px;font-size:1.05rem;line-height:1.5}
+    .subtle{opacity:.8;font-size:.9rem}
+    .row-gap{display:flex;gap:8px;flex-wrap:wrap}
 
     .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;border:1px solid rgba(255,255,255,.12);
            padding:.5rem .75rem;border-radius:999px;z-index:100;font-size:.9rem}
@@ -74,29 +91,42 @@
       <h1 style="margin:0;font-size:1.1rem;font-weight:800;letter-spacing:.3px">PHANToM Script Board</h1>
       <span class="tag">Copy on Tap</span>
       <div class="grow"></div>
-      <button class="btn" id="btnImport">Import .txt</button>
+      <button class="btn" id="btnVarAdd">＋ สร้างตัวแปร</button>
+      <button class="btn" id="btnImport">Import .txt/.json</button>
       <a class="btn" id="btnExport" download>Export .txt</a>
       <input type="file" id="file" accept=".txt,.json" class="hidden" />
     </div>
   </header>
 
   <main>
-    <p class="tip">กดปุ่มสคริปต์เพื่อคัดลอกทันที · ใช้ <b>ลูกศร</b> เพื่อเลือกปุ่ม · <b>Enter</b> เพื่อคัดลอก · <b>E</b> เพื่อแก้ไข · <b>Delete</b> เพื่อลบ · ลากปุ่มเพื่อจัดตำแหน่ง · ข้อมูลเก็บใน <b>เบราว์เซอร์ (localStorage)</b> ผูกกับโดเมน/พาธของ GitHub Pages</p>
+    <p class="tip">กดปุ่มสคริปต์เพื่อคัดลอกทันที · ใช้ <b>ลูกศร</b> เลือกปุ่ม · <b>Enter</b> คัดลอก · <b>E</b> แก้ไข · <b>Delete</b> ลบ · ลากปุ่มจัดวาง · สร้าง <b>ตัวแปร</b> แล้วพิมพ์ในข้อความเป็นรูป <code>{variable_key}</code> ระบบจะแทนค่าก่อนคัดลอก · ข้อมูลเก็บใน <b>localStorage</b></p>
+
+    <!-- Variables Bar -->
+    <section class="varbar" id="varbar">
+      <div class="row" style="margin-bottom:6px">
+        <div class="var-title">ตัวแปร (Variables)</div>
+        <div class="grow"></div>
+        <span class="subtle">พิมพ์ในสคริปต์เป็น {variable_key}</span>
+      </div>
+      <div class="var-grid" id="varGrid"></div>
+    </section>
+
     <div class="board" id="board" aria-label="script-board"></div>
   </main>
 
   <div class="fab">
+    <button class="btn" id="addVarBtn">＋ สร้างตัวแปร</button>
     <button class="btn pulse" id="addBtn">＋ เพิ่มสคริปต์</button>
   </div>
 
-  <!-- Add/Edit Modal -->
+  <!-- Add/Edit Script Modal -->
   <div class="modal" id="editModal" aria-hidden="true">
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mTitle">
       <h3 id="mTitle">เพิ่มสคริปต์ใหม่</h3>
       <div class="body">
         <label>ชื่อปุ่ม/สั้น ๆ</label>
         <input id="mLabel" type="text" placeholder="เช่น ทักทาย, นัดดูห้อง, ยืนยันตัวตน" />
-        <label>ข้อความสคริปต์</label>
+        <label>ข้อความสคริปต์ <span class="subtle">(ใช้ {variable_key} เพื่อแทนค่าจากตัวแปร)</span></label>
         <textarea id="mText" placeholder="พิมพ์ข้อความเต็มที่จะคัดลอก"></textarea>
         <div class="row" style="margin-top:10px">
           <div class="grow"></div>
@@ -107,7 +137,7 @@
     </div>
   </div>
 
-  <!-- Confirm Delete Modal -->
+  <!-- Confirm Delete Script Modal -->
   <div class="modal" id="confirmModal" aria-hidden="true">
     <div class="sheet" role="dialog" aria-modal="true">
       <h3>ลบสคริปต์นี้?</h3>
@@ -122,21 +152,62 @@
     </div>
   </div>
 
+  <!-- Add/Edit Variable Modal -->
+  <div class="modal" id="varModal" aria-hidden="true">
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="vTitle">
+      <h3 id="vTitle">สร้างตัวแปร</h3>
+      <div class="body">
+        <label>ชนิดของตัวแปร</label>
+        <div class="row-gap" role="group" aria-label="variable-type">
+          <button class="btn" id="typeInput">ช่องข้อความ (Input)</button>
+          <button class="btn" id="typeChoice">ชุดตัวเลือก (Choices)</button>
+          <span class="subtle" id="typeHint"></span>
+        </div>
+        <div class="row-gap" style="margin-top:8px">
+          <div style="flex:1;min-width:220px">
+            <label>ชื่อที่แสดง (Label)</label>
+            <input id="vLabel" type="text" placeholder="เช่น โครงการ, ลูกค้า, ดีล" />
+          </div>
+          <div style="flex:1;min-width:220px">
+            <label>ชื่อคีย์ (variable_key) — ใช้ในสคริปต์เป็น {variable_key}</label>
+            <input id="vKey" type="text" placeholder="เช่น global_project, customer_name, deal" />
+          </div>
+        </div>
+        <div id="choiceBox" class="hidden" style="margin-top:10px">
+          <label>ค่าทางเลือก (กดเพิ่มทีละค่า)</label>
+          <div class="row-gap">
+            <input id="optText" type="text" placeholder="เช่น เช่า" style="flex:1;min-width:220px" />
+            <button class="btn" id="optAdd">เพิ่มค่า</button>
+          </div>
+          <div class="row-gap" id="optList" style="margin-top:8px"></div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <div class="grow"></div>
+          <button class="btn" id="vCancel">ยกเลิก</button>
+          <button class="btn" id="vSave">บันทึกตัวแปร</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
   'use strict';
   const $ = s=>document.querySelector(s); const $$ = s=>Array.from(document.querySelectorAll(s));
-  const board = $('#board');
+  const board = $('#board'); const varGrid = $('#varGrid');
 
   // ทำ key แบบ namespaced ตาม path บน GitHub Pages เพื่อคงข้อมูลครบในโดเมน/พาธเดียวกัน
   const STORE_KEY_V2 = 'phantom_script_board_v2::' + location.host + location.pathname.replace(/\/$/, '');
-  const STORE_KEY_V1 = 'phantom_script_board_v1'; // migrate เก่าถ้ามี
+  const STORE_KEY_V1 = 'phantom_script_board_v1'; // migrate เก่า
 
-  let store = { scripts: [], seq: 1 };
+  let store = { scripts: [], seq: 1, vars: [], vseq: 1 };
   let selectedId = null; // for keyboard focus
   let pendingDeleteId = null;
-  let editingId = null; // ถ้าไม่ null = โหมดแก้ไข
+  let editingId = null; // script edit id
 
+  // ===== Utils =====
   function toast(msg){ const el=document.createElement('div'); el.className='toast'; el.textContent=msg; document.body.appendChild(el); setTimeout(()=>el.remove(),1400); }
+// Debounced save to avoid re-render focus loss while typing in variable inputs
+let _saveTimer = null; function debouncedSave(ms=300){ clearTimeout(_saveTimer); _saveTimer = setTimeout(save, ms); }
 
   async function safeCopy(text){
     try{
@@ -154,11 +225,68 @@
   function save(){ localStorage.setItem(STORE_KEY_V2, JSON.stringify(store)); updateExport(); }
   function load(){
     // ลองโหลด v2 ก่อน
-    try{ const j=JSON.parse(localStorage.getItem(STORE_KEY_V2)||'{}'); if(j && Array.isArray(j.scripts)){ store=Object.assign({scripts:[],seq:1}, j); return; } }catch{}
+    try{ const j=JSON.parse(localStorage.getItem(STORE_KEY_V2)||'{}'); if(j && Array.isArray(j.scripts)){ store=Object.assign({scripts:[],seq:1,vars:[],vseq:1}, j); return; } }catch{}
     // ถ้ายังไม่มี ลอง migrate จาก v1
-    try{ const j=JSON.parse(localStorage.getItem(STORE_KEY_V1)||'{}'); if(j && Array.isArray(j.scripts)){ store=Object.assign({scripts:[],seq:1}, j); save(); return; } }catch{}
+    try{ const j=JSON.parse(localStorage.getItem(STORE_KEY_V1)||'{}'); if(j && Array.isArray(j.scripts)){ store=Object.assign({scripts:[],seq:1,vars:[],vseq:1}, j); save(); return; } }catch{}
   }
 
+  // ===== Variables =====
+  function slugify(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9_]+/g,'_').replace(/^_+|_+$/g,'').replace(/__+/g,'_').slice(0,40) || 'var_'+(store.vseq||1); }
+  function uniqueKey(key){ let k=key, n=1; while(store.vars.some(v=>v.key===k)){ k = key + '_' + (++n); } return k; }
+
+  function addVar(def){ const id = 'v'+(store.vseq++); store.vars.push({ id, ...def, value: def.type==='choice' ? (def.options[0]||'') : '' }); renderVars(); save(); }
+  function updateVar(id, patch){ const v=store.vars.find(x=>x.id===id); if(!v) return; Object.assign(v, patch||{}); renderVars(); save(); }
+  function delVar(id){ store.vars = store.vars.filter(v=>v.id!==id); renderVars(); save(); }
+  function getVarByKey(key){ return store.vars.find(v=>v.key===key); }
+
+  function applyVariables(text){
+    if(!text) return '';
+    return String(text).replace(/\{([a-zA-Z0-9_]+)\}/g, (m, k)=>{
+      const v = getVarByKey(k);
+      if(!v){ return 'null'; }
+      if(v.type==='input'){
+        const val = (v.value||'').trim();
+        return val ? val : 'null';
+      }else if(v.type==='choice'){
+        const val = v.value || '';
+        return val ? val : 'null';
+      }
+      return 'null';
+    });
+  }
+
+  function renderVars(){
+    varGrid.innerHTML='';
+    store.vars.forEach(v=>{
+      const box=document.createElement('div'); box.className='var-item'; box.dataset.id=v.id;
+      const head=document.createElement('div'); head.className='var-label'; head.innerHTML = `<strong>${escapeHtml(v.label||v.key)}</strong> <span class="subtle">{${escapeHtml(v.key)}}</span>`;
+      const act=document.createElement('div'); act.className='var-actions';
+      const edit=document.createElement('button'); edit.className='var-mini'; edit.title='แก้ไขตัวแปร'; edit.textContent='✎';
+      const del=document.createElement('button'); del.className='var-mini'; del.title='ลบตัวแปร'; del.textContent='✕';
+      act.appendChild(edit); act.appendChild(del); head.appendChild(act); box.appendChild(head);
+
+      if(v.type==='input'){
+        const inp=document.createElement('input'); inp.className='var-input'; inp.placeholder=v.label||v.key; inp.value=v.value||'';
+        inp.addEventListener('input', ()=>{ const vv = store.vars.find(x=>x.id===v.id); if(vv){ vv.value = inp.value; debouncedSave(); } });
+        box.appendChild(inp);
+      }else{ // choice
+        const row=document.createElement('div'); row.className='var-choices';
+        (v.options||[]).forEach(opt=>{
+          const c=document.createElement('button'); c.className='chip'; c.type='button'; c.textContent=opt; c.dataset.active = String(v.value===opt);
+          c.addEventListener('click', ()=>{ updateVar(v.id, { value: opt }); });
+          row.appendChild(c);
+        });
+        box.appendChild(row);
+      }
+
+      edit.addEventListener('click', ()=> openVarModal(v));
+      del.addEventListener('click', ()=> { if(confirm('ลบตัวแปรนี้?')) delVar(v.id); });
+
+      varGrid.appendChild(box);
+    });
+  }
+
+  // ===== Scripts =====
   function seedIfEmpty(){ if(store.scripts.length) return; const seed=[
     {label:'ทักทาย', text:'สวัสดีค่ะ ดิฉันจาก Connex Property สะดวกคุยสักครู่ไหมคะ'},
     {label:'ยืนยันตัวตน', text:'เพื่อความสบายใจ คุณสามารถตรวจสอบตัวตนทีมงานได้จากลิงก์ยืนยันของบริษัทค่ะ'},
@@ -167,13 +295,10 @@
     {label:'ส่งข้อมูลเพิ่ม', text:'ดิฉันจะส่งรูปและรายละเอียดห้องเพิ่มเติมให้พิจารณาก่อนได้ค่ะ'},
     {label:'English Greet', text:'Hello, this is Connex Property. Do you have a moment to talk?'},
   ];
-  // วางแบบกริดเริ่มต้น
-  let x=24, y=18, w=220, h=90, col=0; seed.forEach((s,i)=>{ addScript(s.label, s.text, x, y, true); x+=w; col++; if(col%3===0){ x=24; y+=h; } }); save(); }
+  let x=24, y=18, w=220, h=90, col=0; seed.forEach((s)=>{ addScript(s.label, s.text, x, y, true); x+=w; col++; if(col%3===0){ x=24; y+=h; } }); save(); }
 
   function addScript(label, text, x=40, y=40, silent=false){ const id = 's'+(store.seq++); store.scripts.push({id,label,text,x,y}); render(); if(!silent) save(); }
-
   function updateScript(id, {label, text}){ const it=store.scripts.find(s=>s.id===id); if(!it) return; if(label!==undefined) it.label=label; if(text!==undefined) it.text=text; render(); save(); }
-
   function delScript(id){ store.scripts = store.scripts.filter(s=>s.id!==id); if(selectedId===id) selectedId=null; render(); save(); }
 
   function updateExport(){ const a=$('#btnExport'); const blob=new Blob([ JSON.stringify(store,null,2) ], {type:'text/plain;charset=utf-8'}); const url=URL.createObjectURL(blob); a.href=url; a.download = 'phantom_scripts_'+ new Date().toISOString().slice(0,10)+'.txt'; }
@@ -183,25 +308,45 @@
   function openConfirm(id){ pendingDeleteId=id; $('#confirmModal').classList.add('show'); }
   function closeConfirm(){ pendingDeleteId=null; $('#confirmModal').classList.remove('show'); }
 
+  function escapeHtml(s){ return String(s).replace(/[&<>\"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
+
   function createButtonEl(s){
-    const el = document.createElement('div'); el.className='script-btn'; el.dataset.id=s.id; el.style.left=(s.x||40)+'px'; el.style.top=(s.y||40)+'px'; el.tabIndex=0;
+    const el = document.createElement('div'); el.className='script-btn'; el.dataset.id=s.id; el.style.left=(s.x||40)+'px'; el.style.top=(s.y||40)+'px';
+    el.setAttribute('role','button'); el.setAttribute('tabindex','0'); el.setAttribute('aria-label', s.label || 'ไม่มีชื่อ');
+
     const lab = document.createElement('div'); lab.className='script-label'; lab.textContent=s.label||'ไม่มีชื่อ';
     const edit = document.createElement('button'); edit.className='mini'; edit.title='แก้ไข'; edit.innerHTML='✎';
     const del = document.createElement('button'); del.className='mini'; del.title='ลบ'; del.innerHTML='✕';
     el.appendChild(lab); el.appendChild(edit); el.appendChild(del);
 
-    el.addEventListener('click', (ev)=>{ if(ev.target===edit || ev.target===del) return; select(s.id); safeCopy(s.text); });
-    el.addEventListener('dblclick', ()=>{ select(s.id); safeCopy(s.text); });
+    // Copy on click (กันกรณีลาก)
+    el.addEventListener('click', (ev)=>{
+      if(ev.target===edit || ev.target===del) return;
+      if(el._moved){ el._moved=false; return; }
+      select(s.id); safeCopy(applyVariables(s.text));
+    });
+    el.addEventListener('dblclick', ()=>{
+      if(el._moved){ el._moved=false; return; }
+      select(s.id); safeCopy(applyVariables(s.text));
+    });
+
+    // Edit/Delete
     edit.addEventListener('click', ()=> openEdit(s));
     del.addEventListener('click', ()=> openConfirm(s.id));
 
-    // Dragging
-    let drag=false, ox=0, oy=0;
+    // Dragging with threshold
+    let drag=false, ox=0, oy=0, moved=false, sx=0, sy=0;
     el.addEventListener('pointerdown', (e)=>{
-      if(e.target===del || e.target===edit) return; drag=true; el.setPointerCapture(e.pointerId); const r=el.getBoundingClientRect(); ox=e.clientX - r.left; oy=e.clientY - r.top; el.style.transition='none'; });
+      if(e.target===del || e.target===edit) return; drag=true; moved=false; el._moved=false; el.classList.add('dragging'); el.setPointerCapture(e.pointerId); const r=el.getBoundingClientRect(); ox=e.clientX - r.left; oy=e.clientY - r.top; sx=e.clientX; sy=e.clientY; el.style.transition='none';
+    });
     el.addEventListener('pointermove', (e)=>{
-      if(!drag) return; const br=board.getBoundingClientRect(); let nx=e.clientX - br.left - ox; let ny=e.clientY - br.top - oy; nx=Math.max(4, Math.min(nx, br.width- el.offsetWidth-4)); ny=Math.max(4, Math.min(ny, br.height- el.offsetHeight-4)); el.style.left=nx+'px'; el.style.top=ny+'px'; });
-    el.addEventListener('pointerup', (e)=>{ if(!drag) return; drag=false; el.releasePointerCapture(e.pointerId); el.style.transition=''; const nx=parseInt(el.style.left)||0; const ny=parseInt(el.style.top)||0; const item = store.scripts.find(x=>x.id===s.id); if(item){ item.x=nx; item.y=ny; save(); } });
+      if(!drag) return; const br=board.getBoundingClientRect(); let nx=e.clientX - br.left - ox; let ny=e.clientY - br.top - oy; nx=Math.max(4, Math.min(nx, br.width- el.offsetWidth-4)); ny=Math.max(4, Math.min(ny, br.height- el.offsetHeight-4)); el.style.left=nx+'px'; el.style.top=ny+'px'; if(!moved && (Math.abs(e.clientX - sx)>3 || Math.abs(e.clientY - sy)>3)){ moved=true; el._moved=true; }
+    });
+    function endDrag(e){ if(!drag) return; drag=false; el.releasePointerCapture(e.pointerId); el.classList.remove('dragging'); el.style.transition=''; const nx=parseInt(el.style.left)||0; const ny=parseInt(el.style.top)||0; const item = store.scripts.find(x=>x.id===s.id); if(item && moved){ item.x=nx; item.y=ny; save(); } moved=false; }
+    el.addEventListener('pointerup', endDrag); el.addEventListener('pointercancel', endDrag);
+
+    el.addEventListener('focus', ()=> select(s.id));
+    el.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); safeCopy(applyVariables(s.text)); } });
 
     return el;
   }
@@ -211,34 +356,48 @@
   function select(id){ selectedId=id; highlightSelected(); }
   function highlightSelected(){ $$('.script-btn').forEach(el=> el.classList.toggle('selected', el.dataset.id===selectedId)); }
 
-  // Keyboard navigation + shortcuts
+  // ===== Keyboard navigation (global) =====
   document.addEventListener('keydown', (e)=>{
     const activeTag = (document.activeElement && document.activeElement.tagName) || '';
-    // ไม่ intercept ตอนโหมดพิมพ์ใน modal หรือช่อง input ใด ๆ
-    if(['INPUT','TEXTAREA'].includes(activeTag) || $('#editModal').classList.contains('show') || $('#confirmModal').classList.contains('show')) return;
-    const list = store.scripts; if(!list.length) return;
-    let idx = list.findIndex(s=>s.id===selectedId); if(idx<0) idx=0;
+    if(['INPUT','TEXTAREA'].includes(activeTag) || $('#editModal').classList.contains('show') || $('#confirmModal').classList.contains('show') || $('#varModal').classList.contains('show')) return;
+    const list = store.scripts; if(!list.length) return; let idx = list.findIndex(s=>s.id===selectedId); if(idx<0) idx=0;
     if(['ArrowRight','ArrowDown'].includes(e.key)){ idx = Math.min(list.length-1, idx+1); select(list[idx].id); e.preventDefault(); }
     else if(['ArrowLeft','ArrowUp'].includes(e.key)){ idx = Math.max(0, idx-1); select(list[idx].id); e.preventDefault(); }
-    else if(e.key==='Enter'){ const s=list[idx]; if(s) { safeCopy(s.text); e.preventDefault(); } }
+    else if(e.key==='Enter'){ const s=list[idx]; if(s){ safeCopy(applyVariables(s.text)); e.preventDefault(); } }
     else if(e.key.toLowerCase()==='e'){ const s=list[idx]; if(s){ openEdit(s); e.preventDefault(); } }
     else if(e.key==='Delete' || e.key==='Backspace'){ const s=list[idx]; if(s){ openConfirm(s.id); e.preventDefault(); } }
   });
 
-  // Import/Export
+  // ===== Import/Export =====
   $('#btnImport').addEventListener('click', ()=> $('#file').click());
   $('#file').addEventListener('change', async (e)=>{
     const f=e.target.files?.[0]; if(!f) return; const txt = await f.text();
     try{
       const j = JSON.parse(txt);
       if(!j || !Array.isArray(j.scripts)) throw 0;
-      store = { scripts: j.scripts.map(x=>({id:x.id||('s'+(Math.random()*1e6|0)), label:String(x.label||'Untitled'), text:String(x.text||''), x:parseInt(x.x)||40, y:parseInt(x.y)||40})), seq: (j.seq && Number(j.seq)) || (j.scripts.length+1) };
-      render(); save(); toast('นำเข้าเรียบร้อย');
-    }catch{ toast('รูปแบบไฟล์ไม่ถูกต้อง ต้องเป็น JSON ที่มีฟิลด์ scripts'); }
+      store.scripts = j.scripts.map(x=>({ id:x.id||('s'+(Math.random()*1e6|0)), label:String(x.label||'Untitled'), text:String(x.text||''), x:parseInt(x.x)||40, y:parseInt(x.y)||40 }));
+      store.seq = (j.seq && Number(j.seq)) || (store.scripts.length+1);
+      // นำเข้า variables ถ้ามี มิฉะนั้นคงค่าของเดิม
+      if(Array.isArray(j.vars)){
+        store.vars = j.vars.map(v=>({ id:v.id||('v'+(Math.random()*1e6|0)), key:String(v.key||''), label:String(v.label||''), type:(v.type==='choice'?'choice':'input'), options: Array.isArray(v.options)? v.options.map(String) : [], value: (v.value==null? '' : String(v.value)) }));
+        store.vseq = (j.vseq && Number(j.vseq)) || (store.vars.length+1);
+      }
+      render(); renderVars(); save(); toast('นำเข้า (JSON) เรียบร้อย');
+    }catch{
+      // Fallback: .txt — split blocks by blank line
+      const blocks = txt.split(/\r?\n\s*\r?\n/).map(b=>b.trim()).filter(Boolean);
+      if(!blocks.length){ toast('ไฟล์ไม่ถูกต้อง'); e.target.value=''; return; }
+      const W = Math.max(300, board.clientWidth  || 800); const w=240; let x=24, y=18, h=100, col=0; const cols=Math.max(1, Math.floor(W/w));
+      const scripts = blocks.map(b=>{ const lines=b.split(/\r?\n/); const label=(lines[0]||'Untitled').slice(0,40); const text=b; const out={ id:'s'+(Math.random()*1e6|0), label, text, x, y }; x+=w; col++; if(col%cols===0){ x=24; y+=h; } return out; });
+      store.scripts = scripts; store.seq = scripts.length+1; // คง vars เดิมไว้
+      render(); save(); toast('นำเข้า (.txt) เรียบร้อย');
+    }
     e.target.value='';
   });
 
-  // Add/Edit modal events
+  function updateExport(){ const a=$('#btnExport'); const blob=new Blob([ JSON.stringify(store,null,2) ], {type:'text/plain;charset=utf-8'}); const url=URL.createObjectURL(blob); a.href=url; a.download = 'phantom_scripts_'+ new Date().toISOString().slice(0,10)+'.txt'; }
+
+  // ===== Script Modal events =====
   $('#addBtn').addEventListener('click', ()=> openEdit(null));
   $('#mCancel').addEventListener('click', closeEdit);
   $('#mSave').addEventListener('click', ()=>{
@@ -248,16 +407,91 @@
     closeEdit();
   });
 
-  // Confirm delete
+  // ===== Delete Script modal =====
   $('#cCancel').addEventListener('click', closeConfirm);
   $('#cDelete').addEventListener('click', ()=>{ if(pendingDeleteId){ delScript(pendingDeleteId); toast('ลบแล้ว'); } closeConfirm(); });
 
-  // Autosave guard: เมื่อหน้าโดนซ่อน/ปิด ให้บันทึกอีกรอบ
+  // ===== Variable Modal logic =====
+  const varModal = $('#varModal');
+  let editingVarId = null; // ถ้าแก้ไข
+  let varType = 'input'; // input | choice
+  let tmpOptions = [];
+
+  function openVarModal(item){
+    editingVarId = item? item.id : null;
+    varType = item? item.type : 'input';
+    tmpOptions = item && Array.isArray(item.options) ? [...item.options] : [];
+
+    $('#vTitle').textContent = editingVarId? 'แก้ไขตัวแปร' : 'สร้างตัวแปร';
+    $('#vLabel').value = item? (item.label||'') : '';
+    $('#vKey').value   = item? (item.key||'')   : '';
+    $('#typeHint').textContent = varType==='input'? 'ป้อนค่าเป็นข้อความอิสระ' : 'เลือกค่าจากตัวเลือกที่กำหนดไว้';
+    $('#choiceBox').classList.toggle('hidden', varType!=='choice');
+
+    renderOptChips();
+    varModal.classList.add('show');
+    $('#vLabel').focus();
+  }
+  function closeVarModal(){ varModal.classList.remove('show'); editingVarId=null; tmpOptions=[]; }
+
+  function renderOptChips(){
+    const box = $('#optList'); box.innerHTML='';
+    tmpOptions.forEach((t,i)=>{ const chip=document.createElement('span'); chip.className='chip'; chip.textContent=t; chip.title='คลิกเพื่อลบ'; chip.addEventListener('click', ()=>{ tmpOptions.splice(i,1); renderOptChips(); }); box.appendChild(chip); });
+  }
+
+  $('#typeInput').addEventListener('click', ()=>{ varType='input'; $('#typeHint').textContent='ป้อนค่าเป็นข้อความอิสระ'; $('#choiceBox').classList.add('hidden'); });
+  $('#typeChoice').addEventListener('click', ()=>{ varType='choice'; $('#typeHint').textContent='เลือกค่าจากตัวเลือกที่กำหนดไว้'; $('#choiceBox').classList.remove('hidden'); });
+
+  $('#optAdd').addEventListener('click', ()=>{ const v=$('#optText').value.trim(); if(!v) return; tmpOptions.push(v); $('#optText').value=''; renderOptChips(); });
+
+  $('#vCancel').addEventListener('click', closeVarModal);
+  $('#vSave').addEventListener('click', ()=>{
+    const label = $('#vLabel').value.trim(); if(!label){ toast('กรอกชื่อที่แสดง'); return; }
+    let key = $('#vKey').value.trim(); if(!key){ key = slugify(label); }
+    key = uniqueKey(slugify(key));
+
+    if(varType==='choice' && tmpOptions.length===0){ toast('เพิ่มค่าทางเลือกอย่างน้อย 1 ค่า'); return; }
+
+    const def = { key, label, type: varType, options: varType==='choice'? [...tmpOptions] : [] };
+
+    if(editingVarId){ updateVar(editingVarId, def); }
+    else{ addVar(def); }
+
+    closeVarModal();
+  });
+
+  // เปิด modal จากปุ่มด้านบน/ล่าง
+  $('#btnVarAdd').addEventListener('click', ()=> openVarModal(null));
+  $('#addVarBtn').addEventListener('click', ()=> openVarModal(null));
+
+  // ===== Autosave guards =====
   document.addEventListener('visibilitychange', ()=>{ if(document.hidden) save(); });
   window.addEventListener('beforeunload', save);
 
-  // init
-  window.addEventListener('load', ()=>{ load(); seedIfEmpty(); render(); updateExport(); });
+  // Init
+  window.addEventListener('load', ()=>{ load(); seedIfEmpty(); render(); renderVars(); updateExport();
+  // Optional: run self-test for focus stability with #devtest hash
+  if (location.hash === '#devtest') {
+    (function runFocusSelfTest(){
+      const def = { key: uniqueKey('test_key'), label: 'ทดสอบ', type: 'input', options: [] };
+      addVar(def);
+      const v = store.vars[store.vars.length-1];
+      setTimeout(()=>{
+        const inputEl = varGrid.querySelector('.var-item[data-id="'+v.id+'"] input.var-input');
+        if(!inputEl){ console.log('SelfTest: input not found'); return; }
+        inputEl.focus();
+        const before = document.activeElement;
+        inputEl.value = 'abc';
+        inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+        setTimeout(()=>{
+          const after = document.activeElement;
+          console.log('SelfTest focus stable:', before===after && after===inputEl);
+          delVar(v.id);
+        }, 80);
+      }, 0);
+    })();
+  }
+});
   </script>
 </body>
 </html>
