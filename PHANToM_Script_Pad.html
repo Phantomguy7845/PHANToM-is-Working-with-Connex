@@ -59,7 +59,7 @@
 
     .tip{font-size:.85rem;opacity:.8}
 
-    /* Floating Add Buttons */
+    /* Floating Add Button */
     .fab{position:fixed;right:18px;bottom:18px;z-index:70;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
     .fab .btn{border-radius:999px;padding:.9rem 1rem;font-weight:600;box-shadow:var(--glow)}
     .pulse{animation:pulse 2.2s infinite}
@@ -115,7 +115,7 @@
   </main>
 
   <div class="fab">
-    <button class="btn" id="addVarBtn">＋ สร้างตัวแปร</button>
+    <!-- ลบปุ่มสร้างตัวแปรด้านล่างตามคำขอ  เหลือเฉพาะเพิ่มสคริปต์ -->
     <button class="btn pulse" id="addBtn">＋ เพิ่มสคริปต์</button>
   </div>
 
@@ -128,6 +128,12 @@
         <input id="mLabel" type="text" placeholder="เช่น ทักทาย, นัดดูห้อง, ยืนยันตัวตน" />
         <label>ข้อความสคริปต์ <span class="subtle">(ใช้ {variable_key} เพื่อแทนค่าจากตัวแปร)</span></label>
         <textarea id="mText" placeholder="พิมพ์ข้อความเต็มที่จะคัดลอก"></textarea>
+        <div class="row" id="varInsertRow" style="margin-top:8px;align-items:center;gap:8px">
+          <span class="subtle">แทรกตัวแปร</span>
+          <select id="varPicker" style="min-width:220px;border-radius:10px;border:1px solid #223456;background:#0a1530;color:#e5e7eb;padding:8px"></select>
+          <button class="btn" id="btnInsertVar" title="แทรก {key} ที่ตำแหน่งเคอร์เซอร์">{key}</button>
+          <button class="btn" id="btnCreateVarQuick" title="สร้างตัวแปรใหม่">＋ สร้างใหม่</button>
+        </div>
         <div class="row" style="margin-top:10px">
           <div class="grow"></div>
           <button class="btn" id="mCancel">ยกเลิก</button>
@@ -195,9 +201,9 @@
   const $ = s=>document.querySelector(s); const $$ = s=>Array.from(document.querySelectorAll(s));
   const board = $('#board'); const varGrid = $('#varGrid');
 
-  // ทำ key แบบ namespaced ตาม path บน GitHub Pages เพื่อคงข้อมูลครบในโดเมน/พาธเดียวกัน
+  // Keys for storage (namespaced by path)
   const STORE_KEY_V2 = 'phantom_script_board_v2::' + location.host + location.pathname.replace(/\/$/, '');
-  const STORE_KEY_V1 = 'phantom_script_board_v1'; // migrate เก่า
+  const STORE_KEY_V1 = 'phantom_script_board_v1'; // migrate legacy
 
   let store = { scripts: [], seq: 1, vars: [], vseq: 1 };
   let selectedId = null; // for keyboard focus
@@ -206,8 +212,7 @@
 
   // ===== Utils =====
   function toast(msg){ const el=document.createElement('div'); el.className='toast'; el.textContent=msg; document.body.appendChild(el); setTimeout(()=>el.remove(),1400); }
-// Debounced save to avoid re-render focus loss while typing in variable inputs
-let _saveTimer = null; function debouncedSave(ms=300){ clearTimeout(_saveTimer); _saveTimer = setTimeout(save, ms); }
+  let _saveTimer = null; function debouncedSave(ms=300){ clearTimeout(_saveTimer); _saveTimer = setTimeout(save, ms); }
 
   async function safeCopy(text){
     try{
@@ -222,11 +227,10 @@ let _saveTimer = null; function debouncedSave(ms=300){ clearTimeout(_saveTimer);
     }
   }
 
+  function updateExport(){ const a=$('#btnExport'); const blob=new Blob([ JSON.stringify(store,null,2) ], {type:'text/plain;charset=utf-8'}); const url=URL.createObjectURL(blob); a.href=url; a.download = 'phantom_scripts_'+ new Date().toISOString().slice(0,10)+'.txt'; }
   function save(){ localStorage.setItem(STORE_KEY_V2, JSON.stringify(store)); updateExport(); }
   function load(){
-    // ลองโหลด v2 ก่อน
     try{ const j=JSON.parse(localStorage.getItem(STORE_KEY_V2)||'{}'); if(j && Array.isArray(j.scripts)){ store=Object.assign({scripts:[],seq:1,vars:[],vseq:1}, j); return; } }catch{}
-    // ถ้ายังไม่มี ลอง migrate จาก v1
     try{ const j=JSON.parse(localStorage.getItem(STORE_KEY_V1)||'{}'); if(j && Array.isArray(j.scripts)){ store=Object.assign({scripts:[],seq:1,vars:[],vseq:1}, j); save(); return; } }catch{}
   }
 
@@ -254,6 +258,8 @@ let _saveTimer = null; function debouncedSave(ms=300){ clearTimeout(_saveTimer);
       return 'null';
     });
   }
+
+  function escapeHtml(s){ return String(s).replace(/[&<>\"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
 
   function renderVars(){
     varGrid.innerHTML='';
@@ -284,6 +290,7 @@ let _saveTimer = null; function debouncedSave(ms=300){ clearTimeout(_saveTimer);
 
       varGrid.appendChild(box);
     });
+    refreshVarPicker();
   }
 
   // ===== Scripts =====
@@ -301,15 +308,41 @@ let _saveTimer = null; function debouncedSave(ms=300){ clearTimeout(_saveTimer);
   function updateScript(id, {label, text}){ const it=store.scripts.find(s=>s.id===id); if(!it) return; if(label!==undefined) it.label=label; if(text!==undefined) it.text=text; render(); save(); }
   function delScript(id){ store.scripts = store.scripts.filter(s=>s.id!==id); if(selectedId===id) selectedId=null; render(); save(); }
 
-  function updateExport(){ const a=$('#btnExport'); const blob=new Blob([ JSON.stringify(store,null,2) ], {type:'text/plain;charset=utf-8'}); const url=URL.createObjectURL(blob); a.href=url; a.download = 'phantom_scripts_'+ new Date().toISOString().slice(0,10)+'.txt'; }
+  // ===== Editor helpers =====
+  function insertAtCursor(el, text, range){
+    if(!el) return;
+    const start = (range && typeof range.start==='number') ? range.start : (el.selectionStart ?? el.value.length);
+    const end   = (range && typeof range.end==='number')   ? range.end   : (el.selectionEnd   ?? el.value.length);
+    const before = el.value.slice(0, start);
+    const after  = el.value.slice(end);
+    el.value = before + text + after;
+    const pos = start + text.length;
+    el.focus();
+    el.setSelectionRange(pos, pos);
+  }
 
-  function openEdit(item=null){ editingId = item? item.id : null; $('#mTitle').textContent = editingId? 'แก้ไขสคริปต์' : 'เพิ่มสคริปต์ใหม่'; $('#mLabel').value=item? (item.label||'') : ''; $('#mText').value=item? (item.text||'') : ''; $('#editModal').classList.add('show'); $('#mLabel').focus(); }
-  function closeEdit(){ $('#editModal').classList.remove('show'); editingId=null; }
-  function openConfirm(id){ pendingDeleteId=id; $('#confirmModal').classList.add('show'); }
-  function closeConfirm(){ pendingDeleteId=null; $('#confirmModal').classList.remove('show'); }
+  function refreshVarPicker(){
+    const sel = document.getElementById('varPicker');
+    if(!sel) return;
+    sel.innerHTML='';
+    if(!store.vars.length){
+      const opt=document.createElement('option');
+      opt.value='';
+      opt.textContent='ยังไม่มีตัวแปร — กด “＋ สร้างใหม่”';
+      sel.appendChild(opt);
+      sel.disabled = true;
+    }else{
+      sel.disabled = false;
+      store.vars.forEach(v=>{
+        const opt=document.createElement('option');
+        opt.value = v.key;
+        opt.textContent = (v.label||v.key) + '  {'+v.key+'}';
+        sel.appendChild(opt);
+      });
+    }
+  }
 
-  function escapeHtml(s){ return String(s).replace(/[&<>\"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c])); }
-
+  // ===== Script buttons (UI) =====
   function createButtonEl(s){
     const el = document.createElement('div'); el.className='script-btn'; el.dataset.id=s.id; el.style.left=(s.x||40)+'px'; el.style.top=(s.y||40)+'px';
     el.setAttribute('role','button'); el.setAttribute('tabindex','0'); el.setAttribute('aria-label', s.label || 'ไม่มีชื่อ');
@@ -319,7 +352,7 @@ let _saveTimer = null; function debouncedSave(ms=300){ clearTimeout(_saveTimer);
     const del = document.createElement('button'); del.className='mini'; del.title='ลบ'; del.innerHTML='✕';
     el.appendChild(lab); el.appendChild(edit); el.appendChild(del);
 
-    // Copy on click (กันกรณีลาก)
+    // Copy on click (ignore when just dragged)
     el.addEventListener('click', (ev)=>{
       if(ev.target===edit || ev.target===del) return;
       if(el._moved){ el._moved=false; return; }
@@ -377,37 +410,79 @@ let _saveTimer = null; function debouncedSave(ms=300){ clearTimeout(_saveTimer);
       if(!j || !Array.isArray(j.scripts)) throw 0;
       store.scripts = j.scripts.map(x=>({ id:x.id||('s'+(Math.random()*1e6|0)), label:String(x.label||'Untitled'), text:String(x.text||''), x:parseInt(x.x)||40, y:parseInt(x.y)||40 }));
       store.seq = (j.seq && Number(j.seq)) || (store.scripts.length+1);
-      // นำเข้า variables ถ้ามี มิฉะนั้นคงค่าของเดิม
       if(Array.isArray(j.vars)){
         store.vars = j.vars.map(v=>({ id:v.id||('v'+(Math.random()*1e6|0)), key:String(v.key||''), label:String(v.label||''), type:(v.type==='choice'?'choice':'input'), options: Array.isArray(v.options)? v.options.map(String) : [], value: (v.value==null? '' : String(v.value)) }));
         store.vseq = (j.vseq && Number(j.vseq)) || (store.vars.length+1);
       }
       render(); renderVars(); save(); toast('นำเข้า (JSON) เรียบร้อย');
     }catch{
-      // Fallback: .txt — split blocks by blank line
       const blocks = txt.split(/\r?\n\s*\r?\n/).map(b=>b.trim()).filter(Boolean);
       if(!blocks.length){ toast('ไฟล์ไม่ถูกต้อง'); e.target.value=''; return; }
       const W = Math.max(300, board.clientWidth  || 800); const w=240; let x=24, y=18, h=100, col=0; const cols=Math.max(1, Math.floor(W/w));
       const scripts = blocks.map(b=>{ const lines=b.split(/\r?\n/); const label=(lines[0]||'Untitled').slice(0,40); const text=b; const out={ id:'s'+(Math.random()*1e6|0), label, text, x, y }; x+=w; col++; if(col%cols===0){ x=24; y+=h; } return out; });
-      store.scripts = scripts; store.seq = scripts.length+1; // คง vars เดิมไว้
+      store.scripts = scripts; store.seq = scripts.length+1;
       render(); save(); toast('นำเข้า (.txt) เรียบร้อย');
     }
     e.target.value='';
   });
 
-  function updateExport(){ const a=$('#btnExport'); const blob=new Blob([ JSON.stringify(store,null,2) ], {type:'text/plain;charset=utf-8'}); const url=URL.createObjectURL(blob); a.href=url; a.download = 'phantom_scripts_'+ new Date().toISOString().slice(0,10)+'.txt'; }
-
   // ===== Script Modal events =====
+  function openEdit(item){
+    editingId = item? item.id : null;
+    $('#mTitle').textContent = editingId? 'แก้ไขสคริปต์' : 'เพิ่มสคริปต์ใหม่';
+    $('#mLabel').value = item? (item.label||'') : '';
+    $('#mText').value  = item? (item.text||'')  : '';
+    refreshVarPicker();
+    $('#editModal').classList.add('show');
+    $('#mLabel').focus();
+    bindCaretTracking();
+  }
+  function closeEdit(){
+    $('#editModal').classList.remove('show');
+    editingId = null;
+    $('#mLabel').value = '';
+    $('#mText').value  = '';
+  }
+
   $('#addBtn').addEventListener('click', ()=> openEdit(null));
   $('#mCancel').addEventListener('click', closeEdit);
   $('#mSave').addEventListener('click', ()=>{
-    const label = $('#mLabel').value.trim(); const text = $('#mText').value.trim(); if(!label || !text){ toast('กรอกชื่อปุ่มและข้อความก่อน'); return; }
+    const label = $('#mLabel').value.trim();
+    const text  = $('#mText').value.trim();
+    if(!label || !text){ toast('กรอกชื่อปุ่มและข้อความก่อน'); return; }
     if(editingId){ updateScript(editingId, {label, text}); }
     else{ addScript(label, text, 40 + Math.random()* (board.clientWidth-220), 40 + Math.random()* (board.clientHeight-90)); }
     closeEdit();
   });
 
+  // Keep caret while inserting variable
+  let _mTextCaret = {start:0,end:0};
+  function bindCaretTracking(){
+    const t = $('#mText');
+    if(!t || t._caretBound) return;
+    ['keyup','mouseup','select','input','focus'].forEach(ev=>{
+      t.addEventListener(ev, ()=>{ _mTextCaret = { start: t.selectionStart||0, end: t.selectionEnd||0 }; });
+    });
+    t._caretBound = true;
+  }
+
+  // Insert variable button — prevent focus loss on mousedown
+  $('#btnInsertVar').addEventListener('mousedown', e=>{ e.preventDefault(); });
+  $('#btnInsertVar').addEventListener('click', ()=>{
+    const key = ($('#varPicker')||{}).value;
+    if(!key){ toast('เลือกตัวแปรก่อน'); return; }
+    const t = $('#mText');
+    insertAtCursor(t, '{'+key+'}', _mTextCaret);
+    t.focus();
+  });
+  // Quick create variable from editor
+  $('#btnCreateVarQuick').addEventListener('mousedown', e=>{ e.preventDefault(); });
+  $('#btnCreateVarQuick').addEventListener('click', ()=> openVarModal(null));
+
   // ===== Delete Script modal =====
+  function openConfirm(id){ pendingDeleteId = id; $('#confirmModal').classList.add('show'); }
+  function closeConfirm(){ pendingDeleteId = null; $('#confirmModal').classList.remove('show'); }
+
   $('#cCancel').addEventListener('click', closeConfirm);
   $('#cDelete').addEventListener('click', ()=>{ if(pendingDeleteId){ delScript(pendingDeleteId); toast('ลบแล้ว'); } closeConfirm(); });
 
@@ -458,40 +533,73 @@ let _saveTimer = null; function debouncedSave(ms=300){ clearTimeout(_saveTimer);
     else{ addVar(def); }
 
     closeVarModal();
+    // อัปเดต dropdown ใน modal แก้ไขสคริปต์ให้ทันที
+    refreshVarPicker();
   });
 
-  // เปิด modal จากปุ่มด้านบน/ล่าง
+  // เปิด modal ตัวแปร จากปุ่มด้านบน (ลบปุ่มล่างแล้ว)
   $('#btnVarAdd').addEventListener('click', ()=> openVarModal(null));
-  $('#addVarBtn').addEventListener('click', ()=> openVarModal(null));
 
   // ===== Autosave guards =====
   document.addEventListener('visibilitychange', ()=>{ if(document.hidden) save(); });
   window.addEventListener('beforeunload', save);
 
-  // Init
-  window.addEventListener('load', ()=>{ load(); seedIfEmpty(); render(); renderVars(); updateExport();
-  // Optional: run self-test for focus stability with #devtest hash
-  if (location.hash === '#devtest') {
-    (function runFocusSelfTest(){
-      const def = { key: uniqueKey('test_key'), label: 'ทดสอบ', type: 'input', options: [] };
-      addVar(def);
-      const v = store.vars[store.vars.length-1];
+  // ===== Dev self-tests =====
+  function runFocusSelfTest(){
+    const def = { key: uniqueKey('test_key'), label: 'ทดสอบ', type: 'input', options: [] };
+    addVar(def);
+    const v = store.vars[store.vars.length-1];
+    setTimeout(()=>{
+      const inputEl = varGrid.querySelector('.var-item[data-id="'+v.id+'"] input.var-input');
+      if(!inputEl){ console.log('SelfTest: input not found'); return; }
+      inputEl.focus();
+      const before = document.activeElement;
+      inputEl.value = 'abc';
+      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
       setTimeout(()=>{
-        const inputEl = varGrid.querySelector('.var-item[data-id="'+v.id+'"] input.var-input');
-        if(!inputEl){ console.log('SelfTest: input not found'); return; }
-        inputEl.focus();
-        const before = document.activeElement;
-        inputEl.value = 'abc';
-        inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-        setTimeout(()=>{
-          const after = document.activeElement;
-          console.log('SelfTest focus stable:', before===after && after===inputEl);
-          delVar(v.id);
-        }, 80);
-      }, 0);
-    })();
+        const after = document.activeElement;
+        console.log('SelfTest focus stable:', before===after && after===inputEl);
+        delVar(v.id);
+      }, 80);
+    }, 0);
   }
-});
+  function runModalSelfTest(){
+    const fake = { id:'s_test', label:'_t', text:'x' };
+    store.scripts.push(fake);
+    openEdit(fake);
+    const editOpen = $('#editModal').classList.contains('show') && editingId===fake.id;
+    closeEdit();
+    const editClosed = !$('#editModal').classList.contains('show') && editingId===null;
+    openConfirm(fake.id);
+    const confOpen = $('#confirmModal').classList.contains('show') && pendingDeleteId===fake.id;
+    closeConfirm();
+    const confClosed = !$('#confirmModal').classList.contains('show') && pendingDeleteId===null;
+    console.log('SelfTest modal:', { editOpen, editClosed, confOpen, confClosed });
+    store.scripts = store.scripts.filter(s=>s.id!==fake.id);
+  }
+  function runInsertVarTest(){
+    // สร้างตัวแปรและเปิด modal แก้ไข เพื่อตรวจว่า caret ไม่หลุดเมื่อกดปุ่ม {key}
+    const k = uniqueKey('deal');
+    addVar({ key:k, label:'ดีล', type:'choice', options:['เช่า','ขาย'] });
+    openEdit({ id:'sX', label:'X', text:'Hello ' });
+    const t = $('#mText'); t.focus(); t.setSelectionRange(6,6); // ท้ายคำว่า Hello 
+    refreshVarPicker();
+    document.getElementById('varPicker').value = k;
+    const before = {start:t.selectionStart, end:t.selectionEnd};
+    document.getElementById('btnInsertVar').dispatchEvent(new MouseEvent('mousedown', {bubbles:true}));
+    document.getElementById('btnInsertVar').click();
+    const after = {start:t.selectionStart, end:t.selectionEnd};
+    console.log('SelfTest insertVar caret preserved:', before.start===6 && after.start===6 + ('{'+k+'}').length);
+    closeEdit();
+  }
+
+  // Init
+  window.addEventListener('load', ()=>{
+    load(); seedIfEmpty(); render(); renderVars(); updateExport();
+    if (location.hash === '#devtest') runFocusSelfTest();
+    if (location.hash === '#modtest') runModalSelfTest();
+    if (location.hash === '#instest') runInsertVarTest();
+  });
   </script>
 </body>
 </html>
