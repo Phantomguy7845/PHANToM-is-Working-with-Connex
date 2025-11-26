@@ -651,7 +651,7 @@
           out.push(`[ ${l2.title} ${evaluateCalc(l2)} ]`);
         }else{
           const total = calcCount(l2);
-          out.push(`// ${l2.title} ${total} //`);
+          out.push(`${l2.title} ${total}`);
           // if text mode and has lines but no children, print lines
           if((l2.mode==="text") && (!l2.children || !l2.children.length)){
             (l2.lines||[]).forEach(t=> out.push(t));
