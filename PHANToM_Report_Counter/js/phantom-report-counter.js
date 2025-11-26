@@ -645,10 +645,10 @@
 
     state.mains.forEach(m=>{
       if(m.kind==="sum") return; // skip here; summary later
-      out.push(`//${m.title}`);
+      out.push(`//////////${m.title}//////////`);
       (m.children||[]).forEach(l2=>{
         if(l2.kind==="calc"){
-          out.push(`${l2.title} ${evaluateCalc(l2)}`);
+          out.push(`//${l2.title} ${evaluateCalc(l2)}//`);
         }else{
           const total = calcCount(l2);
           out.push(`${l2.title} ${total}`);
