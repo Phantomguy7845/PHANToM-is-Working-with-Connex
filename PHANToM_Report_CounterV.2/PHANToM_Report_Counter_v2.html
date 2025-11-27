@@ -45,7 +45,7 @@
     .ghost{background:#1a2238;color:var(--muted);border:1px solid #334}
     .warn{background:var(--warn);color:#000}
     .danger{background:var(--err);color:#fff}
-    .mini{background:#1c2a44;color:var(--txt);border:1px solid #334;width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;line-height:0}
+    .mini{background:#1c2a44;color:var(--txt);border:1px solid #334;width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;line-height:0;font-size:.75rem;padding:0}
 
     /* UP Call section */
     #upcallSection{
@@ -65,50 +65,71 @@
     #upcallSection .up-row{
       display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;
     }
+
+    /* Projects row: แนวนอน, เลื่อนได้, รองรับ 10+ โครงการ */
     #upProjects{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
-      gap:10px;
+      display:flex;
+      flex-wrap:nowrap;
+      gap:8px;
+      overflow-x:auto;
+      padding-bottom:4px;
     }
+
     .up-project-card{
       background:var(--panel);
       border-radius:var(--card-radius);
       border:1px solid var(--edge);
       box-shadow:var(--shadow);
-      padding:8px 10px;
+      padding:6px 8px;
+      flex:0 0 220px;
+      font-size:.8rem;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
     }
+    .up-project-card.collapsed{
+      flex:0 0 140px;
+      opacity:0.9;
+    }
+
     .up-project-header{
-      display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;
+      display:flex;align-items:center;gap:6px;margin-bottom:2px;flex-wrap:wrap;
     }
     .up-project-header input{
       flex:1;
       background:#1a2238;border:1px solid #334;color:var(--txt);
-      border-radius:8px;padding:6px 8px;font-size:.9rem;
+      border-radius:8px;padding:4px 6px;font-size:.8rem;
     }
 
+    .up-project-summary{
+      font-size:.75rem;
+      color:var(--muted);
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      margin-bottom:2px;
+    }
+
+    /* metric list: เรียงบนลงล่าง คอลัมน์เดียว */
     .up-metric-grid{
-      display:grid;
-      grid-template-columns:1fr;
-      gap:4px;
+      display:flex;
+      flex-direction:column;
+      gap:3px;
     }
     .up-metric-row{
       display:flex;align-items:center;justify-content:space-between;gap:6px;
-      font-size:.8rem;
+      font-size:.78rem;
       border-radius:8px;
       padding:2px 4px;
       cursor:pointer;
     }
     .up-metric-row.selected{
-      background:rgba(59,130,246,0.12);
+      background:rgba(59,130,246,0.18);
       box-shadow:0 0 0 1px rgba(59,130,246,0.4);
     }
     .up-metric-row .metric-label{
       max-width:60%;
-    }
-    @media (min-width:900px){
-      .up-metric-grid{
-        grid-template-columns:repeat(2,minmax(0,1fr));
-      }
+      word-break:keep-all;
     }
 
     /* Tree board (mode ปกติ) */
@@ -470,6 +491,7 @@
 
         if(upProjectsWrapEl){
           upProjectsWrapEl.addEventListener("click",(e)=>{
+            // เลือก metric row เพื่อโฟกัส
             const metricRow = e.target.closest(".up-metric-row");
             if(metricRow){
               const pi = Number(metricRow.dataset.projectIndex);
@@ -482,6 +504,7 @@
               }
             }
 
+            // ย้ายหัวข้อในรายงานขึ้น/ลง (ปุ่ม ↑ / ↓ บนแถว metric)
             const metricMove = e.target.closest("button[data-role='up-move-metric']");
             if(metricMove){
               const dir = Number(metricMove.dataset.dir);
@@ -495,14 +518,15 @@
               return;
             }
 
-            const btn = e.target.closest("button[data-upaction]");
-            if(btn){
-              const projIndex = Number(btn.dataset.projectIndex);
-              const metricId = btn.dataset.metricId;
-              const action = btn.dataset.upaction;
+            // + / - ค่า metric (ใช้ dataset)
+            const actBtn = e.target.closest("button[data-upaction]");
+            if(actBtn){
+              const projIndex = Number(actBtn.dataset.projectIndex);
+              const metricId = actBtn.dataset.metricId;
+              const action = actBtn.dataset.upaction;
               const projects = (state.upcall && state.upcall.projects) || [];
               const proj = projects[projIndex];
-              if(!proj) return;
+              if(!proj || !metricId) return;
               if(!proj.metrics) proj.metrics={};
               const cur = Number(proj.metrics[metricId] || 0);
               pushUndo();
@@ -513,31 +537,7 @@
               return;
             }
 
-            const delBtn = e.target.closest("button[data-role='up-del-project']");
-            if(delBtn){
-              const idx = Number(delBtn.dataset.index);
-              if(Number.isNaN(idx)) return;
-              if(!confirm(`ลบโครงการ "${state.upcall.projects[idx]?.name||""}" ?`)) return;
-              pushUndo();
-              state.upcall.projects.splice(idx,1);
-              saveState();
-              render();
-              return;
-            }
-
-            const moveBtn = e.target.closest("button[data-role='up-move-project']");
-            if(moveBtn){
-              const idx = Number(moveBtn.dataset.index);
-              const dir = Number(moveBtn.dataset.dir);
-              pushUndo();
-              moveUpProject(idx, dir);
-              saveState();
-              render();
-              return;
-            }
-          });
-
-          upProjectsWrapEl.addEventListener("input",(e)=>{
+            // แก้ชื่อโครงการ (input)
             const inp = e.target.closest("input[data-role='up-project-name']");
             if(inp){
               const idx = Number(inp.dataset.index);
@@ -562,7 +562,8 @@
         state.upcall.projects.push({
           id: uid(),
           name,
-          metrics: createEmptyUpMetrics()
+          metrics: createEmptyUpMetrics(),
+          collapsed:false
         });
         upProjectNameEl.value="";
         saveState();
@@ -586,6 +587,7 @@
           upMetrics.forEach(m=>{
             if(typeof p.metrics[m.id]!=="number") p.metrics[m.id]=0;
           });
+          if(typeof p.collapsed!=="boolean") p.collapsed=false;
         });
       }
 
@@ -621,6 +623,16 @@
         order.splice(ni,0,x);
       }
 
+      function reachableForProject(p){
+        let s=0;
+        upMetrics.forEach(m=>{
+          if(m.group==="reachable"){
+            s += (p.metrics && p.metrics[m.id]) || 0;
+          }
+        });
+        return s;
+      }
+
       function renderUpcall(){
         ensureUpcallState();
         if(!upProjectsWrapEl) return;
@@ -629,7 +641,7 @@
         if(upFocus){
           if(upFocus.projectIndex >= projects.length) upFocus = null;
           else{
-            const metricLen = state.upcall.order.length || upMetrics.length;
+            const metricLen = (state.upcall.order && state.upcall.order.length) || upMetrics.length;
             if(upFocus.metricIndex >= metricLen){
               upFocus.metricIndex = metricLen-1;
             }
@@ -649,38 +661,75 @@
 
         projects.forEach((p,idx)=>{
           const card = div("up-project-card");
+          if(p.collapsed) card.classList.add("collapsed");
+
+          // header
           const header = div("up-project-header");
           const label = div("muted","โครงการ");
           const nameInput = input(p.name||"", "ชื่อโครงการ");
           nameInput.dataset.role="up-project-name";
           nameInput.dataset.index=idx;
 
-          const moveUpBtn = btnGhost("↑", ()=>{
+          const toggleBtn = document.createElement("button");
+          toggleBtn.className="mini ghost";
+          toggleBtn.textContent = p.collapsed ? "▶" : "◀";
+          toggleBtn.onclick = (e)=>{
+            e.stopPropagation();
+            pushUndo();
+            p.collapsed=!p.collapsed;
+            saveState();
+            render();
+          };
+
+          const moveUpBtn = document.createElement("button");
+          moveUpBtn.className="mini ghost";
+          moveUpBtn.textContent="↑";
+          moveUpBtn.onclick = (e)=>{
+            e.stopPropagation();
             pushUndo();
             moveUpProject(idx,-1);
             saveState(); render();
-          });
-          moveUpBtn.dataset.role="up-move-project";
-          moveUpBtn.dataset.index=idx;
-          moveUpBtn.dataset.dir=-1;
+          };
 
-          const moveDownBtn = btnGhost("↓", ()=>{
+          const moveDownBtn = document.createElement("button");
+          moveDownBtn.className="mini ghost";
+          moveDownBtn.textContent="↓";
+          moveDownBtn.onclick = (e)=>{
+            e.stopPropagation();
             pushUndo();
             moveUpProject(idx,+1);
             saveState(); render();
-          });
-          moveDownBtn.dataset.role="up-move-project";
-          moveDownBtn.dataset.index=idx;
-          moveDownBtn.dataset.dir=1;
+          };
 
-          const delBtn = btnDanger("ลบ", ()=>{});
-          delBtn.dataset.role="up-del-project";
-          delBtn.dataset.index=idx;
+          const delBtn = document.createElement("button");
+          delBtn.className="mini danger";
+          delBtn.textContent="ลบ";
+          delBtn.onclick = (e)=>{
+            e.stopPropagation();
+            if(!confirm(`ลบโครงการ "${p.name||""}" ?`)) return;
+            pushUndo();
+            state.upcall.projects.splice(idx,1);
+            saveState();
+            render();
+          };
 
-          header.append(label, nameInput, moveUpBtn, moveDownBtn, delBtn);
+          header.append(label, nameInput, toggleBtn, moveUpBtn, moveDownBtn, delBtn);
           card.appendChild(header);
 
+          const calls = (p.metrics && p.metrics.calls) || 0;
+          const reach = reachableForProject(p);
+
+          const summary = div("up-project-summary");
+          summary.append(
+            div(null, `โทรกี่สาย: ${calls}`),
+            div(null, `ติดต่อได้: ${reach}`)
+          );
+          card.appendChild(summary);
+
           const grid = div("up-metric-grid");
+          if(p.collapsed){
+            grid.style.display="none";
+          }
 
           order.forEach((metricId,mi)=>{
             const m = upMetrics.find(mm=>mm.id===metricId);
@@ -776,15 +825,7 @@
 
         const sumArr = (arr)=> arr.reduce((a,b)=>a+b,0);
 
-        const reachableVals = projects.map(p=>{
-          let s=0;
-          upMetrics.forEach(m=>{
-            if(m.group==="reachable"){
-              s += (p.metrics && p.metrics[m.id]) || 0;
-            }
-          });
-          return s;
-        });
+        const reachableVals = projects.map(p=>reachableForProject(p));
 
         const order = state.upcall.order && state.upcall.order.length
           ? state.upcall.order
@@ -850,18 +891,18 @@
         ensureUpcallState();
         const projects = state.upcall.projects || [];
         if(!upFocus || !projects.length) return;
-        const COLS = 2;
+
         let {projectIndex, metricIndex} = upFocus;
-        const metricLen = state.upcall.order.length || upMetrics.length;
+        const metricLen = (state.upcall.order && state.upcall.order.length) || upMetrics.length;
 
         if(key==="ArrowRight"){
-          metricIndex = Math.min(metricLen-1, metricIndex+1);
+          projectIndex = Math.min(projects.length-1, projectIndex+1);
         }else if(key==="ArrowLeft"){
-          metricIndex = Math.max(0, metricIndex-1);
+          projectIndex = Math.max(0, projectIndex-1);
         }else if(key==="ArrowDown"){
-          metricIndex = Math.min(metricLen-1, metricIndex+COLS);
+          metricIndex = Math.min(metricLen-1, metricIndex+1);
         }else if(key==="ArrowUp"){
-          metricIndex = Math.max(0, metricIndex-COLS);
+          metricIndex = Math.max(0, metricIndex-1);
         }else if(key==="+" || key==="="){
           changeUpMetric(projectIndex, metricIndex, +1);
         }else if(key==="-" || key==="_"){
