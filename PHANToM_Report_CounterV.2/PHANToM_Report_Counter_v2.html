@@ -369,7 +369,7 @@
       let focusPath = [];
       let undoStack = [];
       let upFocus = null;          // {projectIndex, metricIndex}
-      let upProjectFocus = null;   // projectIndex (การ์ดโครงการที่โฟกัสอยู่)
+      let upProjectFocus = null;   // projectIndex
 
       // temp formula
       let editingCalcObj = null;
@@ -909,6 +909,27 @@
         return lines;
       }
 
+      // ฟังก์ชันนี้หายไปในเวอร์ชันก่อน → ใส่กลับมา
+      function changeUpMetric(pIndex, mIndex, delta){
+        ensureUpcallState();
+        const projects = state.upcall.projects || [];
+        const proj = projects[pIndex];
+        const order = state.upcall.order && state.upcall.order.length
+          ? state.upcall.order
+          : upMetrics.map(m=>m.id);
+        const metricId = order[mIndex];
+        const metric = upMetrics.find(m=>m.id===metricId);
+
+        if(!proj || !metric) return;
+        if(!proj.metrics) proj.metrics = {};
+
+        const cur = Number(proj.metrics[metric.id] || 0);
+        proj.metrics[metric.id] = Math.max(0, cur + delta);
+
+        saveState();
+        render();
+      }
+
       // =========================================================
       // Keyboard (global) — ใช้ grid จากตำแหน่งบนจอ
       function initKeyboard(){
@@ -1401,7 +1422,7 @@
       // =========================================================
       // Focus & Keyboard helpers (ใช้ grid จากตำแหน่งบนจอ)
       function registerFocusable(el, path){
-        // เดิมใช้สำหรับ flat list ตอนนี้ไม่จำเป็นแล้ว แต่คงฟังก์ชันไว้กัน error
+        // ไม่ต้องเก็บ flat list แล้ว แต่คงไว้กัน error
       }
 
       function setFocusPath(path, scroll=false){
