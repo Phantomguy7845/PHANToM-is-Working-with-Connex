@@ -303,19 +303,6 @@
       // ---- Storage ----
       const LS_KEY = "PHANTOM_REPORT_STATE_V5";
 
-      // ---- State ----
-      let state = loadState() || defaultState();
-      ensureSumSection();
-      ensureUpcallState();
-      let focusPath = [];      // node ปกติ
-      let flatFocus = [];
-      let undoStack = [];
-      let upFocus = null;      // {projectIndex, metricIndex} สำหรับ UP Call
-
-      // temp formula
-      let editingCalcObj = null;
-      let editingParts = [];
-
       // ---- UP Call metrics definition ----
       const upMetrics = [
         { id:"calls",           label:"โทรกี่สาย",              group:"all" },
@@ -334,6 +321,19 @@
         { id:"phone_off",       label:"ปิดเครื่อง",              group:"unreachable" },
         { id:"not_convenient",  label:"ไม่สะดวกคุย",             group:"unreachable" }
       ];
+
+      // ---- State ----
+      let state = loadState() || defaultState();
+      ensureSumSection();
+      ensureUpcallState();
+      let focusPath = [];
+      let flatFocus = [];
+      let undoStack = [];
+      let upFocus = null;
+
+      // temp formula
+      let editingCalcObj = null;
+      let editingParts = [];
 
       // ---- Init ----
       initHeader();
@@ -428,7 +428,6 @@
           saveState(); render(); tip("ล้างทั้งหมดแล้ว",true);
         });
 
-        // Formula modal
         formulaCloseBtn.addEventListener("click", ()=> formulaModal.close());
         formulaAddBtn.addEventListener("click", ()=>{
           const id = formulaSourceSel.value; if(!id) return;
@@ -471,20 +470,18 @@
 
         if(upProjectsWrapEl){
           upProjectsWrapEl.addEventListener("click",(e)=>{
-            // เลือกแถว metric
             const metricRow = e.target.closest(".up-metric-row");
             if(metricRow){
               const pi = Number(metricRow.dataset.projectIndex);
               const mi = Number(metricRow.dataset.metricIndex);
               if(!Number.isNaN(pi) && !Number.isNaN(mi)){
                 upFocus = {projectIndex:pi, metricIndex:mi};
-                focusPath = []; // ออกจากโหมด node ปกติ
+                focusPath = [];
                 highlightFocus(false);
                 updateUpcallHighlight(true);
               }
             }
 
-            // ปุ่มเลื่อนหัวข้อ (metric ↑/↓)
             const metricMove = e.target.closest("button[data-role='up-move-metric']");
             if(metricMove){
               const dir = Number(metricMove.dataset.dir);
@@ -498,7 +495,6 @@
               return;
             }
 
-            // ปุ่ม + / - ของ metric
             const btn = e.target.closest("button[data-upaction]");
             if(btn){
               const projIndex = Number(btn.dataset.projectIndex);
@@ -517,7 +513,6 @@
               return;
             }
 
-            // ลบโครงการ
             const delBtn = e.target.closest("button[data-role='up-del-project']");
             if(delBtn){
               const idx = Number(delBtn.dataset.index);
@@ -530,7 +525,6 @@
               return;
             }
 
-            // ย้ายโครงการขึ้น/ลง
             const moveBtn = e.target.closest("button[data-role='up-move-project']");
             if(moveBtn){
               const idx = Number(moveBtn.dataset.index);
@@ -679,7 +673,7 @@
           moveDownBtn.dataset.index=idx;
           moveDownBtn.dataset.dir=1;
 
-          const delBtn = btnDanger("ลบ", ()=>{/* handled in delegation */});
+          const delBtn = btnDanger("ลบ", ()=>{});
           delBtn.dataset.role="up-del-project";
           delBtn.dataset.index=idx;
 
@@ -777,13 +771,11 @@
         if(!projects.length) return [];
         const lines = [];
 
-        // รายชื่อโครงการ
         projects.forEach(p=> lines.push(p.name || "(ไม่ระบุชื่อโครงการ)"));
         if(projects.length) lines.push("");
 
         const sumArr = (arr)=> arr.reduce((a,b)=>a+b,0);
 
-        // ค่าที่ติดต่อได้ (reachable) สำหรับแต่ละโครงการ
         const reachableVals = projects.map(p=>{
           let s=0;
           upMetrics.forEach(m=>{
@@ -829,17 +821,14 @@
           const tag=(document.activeElement && document.activeElement.tagName)||"";
           if(tag==="INPUT"||tag==="TEXTAREA") return;
 
-          // Undo
           if(e.ctrlKey && (e.key==="z"||e.key==="Z")){ e.preventDefault(); undo(); return; }
 
-          // ถ้าอยู่ในโหมด UP Call (มี focus grid)
           if(upFocus && ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","+","=","-","_"].includes(e.key)){
             e.preventDefault();
             handleUpcallKey(e.key);
             return;
           }
 
-          // โหมด node ปกติ
           if(e.key==="+"||e.key==="="){ incFocused(+1); e.preventDefault(); return; }
           if(e.key==="-"||e.key==="_"){ incFocused(-1); e.preventDefault(); return; }
 
