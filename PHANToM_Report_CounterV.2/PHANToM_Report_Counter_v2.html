@@ -107,7 +107,7 @@
       display:flex;
       flex-direction:column;
       gap:2px;
-      margin-bottom:2px;
+      margin-bottom:3px;
     }
 
     /* metric list: เรียงบนลงล่าง คอลัมน์เดียว */
@@ -124,9 +124,23 @@
       cursor:pointer;
     }
     .up-metric-row.selected{
-      background:rgba(59,130,246,0.18);
-      box-shadow:0 0 0 1px rgba(59,130,246,0.4);
+      box-shadow:0 0 0 1px rgba(59,130,246,0.65);
     }
+
+    /* แบ่ง group ให้ชัดเจน */
+    .up-metric-row.group-all{
+      background:rgba(148,163,184,0.06);
+      border-left:2px solid var(--pri);
+    }
+    .up-metric-row.group-reachable{
+      background:rgba(34,197,94,0.06);
+      border-left:2px solid var(--ok);
+    }
+    .up-metric-row.group-unreachable{
+      background:rgba(239,68,68,0.06);
+      border-left:2px solid var(--err);
+    }
+
     .up-metric-row .metric-label{
       max-width:60%;
       word-break:keep-all;
@@ -491,7 +505,6 @@
 
         if(upProjectsWrapEl){
           upProjectsWrapEl.addEventListener("click",(e)=>{
-            // เลือก metric row เพื่อโฟกัส
             const metricRow = e.target.closest(".up-metric-row");
             if(metricRow){
               const pi = Number(metricRow.dataset.projectIndex);
@@ -504,7 +517,6 @@
               }
             }
 
-            // ย้ายหัวข้อในรายงานขึ้น/ลง (ปุ่ม ↑ / ↓ บนแถว metric)
             const metricMove = e.target.closest("button[data-role='up-move-metric']");
             if(metricMove){
               const dir = Number(metricMove.dataset.dir);
@@ -518,7 +530,6 @@
               return;
             }
 
-            // + / - ค่า metric (ใช้ dataset)
             const actBtn = e.target.closest("button[data-upaction]");
             if(actBtn){
               const projIndex = Number(actBtn.dataset.projectIndex);
@@ -537,7 +548,6 @@
               return;
             }
 
-            // แก้ชื่อโครงการ (input)
             const inp = e.target.closest("input[data-role='up-project-name']");
             if(inp){
               const idx = Number(inp.dataset.index);
@@ -559,12 +569,15 @@
         }
         pushUndo();
         ensureUpcallState();
-        state.upcall.projects.push({
+        const proj = {
           id: uid(),
           name,
           metrics: createEmptyUpMetrics(),
           collapsed:false
-        });
+        };
+        state.upcall.projects.push(proj);
+        const lastIndex = state.upcall.projects.length-1;
+        state.upcall.projects.forEach((p,i)=>{ p.collapsed = (i!==lastIndex); });
         upProjectNameEl.value="";
         saveState();
         render();
@@ -632,6 +645,15 @@
         });
         return s;
       }
+      function unreachableForProject(p){
+        let s=0;
+        upMetrics.forEach(m=>{
+          if(m.group==="unreachable"){
+            s += (p.metrics && p.metrics[m.id]) || 0;
+          }
+        });
+        return s;
+      }
 
       function renderUpcall(){
         ensureUpcallState();
@@ -663,7 +685,6 @@
           const card = div("up-project-card");
           if(p.collapsed) card.classList.add("collapsed");
 
-          // header
           const header = div("up-project-header");
           const label = div("muted","โครงการ");
           const nameInput = input(p.name||"", "ชื่อโครงการ");
@@ -676,7 +697,10 @@
           toggleBtn.onclick = (e)=>{
             e.stopPropagation();
             pushUndo();
-            p.collapsed=!p.collapsed;
+            state.upcall.projects.forEach((other,j)=>{
+              if(j!==idx) other.collapsed = true;
+            });
+            p.collapsed = !p.collapsed;
             saveState();
             render();
           };
@@ -718,11 +742,13 @@
 
           const calls = (p.metrics && p.metrics.calls) || 0;
           const reach = reachableForProject(p);
+          const unreach = unreachableForProject(p);
 
           const summary = div("up-project-summary");
           summary.append(
             div(null, `โทรกี่สาย: ${calls}`),
-            div(null, `ติดต่อได้: ${reach}`)
+            div(null, `ติดต่อได้: ${reach}`),
+            div(null, `ติดต่อไม่ได้: ${unreach}`)
           );
           card.appendChild(summary);
 
@@ -736,6 +762,7 @@
             if(!m) return;
 
             const row = div("up-metric-row");
+            if(m.group) row.classList.add("group-"+m.group);
             row.dataset.projectIndex = idx;
             row.dataset.metricIndex = mi;
 
@@ -875,16 +902,37 @@
 
           if(e.key==="ArrowDown"){ moveFocusFlat(+1); e.preventDefault(); return; }
           if(e.key==="ArrowUp"){ moveFocusFlat(-1); e.preventDefault(); return; }
+
           if(e.key==="ArrowRight"){
+            if(handleLevel3Horizontal(1)){ e.preventDefault(); return; }
             const n = getNodeByPath(focusPath);
-            if(n && n.children && n.children.length>0){ setFocusPath([...focusPath,0], true); }
+            if(n && n.children && n.children.length>0){
+              setFocusPath([...focusPath,0], true);
+            }
             e.preventDefault(); return;
           }
           if(e.key==="ArrowLeft"){
-            if(focusPath.length>1){ setFocusPath(focusPath.slice(0,-1), true); }
+            if(handleLevel3Horizontal(-1)){ e.preventDefault(); return; }
+            if(focusPath.length>1){
+              setFocusPath(focusPath.slice(0,-1), true);
+            }
             e.preventDefault(); return;
           }
         }, true);
+      }
+
+      // ใช้ลูกศรซ้าย/ขวา เดินใน grid หัวข้อ Level 3 (ว่าง/ไม่ว่าง/บอก...)
+      function handleLevel3Horizontal(delta){
+        if(!focusPath.length) return false;
+        if(focusPath.length!==3) return false; // เฉพาะ node ขั้น 3 เท่านั้น
+        const parentPath = focusPath.slice(0,-1);
+        const parent = getNodeByPath(parentPath);
+        if(!parent || !parent.children || parent.children.length<=1) return false;
+        const idx = focusPath[2];
+        const ni = idx + delta;
+        if(ni<0 || ni>=parent.children.length) return false;
+        setFocusPath([...parentPath, ni], true);
+        return true;
       }
 
       function handleUpcallKey(key){
