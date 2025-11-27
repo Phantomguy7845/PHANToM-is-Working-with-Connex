@@ -10,8 +10,8 @@
 
   <style>
     /* =======================================================
-       PHANToM Report Counter — Aurora 2025 · 3-Level + Calc
-       + UP Call Mode (หลายโครงการ)
+       PHANToM Report Counter — Aurora 2025
+       3-Level + Calc + UP Call Mode (Multi-project)
        ======================================================= */
 
     :root{
@@ -78,13 +78,14 @@
       padding:8px 10px;
     }
     .up-project-header{
-      display:flex;align-items:center;gap:8px;margin-bottom:6px;
+      display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;
     }
     .up-project-header input{
       flex:1;
       background:#1a2238;border:1px solid #334;color:var(--txt);
       border-radius:8px;padding:6px 8px;font-size:.9rem;
     }
+
     .up-metric-grid{
       display:grid;
       grid-template-columns:1fr;
@@ -93,6 +94,13 @@
     .up-metric-row{
       display:flex;align-items:center;justify-content:space-between;gap:6px;
       font-size:.8rem;
+      border-radius:8px;
+      padding:2px 4px;
+      cursor:pointer;
+    }
+    .up-metric-row.selected{
+      background:rgba(59,130,246,0.12);
+      box-shadow:0 0 0 1px rgba(59,130,246,0.4);
     }
     .up-metric-row .metric-label{
       max-width:60%;
@@ -103,7 +111,7 @@
       }
     }
 
-    /* Tree board */
+    /* Tree board (mode ปกติ) */
     #tree{padding:16px 18px;display:flex;flex-direction:column;gap:16px;flex:1}
 
     /* Node shells */
@@ -124,7 +132,7 @@
     .node.level2{padding:12px;border-radius:12px;margin:8px 0}
     .node.level2 .title{font-weight:700}
     .node.level2 .children{margin-top:6px}
-    .node.level2.has-children .modeWrap{display:none}  /* hide self mode when has level3 */
+    .node.level2.has-children .modeWrap{display:none}
 
     /* Level3 node = small boxes grid */
     .level3-wrap{display:flex;flex-wrap:wrap;gap:8px}
@@ -175,7 +183,6 @@
     }
     #toast.show{opacity:1;transform:translate(-50%,0)}
 
-    /* Responsive */
     @media (max-width:900px){
       .level3-wrap{gap:10px}
     }
@@ -213,7 +220,8 @@
     <div class="head">
       <div class="head-title">UP Call Mode</div>
       <div class="head-note">
-        บันทึกผลการโทร แยกตามโครงการ แล้วสรุปเป็นรูปแบบ: 17/144/18/33/8=220
+        บันทึกผลการโทร แยกตามโครงการ แล้วสรุปเป็นรูปแบบ: 17/144/18/33/8=220<br>
+        คลิกแถวเพื่อโฟกัส → ใช้ลูกศร (↑ ↓ ← →) และปุ่ม + / − เหมือนหัวข้อปกติ
       </div>
     </div>
     <div class="up-row">
@@ -259,9 +267,6 @@
   <div id="toast">พร้อมทำงาน</div>
 
   <script>
-    /* PHANToM Report Counter — 3-Level + Calc + Undo (Aurora 2025)
-       + UP Call Mode (หลายโครงการ) */
-
     (function(){
       const $ = (s,c=document)=>c.querySelector(s);
       const $$ = (s,c=document)=>Array.from(c.querySelectorAll(s));
@@ -302,14 +307,14 @@
       let state = loadState() || defaultState();
       ensureSumSection();
       ensureUpcallState();
-      let focusPath = [];            // [mainIndex] or [mainIndex, subIndex] or [mainIndex, subIndex, leafIndex]
+      let focusPath = [];      // node ปกติ
       let flatFocus = [];
       let undoStack = [];
+      let upFocus = null;      // {projectIndex, metricIndex} สำหรับ UP Call
 
-      // temp for formula editing
-      let editingCalcRef = null;     // { level:"root"|"level2", mainIdx, subIdx?, leafIdx? }
-      let editingCalcObj = null;     // actual node object (kind==="calc")
-      let editingParts = [];         // [{nodeId, sign:+1|-1}]
+      // temp formula
+      let editingCalcObj = null;
+      let editingParts = [];
 
       // ---- UP Call metrics definition ----
       const upMetrics = [
@@ -340,13 +345,21 @@
       // Header & top actions
       function initHeader(){
         userNameEl.value = state.userName || "";
-        userNameEl.addEventListener("input", ()=>{ state.userName = userNameEl.value.trim(); saveState(); });
+        userNameEl.addEventListener("input", ()=>{
+          state.userName = userNameEl.value.trim();
+          saveState();
+        });
 
         if(!state.reportDate){
           dateEl.valueAsDate = new Date();
           state.reportDate = isoDate();
-        }else{ dateEl.value = state.reportDate; }
-        dateEl.addEventListener("change", ()=>{ state.reportDate = dateEl.value || isoDate(); saveState(); });
+        }else{
+          dateEl.value = state.reportDate;
+        }
+        dateEl.addEventListener("change", ()=>{
+          state.reportDate = dateEl.value || isoDate();
+          saveState();
+        });
 
         copyBtn.addEventListener("click", ()=>{
           const t=buildReport();
@@ -376,6 +389,7 @@
           setTimeout(()=>URL.revokeObjectURL(a.href),500);
           tip("Export เรียบร้อย",true);
         });
+
         importInput.addEventListener("change",(e)=>{
           const f=e.target.files && e.target.files[0]; if(!f) return;
           const r=new FileReader();
@@ -388,7 +402,9 @@
               ensureSumSection();
               ensureUpcallState();
               saveState(); render(); tip("Import เรียบร้อย",true);
-            }catch{ tip("ไฟล์ .txt ไม่ถูกต้อง"); }
+            }catch{
+              tip("ไฟล์ .txt ไม่ถูกต้อง");
+            }
             importInput.value="";
           };
           r.readAsText(f);
@@ -405,22 +421,25 @@
         resetAllBtn.addEventListener("click", ()=>{
           if(!confirm("ล้างทุกอย่าง?")) return;
           pushUndo();
-          state = defaultState(); ensureSumSection(); ensureUpcallState(); saveState(); render(); tip("ล้างทั้งหมดแล้ว",true);
+          state = defaultState();
+          ensureSumSection();
+          ensureUpcallState();
+          upFocus = null;
+          saveState(); render(); tip("ล้างทั้งหมดแล้ว",true);
         });
 
-        // Formula modal controls
+        // Formula modal
         formulaCloseBtn.addEventListener("click", ()=> formulaModal.close());
         formulaAddBtn.addEventListener("click", ()=>{
           const id = formulaSourceSel.value; if(!id) return;
           const sign = (formulaSignSel.value==="-") ? -1 : +1;
-          const title = findNodeTitleById(id) || "(unknown)";
           editingParts.push({nodeId:id, sign});
           renderFormulaLines();
         });
         formulaSaveBtn.addEventListener("click", ()=>{
           if(!editingCalcObj) return;
           pushUndo();
-          editingCalcObj.formula = editingParts.slice(); // [{nodeId,sign}]
+          editingCalcObj.formula = editingParts.slice();
           saveState(); render(); formulaModal.close(); tip("บันทึกสูตรแล้ว",true);
         });
       }
@@ -449,8 +468,37 @@
             tip("รีเซ็ต UP Call แล้ว",true);
           });
         }
+
         if(upProjectsWrapEl){
           upProjectsWrapEl.addEventListener("click",(e)=>{
+            // เลือกแถว metric
+            const metricRow = e.target.closest(".up-metric-row");
+            if(metricRow){
+              const pi = Number(metricRow.dataset.projectIndex);
+              const mi = Number(metricRow.dataset.metricIndex);
+              if(!Number.isNaN(pi) && !Number.isNaN(mi)){
+                upFocus = {projectIndex:pi, metricIndex:mi};
+                focusPath = []; // ออกจากโหมด node ปกติ
+                highlightFocus(false);
+                updateUpcallHighlight(true);
+              }
+            }
+
+            // ปุ่มเลื่อนหัวข้อ (metric ↑/↓)
+            const metricMove = e.target.closest("button[data-role='up-move-metric']");
+            if(metricMove){
+              const dir = Number(metricMove.dataset.dir);
+              const idx = Number(metricMove.dataset.metricIndex);
+              if(!Number.isNaN(idx) && (dir===-1 || dir===1)){
+                pushUndo();
+                moveUpMetric(idx, dir);
+                saveState();
+                render();
+              }
+              return;
+            }
+
+            // ปุ่ม + / - ของ metric
             const btn = e.target.closest("button[data-upaction]");
             if(btn){
               const projIndex = Number(btn.dataset.projectIndex);
@@ -468,7 +516,33 @@
               render();
               return;
             }
+
+            // ลบโครงการ
+            const delBtn = e.target.closest("button[data-role='up-del-project']");
+            if(delBtn){
+              const idx = Number(delBtn.dataset.index);
+              if(Number.isNaN(idx)) return;
+              if(!confirm(`ลบโครงการ "${state.upcall.projects[idx]?.name||""}" ?`)) return;
+              pushUndo();
+              state.upcall.projects.splice(idx,1);
+              saveState();
+              render();
+              return;
+            }
+
+            // ย้ายโครงการขึ้น/ลง
+            const moveBtn = e.target.closest("button[data-role='up-move-project']");
+            if(moveBtn){
+              const idx = Number(moveBtn.dataset.index);
+              const dir = Number(moveBtn.dataset.dir);
+              pushUndo();
+              moveUpProject(idx, dir);
+              saveState();
+              render();
+              return;
+            }
           });
+
           upProjectsWrapEl.addEventListener("input",(e)=>{
             const inp = e.target.closest("input[data-role='up-project-name']");
             if(inp){
@@ -502,12 +576,17 @@
       }
 
       function defaultUpcall(){
-        return { projects: [] };
+        return { projects: [], order: upMetrics.map(m=>m.id) };
       }
 
       function ensureUpcallState(){
         if(!state.upcall) state.upcall = defaultUpcall();
         if(!Array.isArray(state.upcall.projects)) state.upcall.projects = [];
+
+        if(!Array.isArray(state.upcall.order) || !state.upcall.order.length){
+          state.upcall.order = upMetrics.map(m=>m.id);
+        }
+
         state.upcall.projects.forEach(p=>{
           if(!p.metrics) p.metrics = {};
           upMetrics.forEach(m=>{
@@ -530,16 +609,50 @@
         });
       }
 
+      function moveUpProject(i,dir){
+        ensureUpcallState();
+        const arr = state.upcall.projects;
+        const ni = i+dir;
+        if(ni<0 || ni>=arr.length) return;
+        const x = arr.splice(i,1)[0];
+        arr.splice(ni,0,x);
+      }
+
+      function moveUpMetric(idx,dir){
+        ensureUpcallState();
+        const order = state.upcall.order || (state.upcall.order = upMetrics.map(m=>m.id));
+        const ni = idx + dir;
+        if(ni<0 || ni>=order.length) return;
+        const x = order.splice(idx,1)[0];
+        order.splice(ni,0,x);
+      }
+
       function renderUpcall(){
         ensureUpcallState();
         if(!upProjectsWrapEl) return;
         const projects = state.upcall.projects || [];
+
+        if(upFocus){
+          if(upFocus.projectIndex >= projects.length) upFocus = null;
+          else{
+            const metricLen = state.upcall.order.length || upMetrics.length;
+            if(upFocus.metricIndex >= metricLen){
+              upFocus.metricIndex = metricLen-1;
+            }
+          }
+        }
+
         upProjectsWrapEl.innerHTML="";
         if(!projects.length){
           const msg = div("muted","ยังไม่มีโครงการสำหรับ UP Call ให้เพิ่มด้านบน");
           upProjectsWrapEl.appendChild(msg);
           return;
         }
+
+        const order = state.upcall.order && state.upcall.order.length
+          ? state.upcall.order
+          : upMetrics.map(m=>m.id);
+
         projects.forEach((p,idx)=>{
           const card = div("up-project-card");
           const header = div("up-project-header");
@@ -547,20 +660,68 @@
           const nameInput = input(p.name||"", "ชื่อโครงการ");
           nameInput.dataset.role="up-project-name";
           nameInput.dataset.index=idx;
-          const delBtn = btnDanger("ลบ", ()=>{
-            if(!confirm(`ลบโครงการ "${p.name||""}" ?`)) return;
+
+          const moveUpBtn = btnGhost("↑", ()=>{
             pushUndo();
-            state.upcall.projects.splice(idx,1);
-            saveState();
-            render();
+            moveUpProject(idx,-1);
+            saveState(); render();
           });
-          header.append(label, nameInput, delBtn);
+          moveUpBtn.dataset.role="up-move-project";
+          moveUpBtn.dataset.index=idx;
+          moveUpBtn.dataset.dir=-1;
+
+          const moveDownBtn = btnGhost("↓", ()=>{
+            pushUndo();
+            moveUpProject(idx,+1);
+            saveState(); render();
+          });
+          moveDownBtn.dataset.role="up-move-project";
+          moveDownBtn.dataset.index=idx;
+          moveDownBtn.dataset.dir=1;
+
+          const delBtn = btnDanger("ลบ", ()=>{/* handled in delegation */});
+          delBtn.dataset.role="up-del-project";
+          delBtn.dataset.index=idx;
+
+          header.append(label, nameInput, moveUpBtn, moveDownBtn, delBtn);
           card.appendChild(header);
 
           const grid = div("up-metric-grid");
-          upMetrics.forEach(m=>{
+
+          order.forEach((metricId,mi)=>{
+            const m = upMetrics.find(mm=>mm.id===metricId);
+            if(!m) return;
+
             const row = div("up-metric-row");
+            row.dataset.projectIndex = idx;
+            row.dataset.metricIndex = mi;
+
+            const moveBox = div("row");
+            moveBox.style.marginTop = "0";
+
+            const upBtn = document.createElement("button");
+            upBtn.className = "mini";
+            upBtn.textContent = "↑";
+            upBtn.dataset.role = "up-move-metric";
+            upBtn.dataset.metricIndex = mi;
+            upBtn.dataset.dir = "-1";
+
+            const downBtn = document.createElement("button");
+            downBtn.className = "mini";
+            downBtn.textContent = "↓";
+            downBtn.dataset.role = "up-move-metric";
+            downBtn.dataset.metricIndex = mi;
+            downBtn.dataset.dir = "1";
+
+            moveBox.append(upBtn,downBtn);
+
             const labelSpan = div("metric-label", m.label);
+            const left = div();
+            left.style.display="flex";
+            left.style.alignItems="center";
+            left.style.gap="4px";
+            left.append(moveBox,labelSpan);
+
             const controls = div("countWrap");
             const decBtn = document.createElement("button");
             decBtn.className="mini";
@@ -568,20 +729,46 @@
             decBtn.dataset.upaction="dec";
             decBtn.dataset.projectIndex=idx;
             decBtn.dataset.metricId=m.id;
+
             const val = div("count", String(p.metrics && typeof p.metrics[m.id]==="number" ? p.metrics[m.id] : 0));
+
             const incBtn = document.createElement("button");
             incBtn.className="mini";
             incBtn.textContent="+";
             incBtn.dataset.upaction="inc";
             incBtn.dataset.projectIndex=idx;
             incBtn.dataset.metricId=m.id;
+
             controls.append(decBtn,val,incBtn);
-            row.append(labelSpan,controls);
+
+            row.append(left,controls);
             grid.appendChild(row);
           });
+
           card.appendChild(grid);
           upProjectsWrapEl.appendChild(card);
         });
+
+        updateUpcallHighlight(false);
+      }
+
+      function updateUpcallHighlight(scroll=false){
+        if(!upProjectsWrapEl) return;
+        const rows = $$(".up-metric-row", upProjectsWrapEl);
+        rows.forEach(row=>{
+          const pi = Number(row.dataset.projectIndex);
+          const mi = Number(row.dataset.metricIndex);
+          const sel = upFocus && upFocus.projectIndex===pi && upFocus.metricIndex===mi;
+          row.classList.toggle("selected", !!sel);
+          if(sel && scroll){
+            row.scrollIntoView({block:"nearest", behavior:"smooth"});
+          }
+        });
+      }
+
+      function valuesForMetric(metricId){
+        const projects = state.upcall.projects || [];
+        return projects.map(p => (p.metrics && p.metrics[metricId]) || 0);
       }
 
       function buildUpcallSectionLines(){
@@ -589,11 +776,14 @@
         const projects = state.upcall.projects || [];
         if(!projects.length) return [];
         const lines = [];
+
+        // รายชื่อโครงการ
         projects.forEach(p=> lines.push(p.name || "(ไม่ระบุชื่อโครงการ)"));
         if(projects.length) lines.push("");
 
-        const valuesForMetric = (id)=> projects.map(p => (p.metrics && p.metrics[id]) || 0);
         const sumArr = (arr)=> arr.reduce((a,b)=>a+b,0);
+
+        // ค่าที่ติดต่อได้ (reachable) สำหรับแต่ละโครงการ
         const reachableVals = projects.map(p=>{
           let s=0;
           upMetrics.forEach(m=>{
@@ -604,23 +794,22 @@
           return s;
         });
 
-        const specs = [
-          {type:"metric",     id:"calls",          label:"โทรกี่สาย"},
-          {type:"reachable",  id:"reachable",      label:"ติดต่อได้"},
-          {type:"metric",     id:"nv_to_v",        label:"จากไม่ว่างเป็นว่าง"},
-          {type:"metric",     id:"v_to_nv",        label:"จากว่างเป็นไม่ว่าง"},
-          {type:"metric",     id:"v_still_v",      label:"ที่ว่างและยังว่างอยู่"},
-          {type:"metric",     id:"nv_still_nv",    label:"ที่ไม่ว่างและยังไม่ว่าง"},
-          {type:"metric",     id:"sold",           label:"ขายแล้ว"},
-          {type:"metric",     id:"wrong_number",   label:"เบอร์ผิด"},
-          {type:"metric",     id:"not_convenient", label:"ไม่สะดวกคุย"},
-          {type:"metric",     id:"no_answer",      label:"ไม่รับสาย"},
-          {type:"metric",     id:"not_release",    label:"ไม่ปล่อยเช่า"},
-          {type:"metric",     id:"phone_off",      label:"ปิดเครื่อง"},
-          {type:"metric",     id:"owner_self",     label:"เจ้าของอยู่เอง"},
-          {type:"metric",     id:"renovate",       label:"รีโนเวท"},
-          {type:"metric",     id:"no_agent",       label:"ไม่รับ Agent"},
-        ];
+        const order = state.upcall.order && state.upcall.order.length
+          ? state.upcall.order
+          : upMetrics.map(m=>m.id);
+
+        const specs = [];
+        order.forEach(mid=>{
+          if(mid==="calls"){
+            specs.push({type:"metric", id:"calls", label:"โทรกี่สาย"});
+            specs.push({type:"reachable", id:"reachable", label:"ติดต่อได้"});
+          }else{
+            const m = upMetrics.find(mm=>mm.id===mid);
+            if(m){
+              specs.push({type:"metric", id:mid, label:m.label});
+            }
+          }
+        });
 
         specs.forEach(spec=>{
           let vals;
@@ -634,21 +823,29 @@
       }
 
       // =========================================================
-      // Keyboard (global): arrows, +/- , Ctrl+Z  (เหมือนโค้ดเดิม)
+      // Keyboard (global)
       function initKeyboard(){
         document.addEventListener("keydown",(e)=>{
-          // ignore while typing
           const tag=(document.activeElement && document.activeElement.tagName)||"";
           if(tag==="INPUT"||tag==="TEXTAREA") return;
 
+          // Undo
           if(e.ctrlKey && (e.key==="z"||e.key==="Z")){ e.preventDefault(); undo(); return; }
 
+          // ถ้าอยู่ในโหมด UP Call (มี focus grid)
+          if(upFocus && ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight","+","=","-","_"].includes(e.key)){
+            e.preventDefault();
+            handleUpcallKey(e.key);
+            return;
+          }
+
+          // โหมด node ปกติ
           if(e.key==="+"||e.key==="="){ incFocused(+1); e.preventDefault(); return; }
           if(e.key==="-"||e.key==="_"){ incFocused(-1); e.preventDefault(); return; }
 
           if(e.key==="ArrowDown"){ moveFocusFlat(+1); e.preventDefault(); return; }
           if(e.key==="ArrowUp"){ moveFocusFlat(-1); e.preventDefault(); return; }
-          if(e.key==="ArrowRight"){ // dive
+          if(e.key==="ArrowRight"){
             const n = getNodeByPath(focusPath);
             if(n && n.children && n.children.length>0){ setFocusPath([...focusPath,0], true); }
             e.preventDefault(); return;
@@ -660,8 +857,54 @@
         }, true);
       }
 
+      function handleUpcallKey(key){
+        ensureUpcallState();
+        const projects = state.upcall.projects || [];
+        if(!upFocus || !projects.length) return;
+        const COLS = 2;
+        let {projectIndex, metricIndex} = upFocus;
+        const metricLen = state.upcall.order.length || upMetrics.length;
+
+        if(key==="ArrowRight"){
+          metricIndex = Math.min(metricLen-1, metricIndex+1);
+        }else if(key==="ArrowLeft"){
+          metricIndex = Math.max(0, metricIndex-1);
+        }else if(key==="ArrowDown"){
+          metricIndex = Math.min(metricLen-1, metricIndex+COLS);
+        }else if(key==="ArrowUp"){
+          metricIndex = Math.max(0, metricIndex-COLS);
+        }else if(key==="+" || key==="="){
+          changeUpMetric(projectIndex, metricIndex, +1);
+        }else if(key==="-" || key==="_"){
+          changeUpMetric(projectIndex, metricIndex, -1);
+        }
+
+        upFocus = {projectIndex, metricIndex};
+        updateUpcallHighlight(true);
+      }
+
+      function changeUpMetric(pIndex, mIndex, delta){
+        ensureUpcallState();
+        const projects = state.upcall.projects || [];
+        const proj = projects[pIndex];
+        const order = state.upcall.order && state.upcall.order.length
+          ? state.upcall.order
+          : upMetrics.map(m=>m.id);
+        const metricId = order[mIndex];
+        const metric = upMetrics.find(m=>m.id===metricId);
+
+        if(!proj || !metric) return;
+        if(!proj.metrics) proj.metrics={};
+
+        const cur = Number(proj.metrics[metric.id] || 0);
+        proj.metrics[metric.id] = Math.max(0, cur+delta);
+
+        saveState();
+        render();
+      }
+
       // =========================================================
-      // Render Tree
+      // Render Tree (mode ปกติ)
       function render(){
         renderUpcall();
 
@@ -682,14 +925,12 @@
         const node = div("node main");
         node.dataset.path = key([mi]);
 
-        // Header (title + add level2 / add calc)
         const header = div("header");
         const title  = div("title", main.kind==="sum" ? "//////////SUM//////////" : main.title);
         header.appendChild(title);
 
         const ops = div("row");
         if(main.kind!=="sum"){
-          // Add level2 section
           const subName = input("", "เพิ่ม node ขั้น 2 (ย่อหน้า)");
           const modeSel = select([{v:"count",t:"Count"},{v:"text",t:"Text"}]);
           const addBtn  = btn("เพิ่ม", ()=> {
@@ -702,7 +943,6 @@
           });
           ops.append(subName, modeSel, addBtn);
 
-          // Add calc at main level
           const addCalc = btnGhost("+ Calc", ()=>{
             pushUndo();
             main.children = main.children || [];
@@ -711,7 +951,6 @@
           });
           ops.appendChild(addCalc);
         }else{
-          // SUM: only calc nodes allowed
           const addCalc = btn("เพิ่ม CALC (SUM)", ()=>{
             pushUndo();
             main.children = main.children || [];
@@ -721,7 +960,6 @@
           ops.appendChild(addCalc);
         }
 
-        // Move / delete main (except SUM cannot move/remove)
         const rightOps = div("row");
         if(main.kind!=="sum"){
           rightOps.append(
@@ -740,7 +978,6 @@
         header.append(ops, rightOps);
         node.appendChild(header);
 
-        // Children (level2 or calc)
         const childrenWrap = div("children");
         (main.children||[]).forEach((child, si)=>{
           if(child.kind==="calc"){
@@ -753,7 +990,12 @@
         node.appendChild(childrenWrap);
 
         registerFocusable(node, [mi]);
-        node.addEventListener("click",(e)=>{ e.stopPropagation(); setFocusPath([mi], true); });
+        node.addEventListener("click",(e)=>{
+          e.stopPropagation();
+          upFocus = null;
+          updateUpcallHighlight(false);
+          setFocusPath([mi], true);
+        });
 
         return node;
       }
@@ -763,12 +1005,10 @@
         node.dataset.path = key(path);
         if(l2.children && l2.children.length>0) node.classList.add("has-children");
 
-        // header
         const head = div("sub-header");
         const title = div("title", l2.title);
         title.title = "ดับเบิลคลิกเพื่อแก้ชื่อ"; title.ondblclick = ()=> renameNode(l2);
 
-        // mode & value (hide when has children)
         const modeWrap = div("modeWrap");
         const modeSel = select([{v:"count",t:"Count"},{v:"text",t:"Text"}], l2.mode||"count");
         modeSel.addEventListener("change", ()=>{
@@ -815,7 +1055,6 @@
         head.append(title, modeWrap, countWrap, leftOps);
         node.appendChild(head);
 
-        // Level3 area + add controls
         const group = div("level3-wrap");
         const addRow = div("row");
         const subName = input("", "เพิ่ม node ขั้น 3");
@@ -844,7 +1083,12 @@
         if((l2.children||[]).length) node.appendChild(group);
 
         registerFocusable(node, path);
-        node.addEventListener("click",(e)=>{ e.stopPropagation(); setFocusPath(path,true); });
+        node.addEventListener("click",(e)=>{
+          e.stopPropagation();
+          upFocus = null;
+          updateUpcallHighlight(false);
+          setFocusPath(path,true);
+        });
 
         return node;
       }
@@ -895,7 +1139,12 @@
         node.appendChild(head);
 
         registerFocusable(node, path);
-        node.addEventListener("click",(e)=>{ e.stopPropagation(); setFocusPath(path, true); });
+        node.addEventListener("click",(e)=>{
+          e.stopPropagation();
+          upFocus = null;
+          updateUpcallHighlight(false);
+          setFocusPath(path, true);
+        });
 
         return node;
       }
@@ -929,16 +1178,20 @@
         node.appendChild(head);
 
         registerFocusable(node, path);
-        node.addEventListener("click",(e)=>{ e.stopPropagation(); setFocusPath(path, true); });
+        node.addEventListener("click",(e)=>{
+          e.stopPropagation();
+          upFocus = null;
+          updateUpcallHighlight(false);
+          setFocusPath(path, true);
+        });
 
         return node;
       }
 
       // =========================================================
-      // Formula editor (เหมือนเดิม)
+      // Formula editor
       function openFormulaEditor(calcObj, path){
         editingCalcObj = calcObj;
-        editingCalcRef = { path };
         editingParts = (calcObj.formula||[]).map(x=>({nodeId:x.nodeId,sign:x.sign}));
 
         formulaSourceSel.innerHTML="";
@@ -1007,7 +1260,7 @@
       }
 
       // =========================================================
-      // Data helpers (เดิม + upcall)
+      // Data helpers
       function defaultState(){
         return {
           userName:"",
@@ -1079,10 +1332,12 @@
       }
 
       // =========================================================
-      // Focus & Keyboard helpers (เดิม)
+      // Focus & Keyboard helpers (node ปกติ)
       function registerFocusable(el, path){ flatFocus.push({path:path.slice(), el}); }
       function setFocusPath(path, scroll=false){
         focusPath = path.slice();
+        upFocus = null;
+        updateUpcallHighlight(false);
         highlightFocus(scroll);
       }
       function highlightFocus(scroll=false){
@@ -1133,7 +1388,7 @@
       }
 
       // =========================================================
-      // Report builder (เพิ่มส่วน UP Call ต่อจาก header)
+      // Report builder
       function buildReport(){
         const name = (state.userName||"PHANToM").trim();
         const d = dateEl.value ? new Date(dateEl.value): new Date();
@@ -1200,7 +1455,9 @@
           ensureUpcallState();
           saveState(); render();
           tip("ย้อนกลับแล้ว",true);
-        }catch{ tip("ย้อนกลับไม่สำเร็จ"); }
+        }catch{
+          tip("ย้อนกลับไม่สำเร็จ");
+        }
       }
 
       // =========================================================
@@ -1256,8 +1513,22 @@
       function isoDate(){ const d=new Date(); return d.toISOString().split("T")[0]; }
       function pad2(n){ return String(n).padStart(2,"0"); }
       function key(path){ return path.join("."); }
-      function tip(t, ok=false){ if(!toastEl) return; toastEl.textContent=t; toastEl.style.borderColor=ok?"var(--ok)":"var(--pri)"; toastEl.classList.add("show"); setTimeout(()=>toastEl.classList.remove("show"),1300); }
-      async function copy(text){ try{ await navigator.clipboard.writeText(text); }catch{ const ta=document.createElement("textarea"); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); } }
+      function tip(t, ok=false){
+        if(!toastEl) return;
+        toastEl.textContent=t;
+        toastEl.style.borderColor=ok?"var(--ok)":"var(--pri)";
+        toastEl.classList.add("show");
+        setTimeout(()=>toastEl.classList.remove("show"),1300);
+      }
+      async function copy(text){
+        try{
+          await navigator.clipboard.writeText(text);
+        }catch{
+          const ta=document.createElement("textarea");
+          ta.value=text; document.body.appendChild(ta); ta.select();
+          document.execCommand("copy"); ta.remove();
+        }
+      }
       function uid(){ return Math.random().toString(36).slice(2,9); }
     })();
   </script>
