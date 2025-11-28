@@ -277,9 +277,10 @@
 
       <button id="addCalcToRoot" class="ghost" title="สร้าง node สำหรับคำนวณผลรวมจากหัวข้อหลักอื่น">+ Calc (Main)</button>
 
-      <button id="exportSettings" class="ghost" title="บันทึกโครงสร้าง+ค่าเป็นไฟล์ .txt (สำรอง/ย้ายเครื่อง)">⤓ Export</button>
+      <!-- แก้ไอคอนให้ถูกทิศ -->
+      <button id="exportSettings" class="ghost" title="บันทึกโครงสร้าง+ค่าเป็นไฟล์ .txt (สำรอง/ย้ายเครื่อง)">⤒ Export</button>
       <label class="ghost" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer" title="โหลดไฟล์ .txt ที่เคย Export ไว้กลับมาใช้">
-        ⤒ Import
+        ⤓ Import
         <input id="importSettings" type="file" accept=".txt" hidden>
       </label>
 
@@ -780,7 +781,9 @@
         ensureUpcallState();
         state.upcall.projects.forEach(p=>{
           if(!p.metrics) p.metrics={};
-          upMetrics.forEach(m=>{ p.metrics[m.id]=0; });
+          upMetrics.forEach(m=>{
+            p.metrics[m.id]=0;
+          });
         });
       }
 
@@ -892,6 +895,7 @@
 
           const toggleBtn = document.createElement("button");
           toggleBtn.className="mini ghost";
+          toggleBtn.type="button";
           toggleBtn.textContent = p.collapsed ? "▶" : "◀";
           toggleBtn.title = p.collapsed ? "ขยายรายละเอียดของโครงการนี้" : "พับรายละเอียดของโครงการนี้";
           toggleBtn.onclick = (e)=>{
@@ -904,6 +908,7 @@
 
           const moveUpBtn = document.createElement("button");
           moveUpBtn.className="mini ghost";
+          moveUpBtn.type="button";
           moveUpBtn.textContent="↑";
           moveUpBtn.title="ย้ายโครงการนี้ขึ้น";
           moveUpBtn.onclick = (e)=>{
@@ -915,6 +920,7 @@
 
           const moveDownBtn = document.createElement("button");
           moveDownBtn.className="mini ghost";
+          moveDownBtn.type="button";
           moveDownBtn.textContent="↓";
           moveDownBtn.title="ย้ายโครงการนี้ลง";
           moveDownBtn.onclick = (e)=>{
@@ -926,6 +932,7 @@
 
           const delBtn = document.createElement("button");
           delBtn.className="mini danger";
+          delBtn.type="button";
           delBtn.textContent="🗑";
           delBtn.title="ลบโครงการนี้และค่าการโทรทั้งหมด";
           delBtn.onclick = (e)=>{
@@ -972,6 +979,7 @@
 
             const upBtn = document.createElement("button");
             upBtn.className = "mini";
+            upBtn.type="button";
             upBtn.textContent = "↑";
             upBtn.dataset.role = "up-move-metric";
             upBtn.dataset.metricIndex = mi;
@@ -980,6 +988,7 @@
 
             const downBtn = document.createElement("button");
             downBtn.className = "mini";
+            downBtn.type="button";
             downBtn.textContent = "↓";
             downBtn.dataset.role = "up-move-metric";
             downBtn.dataset.metricIndex = mi;
@@ -996,23 +1005,39 @@
             left.append(moveBox,labelSpan);
 
             const controls = div("countWrap");
+
+            // ★★ แก้ปุ่ม +/- ให้ใช้เมาส์ได้แน่นอน ★★
             const decBtn = document.createElement("button");
             decBtn.className="mini";
+            decBtn.type="button";
             decBtn.textContent="−";
             decBtn.dataset.upaction="dec";
             decBtn.dataset.projectIndex=idx;
             decBtn.dataset.metricId=m.id;
             decBtn.title = "ลดค่าลง 1";
+            decBtn.addEventListener("click",(ev)=>{
+              ev.stopPropagation();
+              ev.preventDefault();
+              pushUndo();
+              changeUpMetric(idx, mi, -1);
+            });
 
             const val = div("count", String(p.metrics && typeof p.metrics[m.id]==="number" ? p.metrics[m.id] : 0));
 
             const incBtn = document.createElement("button");
             incBtn.className="mini";
+            incBtn.type="button";
             incBtn.textContent="+";
             incBtn.dataset.upaction="inc";
             incBtn.dataset.projectIndex=idx;
             incBtn.dataset.metricId=m.id;
             incBtn.title = "เพิ่มค่าขึ้น 1";
+            incBtn.addEventListener("click",(ev)=>{
+              ev.stopPropagation();
+              ev.preventDefault();
+              pushUndo();
+              changeUpMetric(idx, mi, +1);
+            });
 
             controls.append(decBtn,val,incBtn);
 
