@@ -61,21 +61,25 @@
   }
 
   // upload handlers
-  drop.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    drop.classList.add('drag');
-  });
-  drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
-  drop.addEventListener('drop', (e) => {
-    e.preventDefault();
-    drop.classList.remove('drag');
-    handleFiles(e.dataTransfer.files);
-  });
-  drop.addEventListener('click', () => picker.click());
-  picker.addEventListener('change', (e) => handleFiles(e.target.files));
+  if (drop) {
+    drop.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      drop.classList.add('drag');
+    });
+    drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
+    drop.addEventListener('drop', (e) => {
+      e.preventDefault();
+      drop.classList.remove('drag');
+      handleFiles(e.dataTransfer.files);
+    });
+    drop.addEventListener('click', () => picker && picker.click());
+  }
+  if (picker) {
+    picker.addEventListener('change', (e) => handleFiles(e.target.files));
+  }
 
   function handleFiles(fs) {
-    const arr = Array.from(fs || []).filter((f) => f.type.startsWith('image/'));
+    const arr = Array.from(fs || []).filter((f) => f.type && f.type.startsWith('image/'));
     if (!arr.length) {
       toastMsg('ไม่มีไฟล์ภาพ');
       return;
@@ -99,7 +103,7 @@
       r.readAsDataURL(f);
     });
     toastMsg(`เพิ่มรูป ${arr.length} ไฟล์`, true);
-    picker.value = '';
+    if (picker) picker.value = '';
   }
 
   function render() {
@@ -172,35 +176,41 @@
     });
   }
 
-  btnHeu.addEventListener('click', () => {
-    if (!images.length) return toastMsg('ยังไม่มีภาพ');
-    images.sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true }));
-    render();
-    toastMsg('เรียงตามชื่อไฟล์แล้ว', true);
-  });
+  if (btnHeu) {
+    btnHeu.addEventListener('click', () => {
+      if (!images.length) return toastMsg('ยังไม่มีภาพ');
+      images.sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true }));
+      render();
+      toastMsg('เรียงตามชื่อไฟล์แล้ว', true);
+    });
+  }
 
-  btnClear.addEventListener('click', () => {
-    images = [];
-    render();
-    toastMsg('ล้างทั้งหมด', true);
-  });
+  if (btnClear) {
+    btnClear.addEventListener('click', () => {
+      images = [];
+      render();
+      toastMsg('ล้างทั้งหมด', true);
+    });
+  }
 
-  btnExport.addEventListener('click', async () => {
-    if (!images.length) return toastMsg('ไม่มีภาพสำหรับส่งออก');
-    const q = Math.max(0.6, Math.min(0.95, parseFloat(qualityEl?.value) || 0.9));
-    const covers = images.filter((x) => x.cover);
-    const rest = images.filter((x) => !x.cover);
-    const list = [...covers, ...rest];
+  if (btnExport) {
+    btnExport.addEventListener('click', async () => {
+      if (!images.length) return toastMsg('ไม่มีภาพสำหรับส่งออก');
+      const q = Math.max(0.6, Math.min(0.95, parseFloat(qualityEl?.value) || 0.9));
+      const covers = images.filter((x) => x.cover);
+      const rest = images.filter((x) => !x.cover);
+      const list = [...covers, ...rest];
 
-    const zip = new JSZip();
-    for (let i = 0; i < list.length; i++) {
-      const blob = await dataToJpgBlob(list[i].src, q);
-      zip.file(`${i + 1}.jpg`, blob);
-    }
-    const out = await zip.generateAsync({ type: 'blob' });
-    saveAs(out, 'PHANToM_Sorted.zip');
-    toastMsg('ส่งออก ZIP เรียบร้อย', true);
-  });
+      const zip = new JSZip();
+      for (let i = 0; i < list.length; i++) {
+        const blob = await dataToJpgBlob(list[i].src, q);
+        zip.file(`${i + 1}.jpg`, blob);
+      }
+      const out = await zip.generateAsync({ type: 'blob' });
+      saveAs(out, 'PHANToM_Sorted.zip');
+      toastMsg('ส่งออก ZIP เรียบร้อย', true);
+    });
+  }
 
   async function dataToJpgBlob(data, q) {
     const im = await dataToImg(data);
