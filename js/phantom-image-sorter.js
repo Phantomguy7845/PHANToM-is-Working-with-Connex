@@ -140,10 +140,15 @@
       const idxEl = document.createElement('div');
       idxEl.className = 'idx';
       idxEl.textContent = i + 1;
-      const tag = document.createElement('div');
-      tag.className = 'tag';
-      tag.textContent = x.orientation || '';
-      bar.append(idxEl, tag);
+      // append index to bar
+      bar.appendChild(idxEl);
+      // create orientation overlay on the item instead of inside the bar
+      if (x.orientation) {
+        const orient = document.createElement('div');
+        orient.className = 'orient';
+        orient.textContent = x.orientation;
+        item.appendChild(orient);
+      }
 
       // drag reorder events
       item.addEventListener('dragstart', (e) => {
