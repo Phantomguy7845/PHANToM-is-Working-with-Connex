@@ -45,7 +45,15 @@
     }
     .item.dragging{opacity:.7;outline:2px dashed var(--a1)}
     .thumb{aspect-ratio:1/1;display:block;width:100%;object-fit:cover}
-    .bar{display:flex;align-items:center;justify-content:space-between;padding:8px;gap:8px;background:rgba(255,255,255,.03)}
+    .bar{
+      display:flex;
+      align-items:center;
+      /* align contents to the left instead of spreading them to avoid overlap with the zoom button */
+      justify-content:flex-start;
+      gap:8px;
+      padding:8px;
+      background:rgba(255,255,255,.03);
+    }
     .idx{font-weight:800;font-size:.95rem;opacity:.9}
     .tags{display:flex;gap:6px;flex-wrap:wrap}
     /* orientation tag styling */
@@ -77,18 +85,7 @@
     .zoombtn{position:absolute;bottom:8px;right:8px;background:rgba(255,255,255,.8);border:1px solid var(--edge);border-radius:8px;padding:4px 8px;font-size:.75rem;color:#000;cursor:pointer;transition:background .2s}
     .zoombtn:hover{background:rgba(255,255,255,1)}
 
-    /* orientation overlay shown on each image */
-    .orient{
-      position:absolute;
-      bottom:8px;
-      left:8px;
-      background:rgba(0,0,0,.6);
-      color:#fff;
-      font-size:.7rem;
-      padding:3px 6px;
-      border-radius:6px;
-      pointer-events:none;
-    }
+    /* Orientation overlay no longer used; orientation tags use .tag styling */
   </style>
 </head>
 <body>
