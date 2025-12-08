@@ -142,12 +142,13 @@
       idxEl.textContent = i + 1;
       // append index to bar
       bar.appendChild(idxEl);
-      // create orientation overlay on the item instead of inside the bar
+      // create an orientation label inside the bar so it doesn’t overlap other controls
       if (x.orientation) {
-        const orient = document.createElement('div');
-        orient.className = 'orient';
-        orient.textContent = x.orientation;
-        item.appendChild(orient);
+        const orientTag = document.createElement('div');
+        // reuse the existing .tag styling for orientation labels
+        orientTag.className = 'tag';
+        orientTag.textContent = x.orientation;
+        bar.appendChild(orientTag);
       }
 
       // drag reorder events
@@ -165,16 +166,13 @@
         render();
       });
 
-      // zoom button
+      // zoom button: show overlay on click (no need to hold)
       const zoomBtn = document.createElement('button');
       zoomBtn.className = 'zoombtn';
       zoomBtn.textContent = 'ขยาย';
-      zoomBtn.addEventListener('pointerdown', () => {
+      zoomBtn.addEventListener('click', () => {
         showOverlay(x.src);
       });
-      const hide = () => hideOverlay();
-      zoomBtn.addEventListener('pointerup', hide);
-      zoomBtn.addEventListener('pointerleave', hide);
 
       item.append(im, coverBtn, delBtn, bar, zoomBtn);
       grid.appendChild(item);
