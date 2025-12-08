@@ -34,13 +34,30 @@
     button.ok{background:var(--ok)}
     .small{font-size:.9rem}
     .grid{--w:180px;display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--w),1fr));gap:10px}
-    .item{position:relative;border:1px solid var(--edge);border-radius:14px;overflow:hidden;background:#0e1a3a}
+    .item{
+      position:relative;
+      border:1px solid var(--edge);
+      border-radius:14px;
+      overflow:hidden;
+      background:#0e1a3a;
+      /* animate reposition for smoother reordering */
+      transition:transform .2s ease, box-shadow .2s ease;
+    }
     .item.dragging{opacity:.7;outline:2px dashed var(--a1)}
     .thumb{aspect-ratio:1/1;display:block;width:100%;object-fit:cover}
     .bar{display:flex;align-items:center;justify-content:space-between;padding:8px;gap:8px;background:rgba(255,255,255,.03)}
     .idx{font-weight:800;font-size:.95rem;opacity:.9}
     .tags{display:flex;gap:6px;flex-wrap:wrap}
-    .tag{font-size:.7rem;border:1px solid var(--edge);padding:3px 8px;border-radius:999px;color:var(--muted);white-space:nowrap}
+    /* orientation tag styling */
+    .tag{
+      font-size:.75rem;
+      padding:3px 8px;
+      border-radius:8px;
+      border:1px solid var(--edge);
+      background:rgba(255,255,255,.06);
+      color:var(--a1);
+      white-space:nowrap;
+    }
     .cover{position:absolute;right:8px;top:8px;background:rgba(0,0,0,.45);border:1px solid var(--edge);padding:4px 6px;border-radius:10px;font-size:.75rem}
     .cover.active{background:linear-gradient(90deg,var(--pri),var(--a1));color:#001018}
     .delbtn{position:absolute;left:8px;top:8px;background:rgba(239,68,68,.9);border:0;padding:4px 7px;border-radius:9px;font-size:.75rem;color:#fff}
@@ -59,6 +76,19 @@
     /* expand button styling */
     .zoombtn{position:absolute;bottom:8px;right:8px;background:rgba(255,255,255,.8);border:1px solid var(--edge);border-radius:8px;padding:4px 8px;font-size:.75rem;color:#000;cursor:pointer;transition:background .2s}
     .zoombtn:hover{background:rgba(255,255,255,1)}
+
+    /* orientation overlay shown on each image */
+    .orient{
+      position:absolute;
+      bottom:8px;
+      left:8px;
+      background:rgba(0,0,0,.6);
+      color:#fff;
+      font-size:.7rem;
+      padding:3px 6px;
+      border-radius:6px;
+      pointer-events:none;
+    }
   </style>
 </head>
 <body>
