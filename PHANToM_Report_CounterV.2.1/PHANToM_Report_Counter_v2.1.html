@@ -190,6 +190,15 @@
     .node.selected{border-color:var(--pri);box-shadow:0 0 0 2px rgba(59,130,246,.35)}
     .node .header, .node .sub-header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 
+    /* ★ Hidden node visual ★ */
+    .node.hidden-node{
+      opacity:.55;
+    }
+    .node.hidden-node .title{
+      text-decoration:line-through;
+      opacity:.9;
+    }
+
     /* Main node = sheet */
     .node.main{
       background:linear-gradient(180deg,#101b33,#0a0f1f);
@@ -206,7 +215,7 @@
     .node.level2.has-children .modeWrap{display:none}
 
     /* Level3 node = small boxes grid */
-    .level3-wrap{display:flex;flex-wrap:wrap-reverse;gap:8px}
+    .level3-wrap{display:flex;flex-wrap:wrap;gap:8px}
     .node.level3{
       display:inline-flex;flex-direction:column;gap:6px;
       background:#1a2238;border:1px solid var(--edge);
@@ -430,6 +439,7 @@
       state.theme = state.theme || "dark";
       ensureSumSection();
       ensureUpcallState();
+      normalizeVisibility();
       let focusPath = [];
       let undoStack = [];
       let upFocus = null;          // {projectIndex, metricIndex}
@@ -528,7 +538,7 @@
             const t = (newMainTitleEl.value||"").trim();
             if(!t){ tip("กรอกชื่อหัวข้อหลักก่อน"); return; }
             pushUndo();
-            state.mains.push({ id:uid(), title:t, kind:"main", children:[] });
+            state.mains.push({ id:uid(), title:t, kind:"main", children:[], hidden:false });
             newMainTitleEl.value="";
             saveState(); render();
           });
@@ -568,6 +578,7 @@
                 state.theme = state.theme || "dark";
                 ensureSumSection();
                 ensureUpcallState();
+                normalizeVisibility();
                 applyTheme(state.theme);
                 saveState(); render(); tip("Import เรียบร้อย",true);
               }catch{
@@ -591,12 +602,13 @@
 
         if(resetAllBtn){
           resetAllBtn.addEventListener("click", ()=>{
-            if(!confirm("คุณแน่ใจหรือไม่ว่าจะ 'ล้างทุกอย่าง'?\\nข้อมูลทั้งหมด รวมถึงโครงสร้างและตัวเลขจะถูกลบ และไม่สามารถย้อนกลับได้.")) return;
+            if(!confirm("คุณแน่ใจหรือไม่ว่าจะ 'ล้างทุกอย่าง'?\nข้อมูลทั้งหมด รวมถึงโครงสร้างและตัวเลขจะถูกลบ และไม่สามารถย้อนกลับได้.")) return;
             pushUndo();
             state = defaultState();
             state.theme = state.theme || "dark";
             ensureSumSection();
             ensureUpcallState();
+            normalizeVisibility();
             upFocus = null;
             upProjectFocus = null;
             focusPath = [];
@@ -651,7 +663,7 @@
         }
         if(upResetUpcallBtn){
           upResetUpcallBtn.addEventListener("click", ()=>{
-            if(!confirm("คุณต้องการรีเซ็ตค่าการโทร (UP Call) สำหรับทุกโครงการวันนี้หรือไม่?\\nจะล้างเฉพาะตัวเลขการโทร แต่ไม่ลบโครงการ.")) return;
+            if(!confirm("คุณต้องการรีเซ็ตค่าการโทร (UP Call) สำหรับทุกโครงการวันนี้หรือไม่?\nจะล้างเฉพาะตัวเลขการโทร แต่ไม่ลบโครงการ.")) return;
             pushUndo();
             resetUpcallCounts();
             saveState();
@@ -937,7 +949,7 @@
           delBtn.title="ลบโครงการนี้และค่าการโทรทั้งหมด";
           delBtn.onclick = (e)=>{
             e.stopPropagation();
-            if(!confirm(`ต้องการลบโครงการ "${p.name||""}" ทั้งหมดหรือไม่?\\nค่าการโทรทั้งหมดของโครงการนี้จะถูกลบถาวร.`)) return;
+            if(!confirm(`ต้องการลบโครงการ "${p.name||""}" ทั้งหมดหรือไม่?\nค่าการโทรทั้งหมดของโครงการนี้จะถูกลบถาวร.`)) return;
             pushUndo();
             state.upcall.projects.splice(idx,1);
             saveState();
@@ -1006,7 +1018,6 @@
 
             const controls = div("countWrap");
 
-            // ★★ แก้ปุ่ม +/- ให้ใช้เมาส์ได้แน่นอน ★★
             const decBtn = document.createElement("button");
             decBtn.className="mini";
             decBtn.type="button";
@@ -1287,6 +1298,7 @@
       function renderMain(main, mi){
         const node = div("node main");
         node.dataset.path = key([mi]);
+        if(main.hidden) node.classList.add("hidden-node");
 
         const header = div("header");
         const title  = div("title", main.kind==="sum" ? "//////////SUM//////////" : main.title);
@@ -1328,18 +1340,28 @@
 
         const rightOps = div("row");
         if(main.kind!=="sum"){
+          const eyeB = btnMini(main.hidden ? "🙈" : "👁", ()=>{
+            pushUndo();
+            main.hidden = !main.hidden;
+            saveState();
+            render();
+          });
+          eyeB.title = main.hidden
+            ? "แสดงหัวข้อหลักนี้ในรายงาน/ตัวอย่าง"
+            : "ซ่อนหัวข้อหลักนี้ไม่ให้แสดงในรายงาน/ตัวอย่าง";
+
           const upB = btnGhost("↑", ()=>{ pushUndo(); moveMain(mi,-1); });
           upB.title = "ย้ายหัวข้อหลักนี้ขึ้น";
           const downB = btnGhost("↓", ()=>{ pushUndo(); moveMain(mi,+1); });
           downB.title = "ย้ายหัวข้อหลักนี้ลง";
           const delB = btnDanger("ลบ", ()=>{
-            if(!confirm(`ต้องการลบหัวข้อหลัก "${main.title}" ทั้งหมดหรือไม่?\\nลูกทั้งหมดภายในหัวข้อนี้จะถูกลบถาวร.`)) return;
+            if(!confirm(`ต้องการลบหัวข้อหลัก "${main.title}" ทั้งหมดหรือไม่?\nลูกทั้งหมดภายในหัวข้อนี้จะถูกลบถาวร.`)) return;
             pushUndo();
             state.mains.splice(mi,1);
             saveState(); render();
           });
           delB.title = "ลบหัวข้อหลักและลูกทั้งหมด";
-          rightOps.append(upB, downB, delB);
+          rightOps.append(eyeB, upB, downB, delB);
         }else{
           rightOps.append(div("muted","(ตำแหน่งคงที่ด้านล่าง)"));
         }
@@ -1372,6 +1394,7 @@
         const node = div("node level2");
         node.dataset.path = key(path);
         if(l2.children && l2.children.length>0) node.classList.add("has-children");
+        if(l2.hidden) node.classList.add("hidden-node");
 
         const head = div("sub-header");
         const title = div("title", l2.title);
@@ -1411,6 +1434,16 @@
         }
 
         const leftOps = div("row");
+        const eyeB = btnMini(l2.hidden ? "🙈" : "👁", ()=>{
+          pushUndo();
+          l2.hidden = !l2.hidden;
+          saveState();
+          render();
+        });
+        eyeB.title = l2.hidden
+          ? "แสดงหัวข้อนี้ในรายงาน/ตัวอย่าง"
+          : "ซ่อนหัวข้อนี้ไม่ให้แสดงในรายงาน/ตัวอย่าง";
+
         const upB = btnGhost("↑", ()=>{ pushUndo(); moveChild(getNodeByPath([path[0]]), path, -1); });
         upB.title="ย้ายหัวข้อย่อยนี้ขึ้น";
         const downB = btnGhost("↓", ()=>{ pushUndo(); moveChild(getNodeByPath([path[0]]), path, +1); });
@@ -1424,7 +1457,7 @@
         });
         delB.title="ลบหัวข้อย่อยและลูกทั้งหมด";
 
-        leftOps.append(upB, downB, delB);
+        leftOps.append(eyeB, upB, downB, delB);
 
         head.append(title, modeWrap, countWrap, leftOps);
         node.appendChild(head);
@@ -1472,6 +1505,7 @@
       function renderLevel3(l3, path){
         const node = div("node level3");
         node.dataset.path = key(path);
+        if(l3.hidden) node.classList.add("hidden-node");
 
         const head = div("sub-header");
         const title = div("title", l3.title);
@@ -1502,6 +1536,16 @@
         }
 
         const ops = div("row");
+        const eyeB = btnMini(l3.hidden ? "🙈" : "👁", ()=>{
+          pushUndo();
+          l3.hidden = !l3.hidden;
+          saveState();
+          render();
+        });
+        eyeB.title = l3.hidden
+          ? "แสดง node นี้ในรายงาน/ตัวอย่าง"
+          : "ซ่อน node นี้ไม่ให้แสดงในรายงาน/ตัวอย่าง";
+
         const upB = btnGhost("↑", ()=>{ pushUndo(); moveChild(getNodeByPath([path[0],path[1]]), path, -1); });
         upB.title="ย้าย node นี้ขึ้น";
         const downB = btnGhost("↓", ()=>{ pushUndo(); moveChild(getNodeByPath([path[0],path[1]]), path, +1); });
@@ -1514,7 +1558,7 @@
           saveState(); render();
         });
         delB.title="ลบ node นี้";
-        ops.append(upB, downB, delB);
+        ops.append(eyeB, upB, downB, delB);
 
         head.append(title, modeWrap, countWrap, ops);
         node.appendChild(head);
@@ -1533,6 +1577,7 @@
       function renderCalcNode(calc, path){
         const node = div("node calc");
         node.dataset.path = key(path);
+        if(calc.hidden) node.classList.add("hidden-node");
 
         const head = div("sub-header");
         const title = div("title", calc.title);
@@ -1546,6 +1591,16 @@
         formBtn.title="แก้ไขสูตรคำนวณของ node นี้";
 
         const ops = div("row");
+        const eyeB = btnMini(calc.hidden ? "🙈" : "👁", ()=>{
+          pushUndo();
+          calc.hidden = !calc.hidden;
+          saveState();
+          render();
+        });
+        eyeB.title = calc.hidden
+          ? "แสดง node สูตรนี้ในรายงาน/ตัวอย่าง"
+          : "ซ่อน node สูตรนี้ไม่ให้แสดงในรายงาน/ตัวอย่าง";
+
         const parentPath = path.slice(0,-1);
         const parent = getNodeByPath(parentPath);
         const upB = btnGhost("↑", ()=>{ pushUndo(); moveChild(parent, path, -1); });
@@ -1558,6 +1613,9 @@
         });
         delB.title="ลบ node สูตรนี้";
 
+        head.append(title, div("formula", formulaText(calc)), valueBox, formBtn, ops.appendChild ? null : null);
+        // แก้ head.append ใหม่ให้รวม ops ด้วย
+        head.innerHTML = "";
         head.append(title, div("formula", formulaText(calc)), valueBox, formBtn, ops);
         node.appendChild(head);
 
@@ -1659,7 +1717,7 @@
       function ensureSumSection(){
         const idx = state.mains.findIndex(m=> m.kind==="sum");
         if(idx===-1){
-          state.mains.push({ id:uid(), title:"//////////SUM//////////", kind:"sum", children:[] });
+          state.mains.push({ id:uid(), title:"//////////SUM//////////", kind:"sum", children:[], hidden:false });
         }else if(idx !== state.mains.length-1){
           const x = state.mains.splice(idx,1)[0];
           state.mains.push(x);
@@ -1667,13 +1725,13 @@
       }
 
       function newLevel2Node(title, mode){
-        return { id:uid(), title, kind:"level2", mode:(mode||"count"), count:0, lines:[], children:[] };
+        return { id:uid(), title, kind:"level2", mode:(mode||"count"), count:0, lines:[], children:[], hidden:false };
       }
       function newLevel3Node(title, mode){
-        return { id:uid(), title, kind:"level3", mode:(mode||"count"), count:0, lines:[] };
+        return { id:uid(), title, kind:"level3", mode:(mode||"count"), count:0, lines:[], hidden:false };
       }
       function newCalcNode(title){
-        return { id:uid(), title, kind:"calc", formula:[] };
+        return { id:uid(), title, kind:"calc", formula:[], hidden:false };
       }
 
       function moveMain(i,dir){
@@ -1719,9 +1777,21 @@
       }
 
       // =========================================================
+      // Visibility normalization
+      function normalizeVisibility(){
+        if(!state || !Array.isArray(state.mains)) return;
+        const visit = (n)=>{
+          if(!n) return;
+          if(typeof n.hidden!=="boolean") n.hidden = false;
+          if(Array.isArray(n.children)) n.children.forEach(visit);
+        };
+        state.mains.forEach(visit);
+      }
+
+      // =========================================================
       // Focus & Keyboard helpers (ใช้ grid จากตำแหน่งบนจอ)
       function registerFocusable(el, path){
-        // ไม่ต้องเก็บ flat list แล้ว แต่คงไว้กัน error
+        // kept for compatibility
       }
 
       function setFocusPath(path, scroll=false){
@@ -1903,7 +1973,7 @@
       }
 
       // =========================================================
-      // Report builder
+      // Report builder (เคารพ hidden flag)
       function buildReport(){
         const name = (state.userName||"PHANToM").trim();
         const d = dateEl.value ? new Date(dateEl.value): new Date();
@@ -1918,8 +1988,10 @@
 
         state.mains.forEach(m=>{
           if(m.kind==="sum") return;
+          if(m.hidden) return;
           out.push(`////////// ${m.title} //////////`);
           (m.children||[]).forEach(l2=>{
+            if(l2.hidden) return;
             if(l2.kind==="calc"){
               out.push(`[ ${l2.title} ${evaluateCalc(l2)} ]`);
             }else{
@@ -1929,6 +2001,7 @@
                 (l2.lines||[]).forEach(t=> out.push(t));
               }
               (l2.children||[]).forEach(l3=>{
+                if(l3.hidden) return;
                 if(l3.kind==="calc"){
                   out.push(`- ${l3.title} ${evaluateCalc(l3)}`);
                 }else{
@@ -1947,6 +2020,7 @@
         out.push("//////////SUM//////////");
         const sumMain = state.mains.find(m=> m.kind==="sum");
         (sumMain.children||[]).forEach(calc=>{
+          if(calc.hidden) return;
           const v=evaluateCalc(calc);
           out.push(`${calc.title} ${v}`);
         });
@@ -1969,6 +2043,7 @@
           state.theme = state.theme || "dark";
           ensureSumSection();
           ensureUpcallState();
+          normalizeVisibility();
           applyTheme(state.theme);
           saveState(); render();
           tip("ย้อนกลับแล้ว",true);
