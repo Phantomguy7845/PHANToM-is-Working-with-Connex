@@ -1574,15 +1574,19 @@
         return node;
       }
 
+      /* ★★★★★ ส่วนที่แก้หลัก = ฟังก์ชันนี้ ★★★★★ */
       function renderCalcNode(calc, path){
         const node = div("node calc");
         node.dataset.path = key(path);
         if(calc.hidden) node.classList.add("hidden-node");
 
         const head = div("sub-header");
+
         const title = div("title", calc.title);
-        title.title="ดับเบิลคลิกเพื่อแก้ชื่อ";
+        title.title = "ดับเบิลคลิกเพื่อแก้ชื่อ";
         title.ondblclick = ()=> renameNode(calc);
+
+        const formulaDiv = div("formula", formulaText(calc));
 
         const val = evaluateCalc(calc);
         const valueBox = div("count", String(val));
@@ -1603,20 +1607,25 @@
 
         const parentPath = path.slice(0,-1);
         const parent = getNodeByPath(parentPath);
+
         const upB = btnGhost("↑", ()=>{ pushUndo(); moveChild(parent, path, -1); });
         upB.title="ย้าย node สูตรนี้ขึ้น";
+
         const downB = btnGhost("↓", ()=>{ pushUndo(); moveChild(parent, path, +1); });
         downB.title="ย้าย node สูตรนี้ลง";
+
         const delB = btnDanger("ลบ", ()=>{
           if(!confirm(`ต้องการลบ "${calc.title}" หรือไม่?`)) return;
-          pushUndo(); parent.children.splice(path[path.length-1],1); saveState(); render();
+          pushUndo();
+          parent.children.splice(path[path.length-1],1);
+          saveState();
+          render();
         });
         delB.title="ลบ node สูตรนี้";
 
-        head.append(title, div("formula", formulaText(calc)), valueBox, formBtn, ops.appendChild ? null : null);
-        // แก้ head.append ใหม่ให้รวม ops ด้วย
-        head.innerHTML = "";
-        head.append(title, div("formula", formulaText(calc)), valueBox, formBtn, ops);
+        ops.append(eyeB, upB, downB, delB);
+
+        head.append(title, formulaDiv, valueBox, formBtn, ops);
         node.appendChild(head);
 
         registerFocusable(node, path);
