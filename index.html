@@ -36,7 +36,170 @@ h1{font-size:2rem;margin:2rem 0 1.5rem;letter-spacing:1px;text-shadow:0 0 8px va
   box-shadow:0 8px 24px rgba(0,0,0,.25);
   backdrop-filter:blur(6px);
 }
-.card:hover{transform:translateY(-6px);border-color:var(--pri2);box-shadow:0 0 12px var(--pri2)}
+.card:hover{
+  transform:translateY(-6px);
+  border-color:var(--pri2);
+  box-shadow:0 0 12px var(--pri2);
+}
+
+/* 🎮 Game preview card */
+.card.game-card{
+  text-align:left;
+}
+
+.game-preview{
+  position:relative;
+  width:100%;
+  aspect-ratio:16/9;
+  border-radius:14px;
+  margin-bottom:14px;
+  overflow:hidden;
+  background:radial-gradient(circle at 20% 0%,#1f2937,#020617);
+  border:1px solid rgba(148,163,184,.4);
+  box-shadow:0 0 12px rgba(15,23,42,.9);
+}
+
+/* UI บนเกม */
+.game-preview .ui{
+  position:absolute;
+  top:6px;left:8px;right:8px;
+  display:flex;
+  justify-content:space-between;
+  font-size:10px;
+  color:#e5e7eb;
+  text-shadow:0 0 4px rgba(0,0,0,.9);
+  opacity:.9;
+}
+.game-preview .ui span:last-child{
+  color:#facc15;
+}
+
+/* ท้องฟ้ากับพื้น */
+.game-preview .sky{
+  position:absolute;
+  inset:0;
+  background:radial-gradient(circle at 50% 0%,#0ea5e9 0,#020617 55%,#020617 100%);
+  opacity:.35;
+}
+.game-preview .ground{
+  position:absolute;
+  left:0;right:0;bottom:0;
+  height:26px;
+  background:repeating-linear-gradient(
+    -45deg,
+    #6b7280 0,
+    #6b7280 10px,
+    #4b5563 10px,
+    #4b5563 20px
+  );
+  opacity:.9;
+}
+
+/* ตัว PHANToM */
+.game-preview .ghost{
+  position:absolute;
+  bottom:26px;
+  left:12%;
+  width:42px;height:42px;
+  border-radius:50%;
+  background:radial-gradient(circle at 20% 20%,#ffffff 0,#e5e7eb 45%,#a855f7 100%);
+  box-shadow:0 0 14px rgba(168,85,247,.9);
+  border:3px solid #020617;
+}
+.game-preview .ghost::before{
+  content:"";
+  position:absolute;
+  inset:7px;
+  border-radius:50%;
+  background:radial-gradient(circle at 30% 20%,#ffffff 0,#e5e7eb 60%,#c4b5fd 100%);
+}
+.game-preview .eye{
+  position:absolute;
+  top:15px;
+  width:9px;height:13px;
+  border-radius:50%;
+  background:radial-gradient(circle at 30% 20%,#f9a8d4 0,#0b1120 55%,#020617 100%);
+  box-shadow:0 0 3px rgba(15,23,42,.9);
+}
+.game-preview .eye.left{ left:15px; }
+.game-preview .eye.right{ right:15px; }
+.game-preview .eye::after{
+  content:"";
+  position:absolute;
+  top:3px;left:3px;
+  width:3px;height:3px;
+  border-radius:50%;
+  background:#fff;
+}
+.game-preview .cheek{
+  position:absolute;
+  bottom:11px;
+  width:5px;height:5px;
+  border-radius:50%;
+  background:rgba(244,114,182,.9);
+}
+.game-preview .cheek.left{ left:16px; }
+.game-preview .cheek.right{ right:16px; }
+.game-preview .smile{
+  position:absolute;
+  bottom:10px;left:50%;
+  width:14px;height:7px;
+  margin-left:-7px;
+  border-bottom:2px solid #111827;
+  border-radius:0 0 999px 999px;
+}
+
+/* อุปสรรคพื้น */
+.game-preview .ob-ground{
+  position:absolute;
+  bottom:26px;
+  left:58%;
+  width:16px;height:30px;
+  border-radius:3px 3px 0 0;
+  background:linear-gradient(to top,#166534,#4ade80);
+  box-shadow:0 0 8px rgba(22,101,52,.8);
+  animation:miniGroundMove 3s linear infinite;
+}
+
+/* นกบิน */
+.game-preview .ob-bird{
+  position:absolute;
+  bottom:80px;
+  left:76%;
+  width:22px;height:14px;
+  border-radius:4px;
+  background:radial-gradient(circle at 30% 30%,#fef3c7,#f97316);
+  box-shadow:0 0 6px rgba(248,250,252,.6);
+  transform:skewX(-10deg);
+  animation:miniBirdMove 2.6s ease-in-out infinite alternate;
+}
+
+/* เส้นพื้นเล็ก ๆ */
+.game-preview .dust{
+  position:absolute;
+  bottom:24px;
+  left:10%;
+  width:60%;
+  height:2px;
+  background:linear-gradient(90deg,transparent 0,#9ca3af 25%,transparent 50%,#6b7280 75%,transparent 100%);
+  opacity:.7;
+}
+
+/* แสงตอน hover */
+.card.game-card:hover .game-preview{
+  box-shadow:0 0 16px rgba(139,245,255,.7);
+  border-color:var(--pri2);
+}
+
+@keyframes miniGroundMove{
+  0%{transform:translateX(0)}
+  100%{transform:translateX(-18px)}
+}
+@keyframes miniBirdMove{
+  0%{transform:translateX(0) translateY(0)}
+  100%{transform:translateX(-10px) translateY(4px)}
+}
+
 a.btn{
   display:inline-block;margin-top:10px;padding:10px 18px;border-radius:10px;text-decoration:none;
   font-weight:600;background:linear-gradient(90deg,var(--pri1),var(--pri3),var(--pri2));
@@ -89,14 +252,13 @@ footer{margin:40px 0;font-size:.9rem;opacity:.7;text-align:center}
 <div class="grid" id="grid">
 
   <div class="card">
-  <h3>ADB Dialer Download</h3>
-  <p>ดาวน์โหลดตัวติดตั้ง ADB Dialer (รวมตัวช่วยตั้งค่า ADB และ README)</p>
-  <a href="https://github.com/Phantomguy7845/PHANToM-is-Working-with-Connex/releases/download/v1.1.0/setup_ADB_Dialer.zip"
-     class="btn" target="_blank" rel="noopener">
-    Download
-  </a>
-</div>
-
+    <h3>ADB Dialer Download</h3>
+    <p>ดาวน์โหลดตัวติดตั้ง ADB Dialer (รวมตัวช่วยตั้งค่า ADB และ README)</p>
+    <a href="https://github.com/Phantomguy7845/PHANToM-is-Working-with-Connex/releases/download/v1.1.0/setup_ADB_Dialer.zip"
+       class="btn" target="_blank" rel="noopener">
+      Download
+    </a>
+  </div>
 
   <div class="card">
     <h3>CX Price Editor</h3>
@@ -116,11 +278,43 @@ footer{margin:40px 0;font-size:.9rem;opacity:.7;text-align:center}
     <a href="PHANToM_Report_CounterV.2/PHANToM_Report_Counter_v2.html" class="btn">เปิดใช้งาน</a>
   </div>
 
-  <!-- ⭐ NEW: PHANToM Script Pad -->
+  <!-- ⭐ PHANToM Script Pad -->
   <div class="card">
     <h3>PHANToM Script Pad</h3>
     <p>ปุ่มสคริปต์พร้อมคัดลอกทันที • เพิ่ม/ลบด้วยป๊อปอัปใหญ่ • ลากจัดเรียง • Import/Export .txt</p>
     <a href="PHANToM_Script_Pad.html" class="btn">เปิดใช้งาน</a>
+  </div>
+
+  <!-- ⭐ PHANToM Runner (Mini Game) + Preview -->
+  <div class="card game-card">
+    <div class="game-preview">
+      <div class="sky"></div>
+      <div class="ground"></div>
+      <div class="dust"></div>
+
+      <div class="ghost">
+        <div class="eye left"></div>
+        <div class="eye right"></div>
+        <div class="cheek left"></div>
+        <div class="cheek right"></div>
+        <div class="smile"></div>
+      </div>
+
+      <div class="ob-ground"></div>
+      <div class="ob-bird"></div>
+
+      <div class="ui">
+        <span>SCORE: 123</span>
+        <span>CHEAT: READY</span>
+      </div>
+    </div>
+
+    <h3>PHANToM Runner (Mini Game)</h3>
+    <p>เกมวิ่งหลบสิ่งกีดขวางธีม PHANToM </p>
+    <a href="https://phantomguy7845.github.io/PHANToM-is-Working-with-Connex/mini_game/PHANToM_Runner.html"
+       class="btn" target="_blank" rel="noopener">
+      เล่นเกม
+    </a>
   </div>
 
 </div>
