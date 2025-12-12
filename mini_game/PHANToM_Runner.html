@@ -174,16 +174,68 @@
       filter: brightness(0.98);
     }
 
+    /* ปุ่มควบคุมบนหน้าจอ */
+    #touchControls {
+      margin-top: 14px;
+      width: 800px;
+      max-width: 95vw;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .ctrl-btn {
+      flex: 1;
+      padding: 12px 10px;
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+      background: radial-gradient(circle at 20% 0, #1f2937, #020617);
+      color: #e5e7eb;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(15,23,42,0.9);
+      text-transform: uppercase;
+    }
+
+    .ctrl-btn span {
+      font-size: 11px;
+      display: block;
+      opacity: 0.7;
+      margin-top: 2px;
+    }
+
+    .ctrl-btn:hover {
+      border-color: #38bdf8;
+      box-shadow: 0 0 14px rgba(56,189,248,0.7);
+    }
+
+    .ctrl-btn:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 4px 10px rgba(15,23,42,0.9);
+    }
+
     @media (max-width: 600px) {
       #gameContainer { height: 230px; }
       #player { left: 40px; }
+
+      #touchControls {
+        margin-top: 12px;
+        gap: 8px;
+      }
+
+      .ctrl-btn {
+        padding: 10px 8px;
+        font-size: 13px;
+      }
     }
   </style>
 </head>
 <body>
   <h1>PHANToM Runner</h1>
   <div id="hint">
-    Space / ↑ = กระโดด • ↓ = หมอบ 
+    Space / ↑ = กระโดด • ↓ = หมอบ • (หรือใช้ปุ่มด้านล่างบนมือถือ)
   </div>
 
   <div id="gameContainer">
@@ -192,6 +244,18 @@
       <!-- ชื่อไฟล์รูป เปลี่ยนได้ตามที่ตั้ง -->
       <img src="phantom-runner.png" alt="PHANToM" />
     </div>
+  </div>
+
+  <!-- ปุ่มควบคุมด้านล่างเกม -->
+  <div id="touchControls">
+    <button id="btnJump" class="ctrl-btn">
+      กระโดด
+      <span>JUMP / SPACE</span>
+    </button>
+    <button id="btnDuck" class="ctrl-btn">
+      หมอบ
+      <span>DUCK / ↓</span>
+    </button>
   </div>
 
   <div id="scoreBoard">
@@ -211,6 +275,9 @@
       const messageEl = document.getElementById("message");
       const startBtn = document.getElementById("startBtn");
       const cheatTimerEl = document.getElementById("cheatTimer");
+
+      const btnJump = document.getElementById("btnJump");
+      const btnDuck = document.getElementById("btnDuck");
 
       const groundY = 40;
 
@@ -512,6 +579,36 @@
           setDuck(false);
         }
       });
+
+      // ปุ่มบนหน้าจอ (รองรับเมาส์ + ทัช ด้วย pointer events)
+      if (btnJump) {
+        btnJump.addEventListener("pointerdown", (e) => {
+          e.preventDefault();
+          handleJump();
+          // treat as Space สำหรับสูตรโกง
+          registerCheat("Space");
+        });
+      }
+
+      if (btnDuck) {
+        btnDuck.addEventListener("pointerdown", (e) => {
+          e.preventDefault();
+          setDuck(true);
+          registerCheat("ArrowDown");
+        });
+        btnDuck.addEventListener("pointerup", (e) => {
+          e.preventDefault();
+          setDuck(false);
+        });
+        btnDuck.addEventListener("pointercancel", (e) => {
+          e.preventDefault();
+          setDuck(false);
+        });
+        btnDuck.addEventListener("pointerleave", (e) => {
+          // กันกรณีลากนิ้วออกจากปุ่มแล้วยังหมอบอยู่
+          if (isDucking) setDuck(false);
+        });
+      }
 
       startBtn.addEventListener("click", resetGame);
     })();
