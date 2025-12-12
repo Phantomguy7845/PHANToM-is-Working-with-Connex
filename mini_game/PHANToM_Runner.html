@@ -91,7 +91,7 @@
       box-shadow: 0 0 14px rgba(56, 189, 248, 0.9);
     }
 
-    /* อมตะ */
+    /* อมตะ (โหมดโกง) */
     #player.invincible {
       box-shadow:
         0 0 26px rgba(250, 204, 21, 1),
@@ -125,11 +125,80 @@
       border-radius: 50%;
     }
 
+    /* ไอเท็มเก็บได้: Coin / Energy */
+    .collectible {
+      position: absolute;
+      box-shadow: 0 0 10px rgba(15,23,42,0.9);
+    }
+
+    .collectible.coin {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #fef9c3, #facc15, #b45309);
+    }
+
+    .collectible.energy {
+      width: 22px;
+      height: 22px;
+      border-radius: 30%;
+      background: radial-gradient(circle at 30% 20%, #22c55e, #4ade80, #bbf7d0);
+    }
+
+    /* Energy bar */
+    #energyContainer {
+      margin-top: 10px;
+      width: 800px;
+      max-width: 95vw;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    #energyLabel {
+      font-size: 11px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    #energyBarWrapper {
+      flex: 1;
+      height: 12px;
+      border-radius: 999px;
+      background: #020617;
+      border: 1px solid #4b5563;
+      overflow: hidden;
+      box-shadow: 0 0 8px rgba(15,23,42,0.9);
+    }
+
+    #energyBar {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #22c55e, #facc15, #fb923c);
+      box-shadow: 0 0 12px rgba(250,204,21,0.8);
+      transition: width 0.15s ease;
+    }
+
+    #energyText {
+      width: 70px;
+      text-align: right;
+      font-size: 11px;
+      color: #e5e7eb;
+    }
+
     #scoreBoard {
-      margin-top: 14px;
+      margin-top: 10px;
       font-size: 15px;
       display: flex;
       gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    #coins {
+      color: #facc15;
     }
 
     #cheatTimer {
@@ -138,6 +207,14 @@
       min-height: 20px;
       color: #facc15;
       text-shadow: 0 0 8px rgba(250, 204, 21, 0.9);
+    }
+
+    #mission {
+      margin-top: 6px;
+      font-size: 12px;
+      color: #9ca3af;
+      max-width: 800px;
+      text-align: center;
     }
 
     #message {
@@ -229,13 +306,22 @@
         padding: 10px 8px;
         font-size: 13px;
       }
+
+      #energyContainer {
+        font-size: 12px;
+      }
+
+      #energyText {
+        width: 54px;
+        font-size: 10px;
+      }
     }
   </style>
 </head>
 <body>
   <h1>PHANToM Runner</h1>
   <div id="hint">
-    Space / ↑ = กระโดด • ↓ = หมอบ • (หรือใช้ปุ่มด้านล่างบนมือถือ)
+    Space / ↑ = กระโดด (2 จังหวะ) • ↓ = หมอบ • เก็บเหรียญ & ไอเท็มพลังงานเพิ่มคะแนน/พลังชีวิต
   </div>
 
   <div id="gameContainer">
@@ -258,11 +344,22 @@
     </button>
   </div>
 
+  <!-- Energy bar -->
+  <div id="energyContainer">
+    <div id="energyLabel">Energy</div>
+    <div id="energyBarWrapper">
+      <div id="energyBar"></div>
+    </div>
+    <div id="energyText">100 / 100</div>
+  </div>
+
   <div id="scoreBoard">
     <div id="score">คะแนน: 0</div>
+    <div id="coins">เหรียญ: 0</div>
     <div id="bestScore">สถิติสูงสุด: 0</div>
   </div>
   <div id="cheatTimer"></div>
+  <div id="mission"></div>
   <div id="message">กดปุ่ม "เริ่มเกม / เล่นใหม่" หรือกด Space เพื่อเริ่ม</div>
   <button id="startBtn">เริ่มเกม / เล่นใหม่</button>
 
@@ -275,35 +372,60 @@
       const messageEl = document.getElementById("message");
       const startBtn = document.getElementById("startBtn");
       const cheatTimerEl = document.getElementById("cheatTimer");
-
       const btnJump = document.getElementById("btnJump");
       const btnDuck = document.getElementById("btnDuck");
+      const energyBar = document.getElementById("energyBar");
+      const energyText = document.getElementById("energyText");
+      const coinsEl = document.getElementById("coins");
+      const missionEl = document.getElementById("mission");
 
       const groundY = 40;
 
-      // ฟิสิกส์กระโดด
-      let isJumping = false;
-      let jumpVelocity = 0;
+      // ฟิสิกส์กระโดด + Double Jump
       const gravity = 0.6;
       const jumpStrength = 11;
+      const maxJumps = 2;
       let playerY = groundY;
+      let isJumping = false;
+      let jumpVelocity = 0;
+      let jumpsLeft = maxJumps;
 
       // หมอบ
       let isDucking = false;
 
-      // เกม
-      let obstacles = [];
-      let speed = 6;
+      // Energy
+      const maxEnergy = 100;
+      let energy = maxEnergy;
+      const energyDecayPerSec = 4; // พลังลดเองต่อวินาที
+      const damageGround = 25;     // ชนสิ่งกีดขวางพื้น
+      const damageAir = 35;        // ชนนก/อากาศ
+
+      // คะแนน + เหรียญ + ภารกิจ
       let score = 0;
       let bestScore = Number(localStorage.getItem("phantom_runner_best") || 0);
+      let coins = 0;
+      let coinsCollected = 0;
+      let totalDoubleJumps = 0;
+      let obstaclesPassed = 0;
+
+      const MISSION_COIN_TARGET = 20;
+      const MISSION_DJ_TARGET = 10;
+      const MISSION_OBS_TARGET = 30;
+
       bestScoreEl.textContent = "สถิติสูงสุด: " + bestScore;
 
+      // เกม
+      let obstacles = [];
+      let collectibles = [];
+      let speed = 6;
       let gameOver = false;
       let frameId = null;
       let lastTime = null;
 
       let timeSinceLastObstacle = 0;
       let nextSpawnIn = 1000;
+
+      let timeSinceLastCollectible = 0;
 
       // โหมดโกง
       let invincible = false;
@@ -318,18 +440,43 @@
         return Math.random() * (max - min) + min;
       }
 
+      function updateEnergyUI() {
+        const ratio = Math.max(0, Math.min(1, energy / maxEnergy));
+        energyBar.style.width = (ratio * 100) + "%";
+        energyText.textContent = Math.round(energy) + " / " + maxEnergy;
+      }
+
+      function updateMissionUI() {
+        if (!missionEl) return;
+        missionEl.textContent =
+          "Mission: เหรียญ " + coinsCollected + "/" + MISSION_COIN_TARGET +
+          " • Double Jump " + totalDoubleJumps + "/" + MISSION_DJ_TARGET +
+          " • ผ่านอุปสรรค " + obstaclesPassed + "/" + MISSION_OBS_TARGET;
+      }
+
       function resetGame() {
         obstacles.forEach(o => o.remove());
         obstacles = [];
+        collectibles.forEach(c => c.remove());
+        collectibles = [];
 
         score = 0;
+        coins = 0;
+        coinsCollected = 0;
+        totalDoubleJumps = 0;
+        obstaclesPassed = 0;
         speed = 6;
-        scoreEl.textContent = "คะแนน: 0";
+
+        scoreEl.textContent = "คะแนน: " + score;
+        coinsEl.textContent = "เหรียญ: " + coins;
+
         gameOver = false;
 
         isJumping = false;
         isDucking = false;
         playerY = groundY;
+        jumpVelocity = 0;
+        jumpsLeft = maxJumps;
         player.style.bottom = playerY + "px";
         player.classList.remove("duck", "invincible");
 
@@ -338,8 +485,14 @@
         cheatEvents = [];
         cheatTimerEl.textContent = "";
 
+        energy = maxEnergy;
+        updateEnergyUI();
+
         timeSinceLastObstacle = 0;
         nextSpawnIn = 800 + Math.random() * 600;
+        timeSinceLastCollectible = 0;
+
+        updateMissionUI();
 
         messageEl.textContent = "หลบต้นไม้/ก้อนหิน (กระโดด) และนก (หมอบ) ให้ได้นานที่สุด!";
 
@@ -382,11 +535,37 @@
         obstacles.push(obs);
       }
 
+      function spawnCollectible() {
+        const c = document.createElement("div");
+        c.classList.add("collectible");
+
+        const typeRand = Math.random();
+        if (typeRand < 0.7) {
+          c.classList.add("coin");
+        } else {
+          c.classList.add("energy");
+        }
+
+        const lane = Math.floor(Math.random() * 3); // 0 = ต่ำ, 1 = กลาง, 2 = สูง
+        let bottom;
+        if (lane === 0) bottom = groundY + 60;
+        else if (lane === 1) bottom = groundY + 110;
+        else bottom = groundY + 150;
+
+        c.style.bottom = bottom + "px";
+        c.style.left = gameContainer.offsetWidth + "px";
+
+        gameContainer.appendChild(c);
+        collectibles.push(c);
+      }
+
       function updateObstacles(delta) {
         const moveX = speed * (delta / 16.67);
         const toRemove = [];
 
         obstacles.forEach((obs, index) => {
+          if (gameOver) return;
+
           const left = parseFloat(obs.style.left);
           const newLeft = left - moveX;
           obs.style.left = newLeft + "px";
@@ -394,15 +573,29 @@
           if (newLeft + obs.offsetWidth < 0) {
             toRemove.push(index);
             score += 1;
+            obstaclesPassed += 1;
             scoreEl.textContent = "คะแนน: " + score;
+            updateMissionUI();
 
             if (score % 5 === 0) {
               speed += 0.5;
             }
           }
 
-          if (!gameOver && !invincible && isColliding(player, obs)) {
-            endGame();
+          if (!invincible && !gameOver && isColliding(player, obs)) {
+            const isAir = obs.classList.contains("air");
+            const dmg = isAir ? damageAir : damageGround;
+            energy -= dmg;
+            if (energy <= 0) {
+              energy = 0;
+              updateEnergyUI();
+              endGame();
+              return;
+            } else {
+              updateEnergyUI();
+              obs.style.opacity = "0.4";
+              setTimeout(() => { if (obs && obs.style) obs.style.opacity = "1"; }, 100);
+            }
           }
         });
 
@@ -438,6 +631,55 @@
         }
       }
 
+      function updateCollectibles(delta) {
+        const moveX = speed * (delta / 16.67);
+        const toRemove = [];
+
+        collectibles.forEach((c, index) => {
+          const left = parseFloat(c.style.left);
+          const newLeft = left - moveX;
+          c.style.left = newLeft + "px";
+
+          if (newLeft + c.offsetWidth < 0) {
+            toRemove.push(index);
+            return;
+          }
+
+          if (!gameOver && isColliding(player, c)) {
+            if (c.classList.contains("coin")) {
+              coins += 1;
+              coinsCollected += 1;
+              score += 2;
+              coinsEl.textContent = "เหรียญ: " + coins;
+              scoreEl.textContent = "คะแนน: " + score;
+            } else if (c.classList.contains("energy")) {
+              const gain = 20;
+              energy = Math.min(maxEnergy, energy + gain);
+              updateEnergyUI();
+            }
+            updateMissionUI();
+            toRemove.push(index);
+          }
+        });
+
+        toRemove.reverse().forEach(i => {
+          collectibles[i].remove();
+          collectibles.splice(i, 1);
+        });
+      }
+
+      function maybeSpawnCollectible(delta) {
+        timeSinceLastCollectible += delta;
+        const baseInterval = 900;
+        const minInterval = 500;
+        const interval = Math.max(minInterval, baseInterval - score * 4);
+
+        if (timeSinceLastCollectible >= interval) {
+          spawnCollectible();
+          timeSinceLastCollectible = 0;
+        }
+      }
+
       function isColliding(a, b) {
         const r1 = a.getBoundingClientRect();
         const r2 = b.getBoundingClientRect();
@@ -459,6 +701,7 @@
             playerY = groundY;
             isJumping = false;
             jumpVelocity = 0;
+            jumpsLeft = maxJumps;
           }
           player.style.bottom = playerY + "px";
         }
@@ -470,9 +713,24 @@
         const delta = timestamp - lastTime;
         lastTime = timestamp;
 
+        // Energy ลดเอง (ยกเว้นช่วงโกง)
+        if (!invincible) {
+          energy -= energyDecayPerSec * (delta / 1000);
+          if (energy <= 0) {
+            energy = 0;
+            updateEnergyUI();
+            endGame();
+            return;
+          }
+        }
+        updateEnergyUI();
+
         updatePlayer(delta);
         updateObstacles(delta);
+        updateCollectibles(delta);
+        maybeSpawnCollectible(delta);
 
+        // โหมดโกง
         if (invincible) {
           invincibleTimer -= delta;
           if (invincibleTimer <= 0) {
@@ -494,6 +752,7 @@
       }
 
       function endGame() {
+        if (gameOver) return;
         gameOver = true;
         if (frameId) cancelAnimationFrame(frameId);
 
@@ -505,8 +764,8 @@
 
         cheatTimerEl.textContent = "";
         messageEl.textContent =
-          "Game Over! คะแนน: " +
-          score +
+          "Game Over! คะแนน: " + score +
+          " • เหรียญ: " + coins +
           ' • กด "เริ่มเกม / เล่นใหม่" หรือ Space เพื่อเริ่มใหม่';
       }
 
@@ -515,9 +774,18 @@
           resetGame();
           return;
         }
-        if (!isJumping) {
+        if (jumpsLeft > 0) {
+          if (isDucking) {
+            setDuck(false);
+          }
+          // ถ้าเป็นจังหวะที่ 2 = Double Jump
+          if (jumpsLeft === 1) {
+            totalDoubleJumps += 1;
+            updateMissionUI();
+          }
           isJumping = true;
           jumpVelocity = jumpStrength;
+          jumpsLeft -= 1;
         }
       }
 
@@ -566,7 +834,7 @@
         if (e.code === "Space" || e.code === "ArrowUp") {
           e.preventDefault();
           handleJump();
-          registerCheat(e.code); // Space นับเป็น U
+          registerCheat(e.code); // Space/↑ นับเป็น U
         } else if (e.code === "ArrowDown") {
           e.preventDefault();
           setDuck(true);
@@ -580,12 +848,11 @@
         }
       });
 
-      // ปุ่มบนหน้าจอ (รองรับเมาส์ + ทัช ด้วย pointer events)
+      // ปุ่มบนหน้าจอ (เมาส์ + ทัช)
       if (btnJump) {
         btnJump.addEventListener("pointerdown", (e) => {
           e.preventDefault();
           handleJump();
-          // treat as Space สำหรับสูตรโกง
           registerCheat("Space");
         });
       }
@@ -605,12 +872,15 @@
           setDuck(false);
         });
         btnDuck.addEventListener("pointerleave", (e) => {
-          // กันกรณีลากนิ้วออกจากปุ่มแล้วยังหมอบอยู่
           if (isDucking) setDuck(false);
         });
       }
 
       startBtn.addEventListener("click", resetGame);
+
+      // ตั้งค่า UI เริ่มต้น
+      updateEnergyUI();
+      updateMissionUI();
     })();
   </script>
 </body>
