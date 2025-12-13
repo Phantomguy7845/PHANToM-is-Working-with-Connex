@@ -818,7 +818,7 @@
       const CFG_MISSION_OBS_TARGET = 30;   // ผ่านอุปสรรคกี่ชิ้น
 
       // 9) ความถี่การเกิดไอเท็ม/แพลตฟอร์ม (ms)
-      const CFG_COLLECTIBLE_BASE_INTERVAL = 1500;  // ยิ่งน้อย = ไอเท็มออกถี่ขึ้น
+      const CFG_COLLECTIBLE_BASE_INTERVAL = 1200;  // ยิ่งน้อย = ไอเท็มออกถี่ขึ้น
       const CFG_COLLECTIBLE_MIN_INTERVAL = 700;    // ระยะห่างต่ำสุดระหว่างไอเท็ม
       const CFG_PLATFORM_MIN_INTERVAL = 2000;      // เวลาเกิด platform ล็อตใหม่ขั้นต่ำ
       const CFG_PLATFORM_MAX_INTERVAL = 4500;      // เวลาเกิด platform ล็อตใหม่สูงสุด
@@ -1105,7 +1105,7 @@
         c.classList.add("collectible");
 
         const r = Math.random();
-        if (r < 0.55) {
+        if (r < 0.95) {
           c.classList.add("coin");
         } else if (r < 0.70) {
           c.classList.add("energy");
