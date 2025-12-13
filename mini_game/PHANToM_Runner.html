@@ -509,6 +509,35 @@
       box-shadow: 0 4px 10px rgba(15,23,42,0.9);
     }
 
+    /* === เอฟเฟกต์สั่นจอ / แฟลชตอนโดนชน === */
+    @keyframes hitShake {
+      0%   { transform: translate(0, 0); }
+      20%  { transform: translate(-4px, 2px); }
+      40%  { transform: translate(4px, -2px); }
+      60%  { transform: translate(-3px, 1px); }
+      80%  { transform: translate(3px, -1px); }
+      100% { transform: translate(0, 0); }
+    }
+
+    #gameContainer.shake {
+      animation: hitShake 0.25s ease;
+    }
+
+    #hitFlash {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle, rgba(248,250,252,0.35), transparent 60%);
+      mix-blend-mode: screen;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.12s ease;
+      z-index: 999;
+    }
+
+    body.hit-blink #hitFlash {
+      opacity: 1;
+    }
+
     @media (max-width: 600px) {
       #gameContainer { height: 230px; }
       #player { left: 40px; }
@@ -596,6 +625,9 @@
     <button id="fullscreenBtn">โหมดเต็มจอ</button>
   </div>
 
+  <!-- overlay ไว้ทำแฟลชทั้งจอ -->
+  <div id="hitFlash"></div>
+
   <script>
     (function () {
       // =========================
@@ -607,17 +639,21 @@
       const CFG_JUMP_STRENGTH = 13.5;       // แรงกระโดด (มากขึ้น = กระโดดสูงขึ้น)
       const CFG_MAX_JUMPS = 2;              // จำนวนครั้งที่กระโดดต่อเนื่องได้ (เช่น 2 = double jump)
 
-      // 2) พลังงาน / ความเสียหาย
+      // 2) พลังงาน / ความเสียหาย (ลดลงจากเดิม 40%)
       const CFG_MAX_ENERGY = 100;           // พลังงานสูงสุด
       const CFG_ENERGY_DECAY_PER_SEC = 4;   // พลังงานลดเองต่อวินาที
-      const CFG_DAMAGE_GROUND = 25;         // ชนสิ่งกีดขวางบนพื้น หักพลังเท่าไร
-      const CFG_DAMAGE_AIR = 35;            // ชนอุปสรรคลอย (นก ฯลฯ) หักพลังเท่าไร
+      const CFG_DAMAGE_GROUND = 15;         // เดิม 25 → ลด 40% เหลือ 15
+      const CFG_DAMAGE_AIR = 21;            // เดิม 35 → ลด 40% เหลือ ~21
 
       // 3) ความเร็วเกม
       const CFG_START_SPEED = 6;            // ความเร็วเริ่มต้น
       const CFG_SPEED_UP_EVERY_SCORE = 5;   // ทุก ๆ กี่คะแนน เพิ่มความเร็ว 1 ครั้ง
       const CFG_SPEED_UP_AMOUNT = 0.5;      // เพิ่มความเร็วครั้งละเท่าไร
       const CFG_BOOST_MULTIPLIER = 1.6;     // ตัวคูณความเร็วเมื่อได้ Boost
+
+      // ชะลอความเร็วเมื่อชน (ถ้ายังไม่ตาย)
+      const CFG_HIT_SLOW_FACTOR = 0.8;      // ลดลง 20% → ใช้ speed * 0.8
+      const CFG_HIT_SLOW_DURATION = 500;    // ชะลอเป็นเวลา 0.5 วินาที (ms)
 
       // 4) หลุมกับดัก
       const CFG_HOLE_CHANCE = 0.18;         // โอกาสที่ "อุปสรรคบนพื้น" จะกลายเป็นหลุม (0–1)
@@ -746,6 +782,9 @@
       let giantTimer = 0;
       const GIANT_DURATION = CFG_GIANT_DURATION;
 
+      // Slow หลังชน
+      let hitSlowTimer = 0; // ms ที่ยังชะลอความเร็วอยู่
+
       // ตรวจจับสูตรโกง
       const CHEAT_WINDOW = CFG_CHEAT_WINDOW;
       let cheatEvents = [];
@@ -817,6 +856,8 @@
         boostTimer = 0;
         giantActive = false;
         giantTimer = 0;
+
+        hitSlowTimer = 0;
 
         energy = maxEnergy;
         updateEnergyUI();
@@ -963,8 +1004,30 @@
         }
       }
 
+      // ความเร็วปัจจุบัน (คำนึงถึง Boost + Slow หลังชน)
+      function getEffectiveSpeed() {
+        let s = speed;
+        if (boostActive) s *= BOOST_MULTIPLIER;
+        if (hitSlowTimer > 0) s *= CFG_HIT_SLOW_FACTOR; // ลดลง 20%
+        return s;
+      }
+
+      // เอฟเฟกต์ตอนโดนชน (สั่นจอ + แฟลช)
+      function triggerHitVFX() {
+        // รีสตาร์ท animation shake
+        gameContainer.classList.remove("shake");
+        void gameContainer.offsetWidth;
+        gameContainer.classList.add("shake");
+
+        // แฟลชทั้งจอ
+        document.body.classList.add("hit-blink");
+        setTimeout(() => {
+          document.body.classList.remove("hit-blink");
+        }, 120);
+      }
+
       function updateObstacles(delta) {
-        const moveX = speed * (boostActive ? BOOST_MULTIPLIER : 1) * (delta / 16.67);
+        const moveX = getEffectiveSpeed() * (delta / 16.67);
         const toRemove = [];
 
         obstacles.forEach((obs, index) => {
@@ -995,7 +1058,7 @@
               updateMissionUI();
               toRemove.push(index);
             } else {
-              // ชนปกติ → เสียพลัง + ชะลอความเร็ว
+              // ชนปกติ → เสียพลัง + ชะลอความเร็ว 20% เป็นเวลา 0.5 วิ + เอฟเฟกต์สั่น/แฟลช
               const isAir = obs.classList.contains("air");
               const dmg = isAir ? damageAir : damageGround;
               energy -= dmg;
@@ -1006,14 +1069,17 @@
                 endGame();
                 return;
               } else {
-                // ยังไม่ตาย → อัปเดตพลัง + เอฟเฟกต์กระพริบ + ลดความเร็ว 30%
+                // ยังไม่ตาย → อัปเดตพลัง + เอฟเฟกต์กระพริบอุปสรรค + สั่นจอ/แฟลช + ตั้ง timer ช้าชั่วคราว
                 updateEnergyUI();
 
                 obs.style.opacity = "0.4";
                 setTimeout(() => { if (obs && obs.style) obs.style.opacity = "1"; }, 100);
 
-                // 🔻 ชนแล้วแต่ยังมี Energy → ชะลอความเร็วลง 30% (เหลือ 70%) แต่ไม่ให้ต่ำกว่า 3
-                speed = Math.max(3, speed * 0.7);
+                // เอฟเฟกต์ VFX
+                triggerHitVFX();
+
+                // 🔻 Slow 20% ชั่วคราว 0.5 วินาที
+                hitSlowTimer = CFG_HIT_SLOW_DURATION;
               }
             }
           }
@@ -1052,7 +1118,7 @@
       }
 
       function updatePlatforms(delta) {
-        const moveX = speed * (boostActive ? BOOST_MULTIPLIER : 1) * (delta / 16.67);
+        const moveX = getEffectiveSpeed() * (delta / 16.67);
         const toRemove = [];
 
         platforms.forEach((p, index) => {
@@ -1081,7 +1147,7 @@
       }
 
       function updateHoles(delta) {
-        const moveX = speed * (boostActive ? BOOST_MULTIPLIER : 1) * (delta / 16.67);
+        const moveX = getEffectiveSpeed() * (delta / 16.67);
         const toRemove = [];
         holes.forEach((h, index) => {
           const left = parseFloat(h.style.left);
@@ -1098,7 +1164,7 @@
       }
 
       function updateCollectibles(delta) {
-        const moveX = speed * (boostActive ? BOOST_MULTIPLIER : 1) * (delta / 16.67);
+        const moveX = getEffectiveSpeed() * (delta / 16.67);
         const toRemove = [];
 
         let playerCenterX = 0;
@@ -1129,7 +1195,7 @@
               const dx = playerCenterX - cx;
               const dy = playerCenterY - cy;
               const dist = Math.hypot(dx, dy);
-              if (dist < MAGNET_RADIUS) {
+              if (dist < CFG_MAGNET_RADIUS) {
                 collected = true;
               }
             }
@@ -1277,7 +1343,7 @@
 
         // Energy ลดเอง (ยกเว้นช่วงอมตะ)
         if (!invincible) {
-          energy -= energyDecayPerSec * (delta / 1000);
+          energy -= CFG_ENERGY_DECAY_PER_SEC * (delta / 1000);
           if (energy <= 0) {
             energy = 0;
             updateEnergyUI();
@@ -1340,6 +1406,12 @@
           }
         }
 
+        // Hit slow timer (ลดความเร็วชั่วคราว)
+        if (hitSlowTimer > 0) {
+          hitSlowTimer -= delta;
+          if (hitSlowTimer < 0) hitSlowTimer = 0;
+        }
+
         frameId = requestAnimationFrame(gameLoop);
       }
 
@@ -1380,7 +1452,7 @@
             player.classList.add("double-jump");
           }
           isJumping = true;
-          jumpVelocity = jumpStrength;
+          jumpVelocity = CFG_JUMP_STRENGTH;
           jumpsLeft -= 1;
         }
       }
