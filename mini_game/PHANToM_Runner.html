@@ -93,7 +93,7 @@
       box-shadow: 0 0 14px rgba(56, 189, 248, 0.9);
     }
 
-    /* อมตะ (โหมดโกง) */
+    /* อมตะ (โหมดโกง / Boost) */
     #player.invincible {
       box-shadow:
         0 0 26px rgba(250, 204, 21, 1),
@@ -109,39 +109,51 @@
         0 0 70px rgba(59,130,246,0.7);
     }
 
+    /* เอฟเฟกต์ double jump: หมุนตัว */
+    #player.double-jump img {
+      animation: djumpSpin 0.35s linear;
+    }
+
+    @keyframes djumpSpin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
     .obstacle {
       position: absolute;
       bottom: 40px;
       border-radius: 6px;
-      box-shadow: 0 0 16px rgba(15, 23, 42, 0.9);
+      box-shadow: 0 0 12px rgba(15, 23, 42, 1);
       z-index: 3;
     }
 
     .obstacle.ground.tree {
-      background: linear-gradient(to top, #166534, #4ade80);
+      background: linear-gradient(to top, #14532d, #16a34a);
       border-radius: 4px 4px 0 0;
     }
 
     .obstacle.ground.bush {
-      background: linear-gradient(to top, #15803d, #22c55e);
+      background: linear-gradient(to top, #166534, #22c55e);
       border-radius: 16px;
     }
 
     .obstacle.ground.rock {
-      background: radial-gradient(circle at 30% 20%, #e5e7eb, #9ca3af);
+      background: radial-gradient(circle at 30% 20%, #9ca3af, #4b5563);
       border-radius: 40% 60% 30% 70%;
     }
 
+    /* นก (อุปสรรคที่ต้องหมอบ) = สี่เหลี่ยมเข้ม */
     .obstacle.air.bird {
-      background: radial-gradient(circle at 30% 30%, #fef3c7, #f97316);
-      border-radius: 50%;
+      background: linear-gradient(to bottom, #1f2937, #020617);
+      border-radius: 4px;
+      box-shadow: 0 0 10px rgba(15,23,42,0.95);
     }
 
     /* พื้น/ชั้นพิเศษ (วิ่งได้ แต่ไม่ทำดาเมจ) */
     .platform {
       position: absolute;
       height: 10px;
-      background: linear-gradient(to top, #0f172a, #1e293b);
+      background: linear-gradient(to top, #020617, #111827);
       border-radius: 8px;
       box-shadow: 0 6px 14px rgba(15,23,42,0.95);
       border: 1px solid rgba(148,163,184,0.35);
@@ -151,7 +163,6 @@
     /* ไอเท็มเก็บได้: Coin / Hearts / Power-up */
     .collectible {
       position: absolute;
-      box-shadow: 0 0 10px rgba(15,23,42,0.9);
       z-index: 4;
     }
 
@@ -160,6 +171,7 @@
       height: 20px;
       border-radius: 50%;
       background: radial-gradient(circle at 30% 30%, #fef9c3, #facc15, #b45309);
+      box-shadow: 0 0 12px rgba(250,204,21,0.9);
     }
 
     /* หัวใจเพิ่มพลังงาน (Energy) */
@@ -171,6 +183,7 @@
       position: absolute;
       transform: rotate(-45deg) scale(var(--heart-scale));
       border-radius: 4px;
+      box-shadow: 0 0 12px rgba(248,113,113,0.95);
     }
     .collectible.energy::before,
     .collectible.energy::after {
@@ -201,6 +214,7 @@
       background: radial-gradient(circle at 30% 20%, #e0f2fe, #38bdf8, #0369a1);
       position: relative;
       overflow: hidden;
+      box-shadow: 0 0 12px rgba(56,189,248,0.95);
     }
     .collectible.magnet::before,
     .collectible.magnet::after {
@@ -219,13 +233,13 @@
       right: 16%;
     }
 
-    /* Boost (Speed up) */
+    /* Boost (Speed up + อมตะ) */
     .collectible.boost {
       width: 24px;
       height: 14px;
       border-radius: 999px;
       background: linear-gradient(90deg, #22c55e, #a3e635);
-      box-shadow: 0 0 12px rgba(34,197,94,0.9);
+      box-shadow: 0 0 14px rgba(34,197,94,0.95);
       transform: skewX(-20deg);
     }
 
@@ -235,7 +249,7 @@
       height: 22px;
       border-radius: 50%;
       background: radial-gradient(circle at 30% 20%, #e0e7ff, #6366f1, #312e81);
-      box-shadow: 0 0 14px rgba(129,140,248,0.9);
+      box-shadow: 0 0 14px rgba(129,140,248,0.95);
     }
 
     /* Energy bar */
@@ -414,7 +428,7 @@
 <body>
   <h1>PHANToM Runner</h1>
   <div id="hint">
-    Space / ↑ = กระโดด (2 จังหวะ) • ↓ = หมอบ • มีพื้นลอย/บันไดให้เหยียบ • เก็บเหรียญ / หัวใจ / Magnet / Boost / Giant
+    Space / ↑ = กระโดด (2 จังหวะ) • ↓ = หมอบ • มีพื้นลอย/บันไดให้เหยียบ • เก็บเหรียญ / หัวใจ / Magnet / Boost(อมตะ) / Giant
   </div>
 
   <div id="gameContainer">
@@ -527,16 +541,16 @@
       let timeSinceLastPlatform = 0;
       let nextPlatformIn = 2500;
 
-      // โหมดโกง
+      // โหมดโกง/อมตะรวม
       let invincible = false;
       let invincibleTimer = 0;
-      const INVINCIBLE_DURATION = 10000; // 10 วิ
+      const CHEAT_INVINCIBLE_DURATION = 10000; // 10 วิ สำหรับสูตรโกง
 
       // Power-ups
       let magnetActive = false;
       let magnetTimer = 0;
-      const MAGNET_DURATION = 7000;
-      const MAGNET_RADIUS = 160;
+      const MAGNET_DURATION = 10000;
+      const MAGNET_RADIUS = 260;
 
       let boostActive = false;
       let boostTimer = 0;
@@ -599,7 +613,7 @@
         jumpVelocity = 0;
         jumpsLeft = maxJumps;
         player.style.bottom = playerY + "px";
-        player.classList.remove("duck", "invincible", "giant");
+        player.classList.remove("duck", "invincible", "giant", "double-jump");
 
         invincible = false;
         invincibleTimer = 0;
@@ -671,9 +685,9 @@
         c.classList.add("collectible");
 
         const r = Math.random();
-        if (r < 0.6) {
+        if (r < 0.55) {
            c.classList.add("coin");
-        } else if (r < 0.75) {
+        } else if (r < 0.70) {
            c.classList.add("energy");
            const sizes = ["small","medium","large"];
            const gains = [15, 25, 40];
@@ -750,7 +764,7 @@
 
           if (!gameOver && isColliding(player, obs)) {
             if (invincible || giantActive) {
-              // ทำลายอุปสรรคแบบ Cookie Run Giant
+              // Giant หรือ Boost/โกง ชนแล้วทำลาย
               score += 2;
               obstaclesPassed += 1;
               scoreEl.textContent = "คะแนน: " + score;
@@ -891,11 +905,15 @@
             } else if (c.classList.contains("magnet")) {
               magnetActive = true;
               magnetTimer = MAGNET_DURATION;
-              messageEl.textContent = "Magnet: ดูดเหรียญและหัวใจรอบ ๆ ชั่วคราว ✨";
+              messageEl.textContent = "Magnet: ดูดเหรียญและหัวใจรอบ ๆ ระยะกว้าง ✨";
             } else if (c.classList.contains("boost")) {
               boostActive = true;
               boostTimer = BOOST_DURATION;
-              messageEl.textContent = "Boost: วิ่งเร็วขึ้นระยะสั้น ๆ ⚡";
+              invincible = true;
+              // ถ้าเคยมีเวลาอมตะอยู่แล้ว ให้ใช้ค่ามากสุด
+              invincibleTimer = Math.max(invincibleTimer, BOOST_DURATION);
+              cheatTimerEl.textContent = "Boost: วิ่งเร็วขึ้น + อมตะชั่วคราว ⚡";
+              messageEl.textContent = "Boost: วิ่งเร็วขึ้น + อมตะชั่วคราว ⚡";
             } else if (c.classList.contains("giant")) {
               giantActive = true;
               giantTimer = GIANT_DURATION;
@@ -985,7 +1003,7 @@
         const delta = timestamp - lastTime;
         lastTime = timestamp;
 
-        // Energy ลดเอง (ยกเว้นช่วงโกง)
+        // Energy ลดเอง (ยกเว้นช่วงอมตะ)
         if (!invincible) {
           energy -= energyDecayPerSec * (delta / 1000);
           if (energy <= 0) {
@@ -1002,20 +1020,20 @@
         updateObstacles(delta);
         updateCollectibles(delta);
 
-        // โหมดโกง
+        // อมตะ (ทั้งจากสูตรโกง + Boost)
         if (invincible) {
           invincibleTimer -= delta;
           if (invincibleTimer <= 0) {
             invincible = false;
             player.classList.remove("invincible");
             cheatTimerEl.textContent = "";
-            messageEl.textContent = "โหมดโกงหมดแล้ว! ระวังให้ดี 😈";
+            if (!boostActive) {
+              messageEl.textContent = "โหมดอมตะหมดแล้ว! ระวังให้ดี 😈";
+            }
           } else {
             if (invincibleTimer <= 3000) {
               const secs = Math.ceil(invincibleTimer / 1000);
-              cheatTimerEl.textContent = "นับถอยหลังโหมดโกง: " + secs + " วิ";
-            } else {
-              cheatTimerEl.textContent = "โหมดโกง: PHANToM อมตะอยู่ ✨";
+              cheatTimerEl.textContent = "นับถอยหลังโหมดอมตะ: " + secs + " วิ";
             }
           }
         }
@@ -1075,10 +1093,14 @@
           if (isDucking) {
             setDuck(false);
           }
-          // ถ้าเป็นจังหวะที่ 2 = Double Jump
+          // ถ้าเป็นจังหวะที่ 2 = Double Jump (มี 1 กระโดดเหลือก่อนกด)
           if (jumpsLeft === 1) {
             totalDoubleJumps += 1;
             updateMissionUI();
+            // รีสตาร์ท animation double-jump
+            player.classList.remove("double-jump");
+            void player.offsetWidth; // force reflow
+            player.classList.add("double-jump");
           }
           isJumping = true;
           jumpVelocity = jumpStrength;
@@ -1111,7 +1133,7 @@
         const lastSix = cheatEvents.slice(-6);
         if (lastSix.length === 6) {
           const pattern = lastSix.map(e => e.symbol).join("");
-          if (pattern === "DDDUUU" && !invincible && !gameOver) {
+          if (pattern === "DDDUUU" && !gameOver) {
             activateCheat();
             cheatEvents = [];
           }
@@ -1120,7 +1142,7 @@
 
       function activateCheat() {
         invincible = true;
-        invincibleTimer = INVINCIBLE_DURATION;
+        invincibleTimer = Math.max(invincibleTimer, CHEAT_INVINCIBLE_DURATION);
         player.classList.add("invincible");
         cheatTimerEl.textContent = "โหมดโกง: PHANToM อมตะ 10 วิ 🎃";
         messageEl.textContent = "โหมดโกงเปิดแล้ว! ชนอะไรก็ไม่ตาย 10 วิ";
