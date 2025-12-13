@@ -17,6 +17,10 @@
       padding-top: 40px;
     }
 
+    body.fullscreen-game{
+      padding-top: 12px;
+    }
+
     h1 {
       margin-bottom: 8px;
       letter-spacing: 0.08em;
@@ -425,8 +429,38 @@
       max-width: 800px;
     }
 
-    #startBtn {
+    /* กล่องคำอธิบายไอเท็ม */
+    #itemGuide {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #e5e7eb;
+      max-width: 800px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(15,23,42,0.85);
+      border: 1px solid rgba(148,163,184,0.45);
+    }
+    #itemGuide strong {
+      color: #facc15;
+    }
+    #itemGuide ul {
+      margin: 4px 0 0;
+      padding-left: 18px;
+    }
+    #itemGuide li {
+      margin-bottom: 2px;
+    }
+
+    /* ปุ่มเริ่มเกม + เต็มจอ */
+    #buttonsRow{
       margin-top: 14px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+
+    #startBtn {
       padding: 8px 22px;
       border: none;
       border-radius: 999px;
@@ -449,6 +483,25 @@
       transform: translateY(1px);
       box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
       filter: brightness(0.98);
+    }
+
+    #fullscreenBtn{
+      padding:8px 16px;
+      border-radius:999px;
+      border:1px solid #4b5563;
+      background:radial-gradient(circle at 20% 0,#1f2937,#020617);
+      color:#e5e7eb;
+      font-size:13px;
+      cursor:pointer;
+      box-shadow:0 8px 18px rgba(15,23,42,0.9);
+    }
+    #fullscreenBtn:hover{
+      border-color:#38bdf8;
+      box-shadow:0 0 14px rgba(56,189,248,0.7);
+    }
+    #fullscreenBtn:active{
+      transform:translateY(1px) scale(0.98);
+      box-shadow:0 4px 10px rgba(15,23,42,0.9);
     }
 
     /* ปุ่มควบคุมบนหน้าจอ */
@@ -561,16 +614,91 @@
   <div id="cheatTimer"></div>
   <div id="mission"></div>
   <div id="message">กดปุ่ม "เริ่มเกม / เล่นใหม่" หรือกด Space เพื่อเริ่ม</div>
-  <button id="startBtn">เริ่มเกม / เล่นใหม่</button>
+
+  <!-- คำอธิบายไอเท็ม -->
+  <div id="itemGuide">
+    <strong>คำอธิบายไอเท็ม:</strong>
+    <ul>
+      <li>🪙 <b>เหรียญ (Coin)</b> : +2 คะแนนต่อเหรียญ ช่วยเพิ่มสกอร์รวม</li>
+      <li>❤️ <b>หัวใจ (Energy)</b> : เพิ่มค่า Energy ตามขนาดหัวใจ (เล็ก/กลาง/ใหญ่)</li>
+      <li>🧲 <b>Magnet</b> : ดูดเหรียญและหัวใจรอบ ๆ แรงมาก เกือบทั้งจอ ชั่วคราว</li>
+      <li>⚡ <b>Boost</b> : วิ่งเร็วขึ้น + อมตะชั่วคราว (ชนสิ่งกีดขวางไม่โดนดาเมจ)</li>
+      <li>🌀 <b>Giant</b> : ขยายร่าง ตัวใหญ่ขึ้น ชนสิ่งกีดขวางบนพื้นให้พังได้</li>
+    </ul>
+  </div>
+
+  <!-- ปุ่มเริ่มเกม + เต็มจอ -->
+  <div id="buttonsRow">
+    <button id="startBtn">เริ่มเกม / เล่นใหม่</button>
+    <button id="fullscreenBtn">โหมดเต็มจอ</button>
+  </div>
 
   <script>
     (function () {
+      // =========================
+      // 🔧 CONFIG ปรับจูนเกมตรงนี้
+      // =========================
+
+      // 1) ฟิสิกส์ตัวละคร
+      const CFG_GRAVITY = 0.9;              // แรงโน้มถ่วง (มากขึ้น = ตัวตกไว หนักขึ้น)
+      const CFG_JUMP_STRENGTH = 13.5;       // แรงกระโดด (มากขึ้น = กระโดดสูงขึ้น)
+      const CFG_MAX_JUMPS = 2;              // จำนวนครั้งที่กระโดดต่อเนื่องได้ (เช่น 2 = double jump)
+
+      // 2) พลังงาน / ความเสียหาย
+      const CFG_MAX_ENERGY = 100;           // พลังงานสูงสุด
+      const CFG_ENERGY_DECAY_PER_SEC = 4;   // พลังงานลดเองต่อวินาที
+      const CFG_DAMAGE_GROUND = 25;         // ชนสิ่งกีดขวางบนพื้น หักพลังเท่าไร
+      const CFG_DAMAGE_AIR = 35;            // ชนอุปสรรคลอย (นก ฯลฯ) หักพลังเท่าไร
+
+      // 3) ความเร็วเกม
+      const CFG_START_SPEED = 6;            // ความเร็วเริ่มต้น
+      const CFG_SPEED_UP_EVERY_SCORE = 5;   // ทุก ๆ กี่คะแนน เพิ่มความเร็ว 1 ครั้ง
+      const CFG_SPEED_UP_AMOUNT = 0.5;      // เพิ่มความเร็วครั้งละเท่าไร
+      const CFG_BOOST_MULTIPLIER = 1.6;     // ตัวคูณความเร็วเมื่อได้ Boost
+
+      // 4) หลุมกับดัก
+      const CFG_HOLE_CHANCE = 0.18;         // โอกาสที่ "อุปสรรคบนพื้น" จะกลายเป็นหลุม (0–1)
+      const CFG_TRAP_Y = -60;               // ระดับความลึกที่ถือว่าโดนกับดักใต้หลุมแล้ว (ยิ่งติดลบมาก = ตกได้ลึกก่อนตาย)
+
+      // 5) เวลา buff / cheat (หน่วย ms)
+      const CFG_CHEAT_INVINCIBLE_DURATION = 10000; // สูตรโกง DDD+UUU อมตะกี่ ms (10 วิ = 10000)
+      const CFG_MAGNET_DURATION = 10000;           // ระยะเวลา Magnet
+      const CFG_BOOST_DURATION = 5000;             // ระยะเวลา Boost (วิ่งเร็ว + อมตะ)
+      const CFG_GIANT_DURATION = 6000;             // ระยะเวลา Giant (ตัวใหญ่ ชนสิ่งกีดขวางแตก)
+
+      // 6) ระยะดูดเหรียญ/หัวใจของ Magnet (px ตามหน้าจอ)
+      const CFG_MAGNET_RADIUS = 900;       // ยิ่งมาก = ดูดไกลขึ้น เกือบทั้งจอ
+
+      // 7) ค่าพลังจากหัวใจแต่ละขนาด
+      const CFG_HEART_SMALL_GAIN = 15;     // หัวใจเล็ก +energy
+      const CFG_HEART_MEDIUM_GAIN = 25;    // หัวใจกลาง +energy
+      const CFG_HEART_LARGE_GAIN = 40;     // หัวใจใหญ่ +energy
+
+      // 8) ภารกิจ (Mission) เป้าหมาย
+      const CFG_MISSION_COIN_TARGET = 20;  // ต้องเก็บเหรียญถึงเท่าไร
+      const CFG_MISSION_DJ_TARGET = 10;    // ใช้ double jump ทั้งหมดกี่ครั้ง
+      const CFG_MISSION_OBS_TARGET = 30;   // ผ่านอุปสรรคกี่ชิ้น
+
+      // 9) ความถี่การเกิดไอเท็ม/แพลตฟอร์ม (ms)
+      const CFG_COLLECTIBLE_BASE_INTERVAL = 900;  // ยิ่งน้อย = ไอเท็มออกถี่ขึ้น
+      const CFG_COLLECTIBLE_MIN_INTERVAL = 500;   // ระยะห่างต่ำสุดระหว่างไอเท็ม
+      const CFG_PLATFORM_MIN_INTERVAL = 2000;     // เวลาเกิด platform ล็อตใหม่ขั้นต่ำ
+      const CFG_PLATFORM_MAX_INTERVAL = 4500;     // เวลาเกิด platform ล็อตใหม่สูงสุด
+
+      // 10) สูตรโกง
+      const CFG_CHEAT_WINDOW = 1000;       // ต้องกด DDD+UUU ให้ครบในกี่ ms (1 วิ = 1000)
+
+      // ==========
+      // Logic เกม
+      // ==========
+
       const gameContainer = document.getElementById("gameContainer");
       const player = document.getElementById("player");
       const scoreEl = document.getElementById("score");
       const bestScoreEl = document.getElementById("bestScore");
       const messageEl = document.getElementById("message");
       const startBtn = document.getElementById("startBtn");
+      const fullscreenBtn = document.getElementById("fullscreenBtn");
       const cheatTimerEl = document.getElementById("cheatTimer");
       const btnJump = document.getElementById("btnJump");
       const btnDuck = document.getElementById("btnDuck");
@@ -581,10 +709,10 @@
 
       const groundY = 40;
 
-      // ฟิสิกส์กระโดด + Double Jump
-      const gravity = 0.9;       // ตกเร็ว
-      const jumpStrength = 13.5; // กระโดดสูงขึ้น
-      const maxJumps = 2;
+      // ฟิสิกส์กระโดด + Double Jump (ใช้ค่าจาก CONFIG)
+      const gravity = CFG_GRAVITY;
+      const jumpStrength = CFG_JUMP_STRENGTH;
+      const maxJumps = CFG_MAX_JUMPS;
       let playerY = groundY;
       let prevPlayerY = groundY;
       let isJumping = false;
@@ -594,12 +722,12 @@
       // หมอบ
       let isDucking = false;
 
-      // Energy
-      const maxEnergy = 100;
+      // Energy (ใช้ CONFIG)
+      const maxEnergy = CFG_MAX_ENERGY;
       let energy = maxEnergy;
-      const energyDecayPerSec = 4;
-      const damageGround = 25;
-      const damageAir = 35;
+      const energyDecayPerSec = CFG_ENERGY_DECAY_PER_SEC;
+      const damageGround = CFG_DAMAGE_GROUND;
+      const damageAir = CFG_DAMAGE_AIR;
 
       // คะแนน + เหรียญ + ภารกิจ
       let score = 0;
@@ -609,9 +737,9 @@
       let totalDoubleJumps = 0;
       let obstaclesPassed = 0;
 
-      const MISSION_COIN_TARGET = 20;
-      const MISSION_DJ_TARGET = 10;
-      const MISSION_OBS_TARGET = 30;
+      const MISSION_COIN_TARGET = CFG_MISSION_COIN_TARGET;
+      const MISSION_DJ_TARGET = CFG_MISSION_DJ_TARGET;
+      const MISSION_OBS_TARGET = CFG_MISSION_OBS_TARGET;
 
       bestScoreEl.textContent = "สถิติสูงสุด: " + bestScore;
 
@@ -620,9 +748,9 @@
       let collectibles = [];
       let platforms = [];
       let holes = [];
-      let speed = 6;
-      const BOOST_MULTIPLIER = 1.6;
-      const HOLE_CHANCE = 0.18;
+      let speed = CFG_START_SPEED;
+      const BOOST_MULTIPLIER = CFG_BOOST_MULTIPLIER;
+      const HOLE_CHANCE = CFG_HOLE_CHANCE;
 
       let gameOver = false;
       let frameId = null;
@@ -634,30 +762,32 @@
       let timeSinceLastCollectible = 0;
 
       let timeSinceLastPlatform = 0;
-      let nextPlatformIn = 2500;
+      let nextPlatformIn = CFG_PLATFORM_MIN_INTERVAL + Math.random() * (CFG_PLATFORM_MAX_INTERVAL - CFG_PLATFORM_MIN_INTERVAL);
 
       // โหมดอมตะรวม (โกง + Boost)
       let invincible = false;
       let invincibleTimer = 0;
-      const CHEAT_INVINCIBLE_DURATION = 10000;
+      const CHEAT_INVINCIBLE_DURATION = CFG_CHEAT_INVINCIBLE_DURATION;
 
       // Power-ups
       let magnetActive = false;
       let magnetTimer = 0;
-      const MAGNET_DURATION = 10000;
-      const MAGNET_RADIUS = 900; // ดูดแรงมาก
+      const MAGNET_DURATION = CFG_MAGNET_DURATION;
+      const MAGNET_RADIUS = CFG_MAGNET_RADIUS;
 
       let boostActive = false;
       let boostTimer = 0;
-      const BOOST_DURATION = 5000;
+      const BOOST_DURATION = CFG_BOOST_DURATION;
 
       let giantActive = false;
       let giantTimer = 0;
-      const GIANT_DURATION = 6000;
+      const GIANT_DURATION = CFG_GIANT_DURATION;
 
       // ตรวจจับสูตรโกง
-      const CHEAT_WINDOW = 1000;
+      const CHEAT_WINDOW = CFG_CHEAT_WINDOW;
       let cheatEvents = [];
+
+      const TRAP_Y = CFG_TRAP_Y; // ระดับกับดักใต้หลุม
 
       function randomBetween(min, max) {
         return Math.random() * (max - min) + min;
@@ -696,7 +826,7 @@
         coinsCollected = 0;
         totalDoubleJumps = 0;
         obstaclesPassed = 0;
-        speed = 6;
+        speed = CFG_START_SPEED;
 
         scoreEl.textContent = "คะแนน: " + score;
         coinsEl.textContent = "เหรียญ: " + coins;
@@ -733,7 +863,7 @@
         timeSinceLastCollectible = 0;
 
         timeSinceLastPlatform = 0;
-        nextPlatformIn = 2000 + Math.random() * 2000;
+        nextPlatformIn = CFG_PLATFORM_MIN_INTERVAL + Math.random() * (CFG_PLATFORM_MAX_INTERVAL - CFG_PLATFORM_MIN_INTERVAL);
 
         updateMissionUI();
 
@@ -808,7 +938,7 @@
         } else if (r < 0.70) {
           c.classList.add("energy");
           const sizes = ["small","medium","large"];
-          const gains = [15, 25, 40];
+          const gains = [CFG_HEART_SMALL_GAIN, CFG_HEART_MEDIUM_GAIN, CFG_HEART_LARGE_GAIN];
           const idx = Math.floor(Math.random() * sizes.length);
           c.classList.add(sizes[idx]);
           c.dataset.energy = gains[idx];
@@ -875,8 +1005,8 @@
             scoreEl.textContent = "คะแนน: " + score;
             updateMissionUI();
 
-            if (score % 5 === 0) {
-              speed += 0.5;
+            if (CFG_SPEED_UP_EVERY_SCORE > 0 && score % CFG_SPEED_UP_EVERY_SCORE === 0) {
+              speed += CFG_SPEED_UP_AMOUNT;
             }
           }
 
@@ -962,7 +1092,7 @@
             spawnPlatformGroup();
           }
           timeSinceLastPlatform = 0;
-          nextPlatformIn = 2000 + Math.random() * 2500;
+          nextPlatformIn = CFG_PLATFORM_MIN_INTERVAL + Math.random() * (CFG_PLATFORM_MAX_INTERVAL - CFG_PLATFORM_MIN_INTERVAL);
         }
       }
 
@@ -1066,8 +1196,8 @@
         });
 
         timeSinceLastCollectible += delta;
-        const baseInterval = 900;
-        const minInterval = 500;
+        const baseInterval = CFG_COLLECTIBLE_BASE_INTERVAL;
+        const minInterval = CFG_COLLECTIBLE_MIN_INTERVAL;
         const interval = Math.max(minInterval, baseInterval - score * 4);
 
         if (timeSinceLastCollectible >= interval) {
@@ -1134,9 +1264,9 @@
           }
         });
 
-        // ปกติ: ถ้า player ต่ำกว่าพื้นรองรับ → ให้ยืนบนพื้น
-        // แต่ถ้าพื้นนั้นคือพื้นหลัก (groundY) และตรงนั้นเป็นหลุม → "ไม่ให้ยืน" ปล่อยให้ตกต่อไป
+        // ถ้าอยู่ต่ำกว่าระดับพื้นรองรับ
         if (playerY <= supportY) {
+          // ถ้าระดับนั้นคือพื้นหลัก และตรงนั้นเป็นหลุม → ไม่ให้ยืน ปล่อยให้ตก
           if (!(supportY === groundY && holeUnder)) {
             playerY = supportY;
             jumpVelocity = 0;
@@ -1148,10 +1278,8 @@
         player.style.bottom = playerY + "px";
       }
 
-      // กับดักด้านล่างหลุม (ปล่อยให้ตกได้ แต่ถ้าตกลึกเกินไป = ชนกับดัก)
+      // กับดักด้านล่างหลุม (ตกได้ แต่ถ้าตกลึกเกินไป = โดนกับดัก)
       function checkHoleTrap() {
-        // ถ้า y ต่ำกว่าจุดนี้ แปลว่าตกลึกไปถึงระดับกับดักแล้ว
-        const TRAP_Y = -60;
         if (playerY < TRAP_Y) {
           endGame();
         }
@@ -1312,6 +1440,38 @@
         cheatTimerEl.textContent = "โหมดโกง: PHANToM อมตะ 10 วิ 🎃";
         messageEl.textContent = "โหมดโกงเปิดแล้ว! ชนอะไรก็ไม่ตาย 10 วิ";
       }
+
+      // Fullscreen toggle
+      function toggleFullscreen(){
+        const elem = document.documentElement;
+        if (!document.fullscreenElement){
+          if (elem.requestFullscreen) elem.requestFullscreen();
+          else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+          else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+        } else {
+          if (document.exitFullscreen) document.exitFullscreen();
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+          else if (document.msExitFullscreen) document.msExitFullscreen();
+        }
+      }
+
+      if (fullscreenBtn){
+        fullscreenBtn.addEventListener("click",(e)=>{
+          e.preventDefault();
+          toggleFullscreen();
+        });
+      }
+
+      document.addEventListener("fullscreenchange", () => {
+        if (!fullscreenBtn) return;
+        if (document.fullscreenElement){
+          fullscreenBtn.textContent = "ออกจากโหมดเต็มจอ";
+          document.body.classList.add("fullscreen-game");
+        } else {
+          fullscreenBtn.textContent = "โหมดเต็มจอ";
+          document.body.classList.remove("fullscreen-game");
+        }
+      });
 
       // คีย์บอร์ด
       document.addEventListener("keydown", (e) => {
