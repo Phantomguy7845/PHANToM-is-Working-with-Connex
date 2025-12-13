@@ -78,7 +78,7 @@
       height: 60px;
       transform-origin: center bottom;
       transition: transform 0.08s ease, width 0.12s ease, height 0.12s ease;
-      box-shadow: none;
+      box-shadow: none;   /* ไม่ใช้ box-shadow เพื่อเลี่ยงกรอบสี่เหลี่ยม */
       z-index: 5;
     }
 
@@ -89,6 +89,7 @@
       pointer-events: none;
       user-select: none;
       background: transparent;
+      /* แสงปกติ ใช้ drop-shadow ตาม alpha ของ PNG */
       filter: drop-shadow(0 0 16px rgba(56,189,248,0.8));
     }
 
@@ -97,11 +98,13 @@
       transform: translateY(-8px) scaleY(0.5);
     }
     #player.duck img {
+      /* Glow ตอนหมอบ */
       filter: drop-shadow(0 0 14px rgba(56,189,248,0.9));
     }
 
     /* อมตะ (โหมดโกง / Boost) */
     #player.invincible img {
+      /* แสงทองอมตะ ตามรูป ไม่ใช่กรอบสี่เหลี่ยม */
       filter:
         drop-shadow(0 0 26px rgba(250,204,21,1))
         drop-shadow(0 0 70px rgba(250,204,21,0.7));
@@ -113,6 +116,7 @@
       height: 130px;
     }
     #player.giant img {
+      /* แสงฟ้าใหญ่ */
       filter:
         drop-shadow(0 0 26px rgba(59,130,246,1))
         drop-shadow(0 0 70px rgba(59,130,246,0.7));
@@ -133,7 +137,7 @@
       position: absolute;
       width: 140px;
       height: 35px;
-      left: -9999px;
+      left: -9999px; /* ซ่อนเริ่มต้น */
       bottom: 40px;
       background: linear-gradient(
         90deg,
@@ -157,30 +161,37 @@
       z-index: 3;
     }
 
+    /* อุปสรรคพื้น (แบบต่างๆ) */
     .obstacle.ground.tree {
       background: linear-gradient(to top, #14532d, #16a34a);
       border-radius: 4px 4px 0 0;
     }
+
     .obstacle.ground.bush {
       background: linear-gradient(to top, #166534, #22c55e);
       border-radius: 16px;
     }
+
     .obstacle.ground.rock {
       background: radial-gradient(circle at 30% 20%, #9ca3af, #4b5563);
       border-radius: 40% 60% 30% 70%;
     }
+
     .obstacle.ground.spike {
       background: repeating-linear-gradient(135deg, #fecaca 0, #fecaca 6px, #b91c1c 6px, #b91c1c 12px);
     }
+
     .obstacle.ground.crate {
       background: linear-gradient(135deg, #78350f, #fbbf24);
       box-shadow: 0 0 12px rgba(124,45,18,0.9);
     }
+
     .obstacle.ground.barrel {
       background: linear-gradient(180deg, #f97316, #c2410c);
       box-shadow: 0 0 14px rgba(249,115,22,0.95);
       border-radius: 6px;
     }
+
     .obstacle.ground.sign {
       background: linear-gradient(180deg, #facc15, #eab308);
       box-shadow: 0 0 14px rgba(234,179,8,0.95);
@@ -196,29 +207,34 @@
       font-weight: 700;
       font-size: 18px;
     }
+
     .obstacle.ground.laser {
       background: linear-gradient(180deg, #ef4444, #f97316);
       box-shadow: 0 0 18px rgba(248,113,113,1);
     }
 
+    /* อุปสรรคลอย (ต้องหมอบ/กระโดดหลบ) */
     .obstacle.air.bird {
       background: linear-gradient(135deg, #fee2e2, #ef4444, #7f1d1d);
       border: 2px solid #fecaca;
       box-shadow: 0 0 16px rgba(239,68,68,0.95);
       border-radius: 6px;
     }
+
     .obstacle.air.drone {
       background: radial-gradient(circle at 30% 30%, #e5e7eb, #64748b, #020617);
       border-radius: 40%;
       border: 2px solid #e5e7eb;
       box-shadow: 0 0 14px rgba(148,163,184,0.9);
     }
+
     .obstacle.air.fireball {
       background: radial-gradient(circle at 30% 30%, #fef9c3, #f97316, #7c2d12);
       border-radius: 50%;
       box-shadow: 0 0 16px rgba(249,115,22,0.95);
     }
 
+    /* พื้น/ชั้นพิเศษ (วิ่งได้ แต่ไม่ทำดาเมจ) */
     .platform {
       position: absolute;
       height: 10px;
@@ -229,6 +245,7 @@
       z-index: 2;
     }
 
+    /* หลุม + กับดักด้านล่าง */
     .hole {
       position: absolute;
       bottom: 0;
@@ -242,6 +259,7 @@
       overflow: hidden;
     }
     .hole::before {
+      /* ฟันแหลม/กับดักด้านล่างหลุม */
       content: "";
       position: absolute;
       left: 0;
@@ -257,6 +275,7 @@
       box-shadow: 0 -2px 8px rgba(248,113,113,0.8);
     }
     .hole::after {
+      /* แสงแดงจากกับดัก */
       content: "";
       position: absolute;
       left: 50%;
@@ -268,6 +287,7 @@
       opacity: 0.9;
     }
 
+    /* ไอเท็มเก็บได้: ใช้ emoji แทนกราฟิก */
     .collectible {
       position: absolute;
       z-index: 4;
@@ -281,7 +301,6 @@
       line-height: 1;
       user-select: none;
       pointer-events: none;
-      will-change: transform, opacity;
     }
 
     .collectible.coin {
@@ -314,6 +333,7 @@
       box-shadow: 0 0 14px rgba(129, 140, 248, 0.95);
     }
 
+    /* Energy bar */
     #energyContainer {
       margin-top: 10px;
       width: 800px;
@@ -365,7 +385,9 @@
       justify-content: center;
     }
 
-    #coins { color: #facc15; }
+    #coins {
+      color: #facc15;
+    }
 
     #cheatTimer {
       margin-top: 4px;
@@ -391,6 +413,7 @@
       max-width: 800px;
     }
 
+    /* กล่องคำอธิบายไอเท็ม */
     #itemGuide {
       margin-top: 8px;
       font-size: 12px;
@@ -401,10 +424,18 @@
       background: rgba(15,23,42,0.85);
       border: 1px solid rgba(148,163,184,0.45);
     }
-    #itemGuide strong { color: #facc15; }
-    #itemGuide ul { margin: 4px 0 0; padding-left: 18px; }
-    #itemGuide li { margin-bottom: 2px; }
+    #itemGuide strong {
+      color: #facc15;
+    }
+    #itemGuide ul {
+      margin: 4px 0 0;
+      padding-left: 18px;
+    }
+    #itemGuide li {
+      margin-bottom: 2px;
+    }
 
+    /* ปุ่มเริ่มเกม + เต็มจอ */
     #buttonsRow{
       margin-top: 14px;
       display:flex;
@@ -431,6 +462,7 @@
       box-shadow: 0 14px 32px rgba(34, 197, 94, 0.55);
       filter: brightness(1.05);
     }
+
     #startBtn:active {
       transform: translateY(1px);
       box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
@@ -456,6 +488,7 @@
       box-shadow:0 4px 10px rgba(15,23,42,0.9);
     }
 
+    /* ปุ่มควบคุมบนหน้าจอ */
     #touchControls {
       margin-top: 14px;
       width: 800px;
@@ -507,7 +540,9 @@
       100% { transform: translate(0, 0); }
     }
 
-    #gameContainer.shake { animation: hitShake 0.25s ease; }
+    #gameContainer.shake {
+      animation: hitShake 0.25s ease;
+    }
 
     #hitFlash {
       position: fixed;
@@ -519,91 +554,134 @@
       transition: opacity 0.12s ease;
       z-index: 999;
     }
-    body.hit-blink #hitFlash { opacity: 1; }
 
-    /* === GAME OVER POPUP === */
-    #gameOverModal {
+    body.hit-blink #hitFlash {
+      opacity: 1;
+    }
+
+    /* === Game Over Overlay === */
+    #gameOverOverlay {
       position: fixed;
       inset: 0;
-      display: none;
+      display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 2000;
-      padding: 18px;
-      background: rgba(2,6,23,0.75);
-      backdrop-filter: blur(6px);
+      background: radial-gradient(circle at top, rgba(15,23,42,0.88), rgba(2,6,23,0.98));
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease;
     }
-    #gameOverModal.show { display: flex; }
 
-    .modal-card {
-      width: min(520px, 92vw);
-      border-radius: 18px;
-      border: 1px solid rgba(148,163,184,0.35);
-      background: rgba(15,23,42,0.92);
-      box-shadow: 0 24px 70px rgba(0,0,0,0.55);
-      padding: 16px;
+    #gameOverOverlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .go-panel {
+      min-width: 260px;
+      max-width: 320px;
+      padding: 18px 20px;
+      border-radius: 16px;
+      background: radial-gradient(circle at top left, #1f2937, #020617);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.85);
+      border: 1px solid rgba(148,163,184,0.7);
       text-align: center;
-      animation: modalPop 0.18s ease;
-    }
-    @keyframes modalPop {
-      from { transform: translateY(8px) scale(0.98); opacity: 0.6; }
-      to   { transform: translateY(0) scale(1); opacity: 1; }
     }
 
-    .modal-title{
+    .go-title {
       font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      margin-bottom: 8px;
-      color: #facc15;
-      text-shadow: 0 0 14px rgba(250,204,21,0.25);
     }
-    .modal-stats{
-      font-size: 14px;
-      color: #e5e7eb;
-      margin-bottom: 14px;
-      line-height: 1.6;
+
+    .go-summary {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 10px;
     }
-    .modal-actions{
+    .go-summary span {
+      color:#e5e7eb;
+    }
+
+    .go-buttons {
+      margin-top: 8px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      margin-top: 10px;
+      gap: 8px;
     }
-    .modal-btn{
-      width: 100%;
-      padding: 12px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(148,163,184,0.35);
-      cursor: pointer;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      color: #e5e7eb;
-      background: radial-gradient(circle at 20% 0, #1f2937, #020617);
-      box-shadow: 0 12px 28px rgba(0,0,0,0.35);
-    }
-    .modal-btn.primary{
+
+    #reviveBtn {
+      padding: 8px 12px;
+      border-radius: 999px;
       border: none;
-      background: linear-gradient(to right, #22c55e, #2dd4bf);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      background: linear-gradient(to right, #22c55e, #22d3ee);
       color: #022c22;
-      box-shadow: 0 14px 32px rgba(34, 197, 94, 0.35);
+      box-shadow: 0 10px 25px rgba(34,197,94,0.35);
     }
-    .modal-btn.revive{
-      border: 1px solid rgba(250,204,21,0.55);
-      background: radial-gradient(circle at 30% 20%, rgba(250,204,21,0.18), rgba(15,23,42,0.92));
-      color: #facc15;
+
+    #reviveBtn:hover {
+      filter: brightness(1.05);
+      box-shadow: 0 14px 32px rgba(34,197,94,0.55);
     }
-    .modal-btn:active{ transform: translateY(1px); }
+
+    #reviveBtn:active {
+      transform: translateY(1px);
+      box-shadow: 0 6px 16px rgba(34,197,94,0.4);
+    }
+
+    #restartBtnOverlay {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+      background: radial-gradient(circle at 20% 0, #1f2937, #020617);
+      color: #e5e7eb;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    #restartBtnOverlay:hover {
+      border-color: #38bdf8;
+      box-shadow: 0 0 14px rgba(56,189,248,0.7);
+    }
+
+    #restartBtnOverlay:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 4px 10px rgba(15,23,42,0.9);
+    }
 
     @media (max-width: 600px) {
       #gameContainer { height: 230px; }
       #player { left: 40px; }
 
-      #touchControls { margin-top: 12px; gap: 8px; }
-      .ctrl-btn { padding: 10px 8px; font-size: 13px; }
+      #touchControls {
+        margin-top: 12px;
+        gap: 8px;
+      }
 
-      #energyContainer { font-size: 12px; }
-      #energyText { width: 54px; font-size: 10px; }
+      .ctrl-btn {
+        padding: 10px 8px;
+        font-size: 13px;
+      }
+
+      #energyContainer {
+        font-size: 12px;
+      }
+
+      #energyText {
+        width: 54px;
+        font-size: 10px;
+      }
+
+      .go-panel {
+        max-width: 90vw;
+      }
     }
   </style>
 </head>
@@ -615,13 +693,16 @@
 
   <div id="gameContainer">
     <div id="ground"></div>
+    <!-- ลำแสง Boost -->
     <div id="boostBeam"></div>
 
     <div id="player">
+      <!-- เปลี่ยนชื่อไฟล์รูปได้ -->
       <img src="phantom-runner.png" alt="PHANToM" />
     </div>
   </div>
 
+  <!-- ปุ่มควบคุมด้านล่างเกม -->
   <div id="touchControls">
     <button id="btnJump" class="ctrl-btn">
       กระโดด
@@ -633,6 +714,7 @@
     </button>
   </div>
 
+  <!-- Energy bar -->
   <div id="energyContainer">
     <div id="energyLabel">Energy</div>
     <div id="energyBarWrapper">
@@ -650,6 +732,7 @@
   <div id="mission"></div>
   <div id="message">กดปุ่ม "เริ่มเกม / เล่นใหม่" หรือกด Space เพื่อเริ่ม</div>
 
+  <!-- คำอธิบายไอเท็ม (ใช้ emoji ตรงกับในเกม) -->
   <div id="itemGuide">
     <strong>คำอธิบายไอเท็ม:</strong>
     <ul>
@@ -661,26 +744,25 @@
     </ul>
   </div>
 
+  <!-- ปุ่มเริ่มเกม + เต็มจอ -->
   <div id="buttonsRow">
     <button id="startBtn">เริ่มเกม / เล่นใหม่</button>
     <button id="fullscreenBtn">โหมดเต็มจอ</button>
   </div>
 
+  <!-- overlay ไว้ทำแฟลชทั้งจอ -->
   <div id="hitFlash"></div>
 
-  <!-- GAME OVER POPUP -->
-  <div id="gameOverModal">
-    <div class="modal-card">
-      <div class="modal-title">GAME OVER</div>
-      <div class="modal-stats" id="gameOverStats">...</div>
-
-      <div class="modal-actions">
-        <button class="modal-btn revive" id="reviveBtn">คืนชีพ (ใช้เหรียญ 20)</button>
-        <button class="modal-btn primary" id="restartFromModalBtn">เริ่มเกมใหม่</button>
+  <!-- Game Over Popup -->
+  <div id="gameOverOverlay">
+    <div class="go-panel">
+      <div class="go-title">Game Over</div>
+      <div class="go-summary">
+        คะแนน: <span id="finalScore">0</span> • เหรียญ: <span id="finalCoins">0</span>
       </div>
-
-      <div style="margin-top:10px; font-size:12px; color:#9ca3af;">
-        * ปุ่มคืนชีพจะแสดงเฉพาะตอนเหรียญพอ (>= 20)
+      <div class="go-buttons">
+        <button id="reviveBtn">คืนชีพ (ใช้ 20 เหรียญ)</button>
+        <button id="restartBtnOverlay">เริ่มเกมใหม่</button>
       </div>
     </div>
   </div>
@@ -692,62 +774,1096 @@
       // =========================
 
       // 1) ฟิสิกส์ตัวละคร
-      const CFG_GRAVITY = 0.9;
-      const CFG_JUMP_STRENGTH = 13.5;
-      const CFG_MAX_JUMPS = 2;
+      const CFG_GRAVITY = 0.9;              // แรงโน้มถ่วง (มากขึ้น = ตัวตกไว หนักขึ้น)
+      const CFG_JUMP_STRENGTH = 13.5;       // แรงกระโดด (มากขึ้น = กระโดดสูงขึ้น)
+      const CFG_MAX_JUMPS = 2;              // จำนวนครั้งที่กระโดดต่อเนื่องได้ (เช่น 2 = double jump)
 
       // 2) พลังงาน / ความเสียหาย (ลดลงจากเดิม 40%)
-      const CFG_MAX_ENERGY = 100;
-      const CFG_ENERGY_DECAY_PER_SEC = 4;
-      const CFG_DAMAGE_GROUND = 15;   // เดิม 25 → ลด 40%
-      const CFG_DAMAGE_AIR = 21;      // เดิม 35 → ลด 40%
+      const CFG_MAX_ENERGY = 100;           // พลังงานสูงสุด
+      const CFG_ENERGY_DECAY_PER_SEC = 4;   // พลังงานลดเองต่อวินาที
+      const CFG_DAMAGE_GROUND = 15;         // เดิม 25 → ลด 40% เหลือ 15
+      const CFG_DAMAGE_AIR = 21;            // เดิม 35 → ลด 40% เหลือ ~21
 
       // 3) ความเร็วเกม
-      const CFG_START_SPEED = 6;
-      const CFG_SPEED_UP_EVERY_SCORE = 5;
-      const CFG_SPEED_UP_AMOUNT = 0.5;
-      const CFG_BOOST_MULTIPLIER = 1.6;
+      const CFG_START_SPEED = 6;            // ความเร็วเริ่มต้น
+      const CFG_SPEED_UP_EVERY_SCORE = 5;   // ทุก ๆ กี่คะแนน เพิ่มความเร็ว 1 ครั้ง
+      const CFG_SPEED_UP_AMOUNT = 0.5;      // เพิ่มความเร็วครั้งละเท่าไร
+      const CFG_BOOST_MULTIPLIER = 1.6;     // ตัวคูณความเร็วเมื่อได้ Boost
 
       // ชะลอความเร็วเมื่อชน (ถ้ายังไม่ตาย)
-      const CFG_HIT_SLOW_FACTOR = 0.8;   // ลดลง 20%
-      const CFG_HIT_SLOW_DURATION = 500; // 0.5 วิ
+      const CFG_HIT_SLOW_FACTOR = 0.8;      // ลดลง 20%
+      const CFG_HIT_SLOW_DURATION = 500;    // ชะลอเป็นเวลา 0.5 วินาที (ms)
 
       // 4) หลุมกับดัก
-      const CFG_HOLE_CHANCE = 0.18;
-      const CFG_TRAP_Y = -60;
+      const CFG_HOLE_CHANCE = 0.18;         // โอกาสที่ "อุปสรรคบนพื้น" จะกลายเป็นหลุม (0–1)
+      const CFG_TRAP_Y = -60;               // ระดับความลึกที่ถือว่าโดนกับดักใต้หลุมแล้ว
 
-      // 5) เวลา buff / cheat (ms)
-      const CFG_CHEAT_INVINCIBLE_DURATION = 10000;
-      const CFG_MAGNET_DURATION = 10000;
-      const CFG_BOOST_DURATION = 5000;
-      const CFG_GIANT_DURATION = 6000;
+      // 5) เวลา buff / cheat (หน่วย ms)
+      const CFG_CHEAT_INVINCIBLE_DURATION = 10000; // สูตรโกง DDD+UUU อมตะกี่ ms (10 วิ = 10000)
+      const CFG_MAGNET_DURATION = 10000;           // ระยะเวลา Magnet
+      const CFG_BOOST_DURATION = 5000;             // ระยะเวลา Boost (วิ่งเร็ว + อมตะ)
+      const CFG_GIANT_DURATION = 6000;             // ระยะเวลา Giant (ตัวใหญ่ ชนสิ่งกีดขวางแตก)
 
-      // 6) ระยะดูด Magnet (px)
-      const CFG_MAGNET_RADIUS = 400;  // << ปรับรัศมีดูดที่นี่
+      // 6) ระยะดูดเหรียญ/หัวใจของ Magnet (px ตามหน้าจอ)
+      const CFG_MAGNET_RADIUS = 400;       // ปรับได้เอง (ยิ่งมาก = ดูดไกลขึ้น)
 
-      // 7) ค่าพลังหัวใจ
-      const CFG_HEART_SMALL_GAIN = 15;
-      const CFG_HEART_MEDIUM_GAIN = 25;
-      const CFG_HEART_LARGE_GAIN = 40;
+      // 7) ค่าพลังจากหัวใจแต่ละขนาด
+      const CFG_HEART_SMALL_GAIN = 15;     // หัวใจเล็ก +energy
+      const CFG_HEART_MEDIUM_GAIN = 25;    // หัวใจกลาง +energy
+      const CFG_HEART_LARGE_GAIN = 40;     // หัวใจใหญ่ +energy
 
-      // ✅ 7.1) หัวใจ “ใหญ่สุด” ออกทุกกี่วินาที (การันตี)
-      const CFG_BIG_HEART_EVERY_MS = 40000; // 40 วินาที
+      // 8) ภารกิจ (Mission) เป้าหมาย
+      const CFG_MISSION_COIN_TARGET = 20;  // ต้องเก็บเหรียญถึงเท่าไร
+      const CFG_MISSION_DJ_TARGET = 10;    // ใช้ double jump ทั้งหมดกี่ครั้ง
+      const CFG_MISSION_OBS_TARGET = 30;   // ผ่านอุปสรรคกี่ชิ้น
 
-      // 8) ภารกิจ
-      const CFG_MISSION_COIN_TARGET = 20;
-      const CFG_MISSION_DJ_TARGET = 10;
-      const CFG_MISSION_OBS_TARGET = 30;
-
-      // 9) ความถี่การเกิดไอเท็ม (ms)  ✅ ลดค่านี้ = ของออกถี่ขึ้น
-      const CFG_COLLECTIBLE_BASE_INTERVAL = 1200; // แนะนำ 1200 หรือ 1000 เพื่อเหรียญเยอะ
-      const CFG_COLLECTIBLE_MIN_INTERVAL = 450;
-
-      const CFG_PLATFORM_MIN_INTERVAL = 2000;
-      const CFG_PLATFORM_MAX_INTERVAL = 4500;
+      // 9) ความถี่การเกิดไอเท็ม/แพลตฟอร์ม (ms)
+      const CFG_COLLECTIBLE_BASE_INTERVAL = 700;  // ยิ่งน้อย = ไอเท็มออกถี่ขึ้น
+      const CFG_COLLECTIBLE_MIN_INTERVAL = 50;    // ระยะห่างต่ำสุดระหว่างไอเท็ม
+      const CFG_PLATFORM_MIN_INTERVAL = 2000;      // เวลาเกิด platform ล็อตใหม่ขั้นต่ำ
+      const CFG_PLATFORM_MAX_INTERVAL = 4500;      // เวลาเกิด platform ล็อตใหม่สูงสุด
 
       // 10) สูตรโกง
-      const CFG_CHEAT_WINDOW = 1000;
+      const CFG_CHEAT_WINDOW = 1000;       // ต้องกด DDD+UUU ให้ครบในกี่ ms (1 วิ = 1000)
 
-      // ✅ 11) สัดส่วนไอเท็มสุ่ม (เหรียญเยอะ / ไอเท็มอื่นสุ่มเหมือนเดิม)
-      // หมายเหตุ: หัวใจ "large" จะถูกบังคับออกตามเวลา ไม่อยู่ในสุ่ม
-      const CFG_CHANCE_COIN = 0.72;       
+      // ==========
+      // Logic เกม
+      // ==========
+
+      const gameContainer = document.getElementById("gameContainer");
+      const player = document.getElementById("player");
+      const scoreEl = document.getElementById("score");
+      const bestScoreEl = document.getElementById("bestScore");
+      const messageEl = document.getElementById("message");
+      const startBtn = document.getElementById("startBtn");
+      const fullscreenBtn = document.getElementById("fullscreenBtn");
+      const cheatTimerEl = document.getElementById("cheatTimer");
+      const btnJump = document.getElementById("btnJump");
+      const btnDuck = document.getElementById("btnDuck");
+      const energyBar = document.getElementById("energyBar");
+      const energyText = document.getElementById("energyText");
+      const coinsEl = document.getElementById("coins");
+      const missionEl = document.getElementById("mission");
+      const boostBeam = document.getElementById("boostBeam");
+
+      const gameOverOverlay = document.getElementById("gameOverOverlay");
+      const finalScoreEl = document.getElementById("finalScore");
+      const finalCoinsEl = document.getElementById("finalCoins");
+      const restartBtnOverlay = document.getElementById("restartBtnOverlay");
+      const reviveBtn = document.getElementById("reviveBtn");
+
+      const groundY = 40;
+      const playerBaseLeft = parseFloat(getComputedStyle(player).left) || 80;
+
+      // ฟิสิกส์กระโดด + Double Jump
+      const gravity = CFG_GRAVITY;
+      const jumpStrength = CFG_JUMP_STRENGTH;
+      const maxJumps = CFG_MAX_JUMPS;
+      let playerY = groundY;
+      let prevPlayerY = groundY;
+      let isJumping = false;
+      let jumpVelocity = 0;
+      let jumpsLeft = maxJumps;
+
+      // หมอบ
+      let isDucking = false;
+
+      // Energy
+      const maxEnergy = CFG_MAX_ENERGY;
+      let energy = maxEnergy;
+      const energyDecayPerSec = CFG_ENERGY_DECAY_PER_SEC;
+      const damageGround = CFG_DAMAGE_GROUND;
+      const damageAir = CFG_DAMAGE_AIR;
+
+      // คะแนน + เหรียญ + ภารกิจ
+      let score = 0;
+      let bestScore = Number(localStorage.getItem("phantom_runner_best") || 0);
+      let coins = 0;
+      let coinsCollected = 0;
+      let totalDoubleJumps = 0;
+      let obstaclesPassed = 0;
+
+      const MISSION_COIN_TARGET = CFG_MISSION_COIN_TARGET;
+      const MISSION_DJ_TARGET = CFG_MISSION_DJ_TARGET;
+      const MISSION_OBS_TARGET = CFG_MISSION_OBS_TARGET;
+
+      bestScoreEl.textContent = "สถิติสูงสุด: " + bestScore;
+
+      // เกม
+      let obstacles = [];
+      let collectibles = [];
+      let platforms = [];
+      let holes = [];
+      let speed = CFG_START_SPEED;
+      const BOOST_MULTIPLIER = CFG_BOOST_MULTIPLIER;
+      const HOLE_CHANCE = CFG_HOLE_CHANCE;
+
+      let gameOver = false;
+      let frameId = null;
+      let lastTime = null;
+
+      let timeSinceLastObstacle = 0;
+      let nextSpawnIn = 1000;
+
+      let timeSinceLastCollectible = 0;
+
+      let timeSinceLastPlatform = 0;
+      let nextPlatformIn = CFG_PLATFORM_MIN_INTERVAL + Math.random() * (CFG_PLATFORM_MAX_INTERVAL - CFG_PLATFORM_MIN_INTERVAL);
+
+      // โหมดอมตะรวม (โกง + Boost)
+      let invincible = false;
+      let invincibleTimer = 0;
+      const CHEAT_INVINCIBLE_DURATION = CFG_CHEAT_INVINCIBLE_DURATION;
+
+      // Power-ups
+      let magnetActive = false;
+      let magnetTimer = 0;
+
+      let boostActive = false;
+      let boostTimer = 0;
+
+      let giantActive = false;
+      let giantTimer = 0;
+
+      // Slow หลังชน
+      let hitSlowTimer = 0; // ms ที่ยังชะลอความเร็วอยู่
+
+      // ตรวจจับสูตรโกง
+      const CHEAT_WINDOW = CFG_CHEAT_WINDOW;
+      let cheatEvents = [];
+
+      const TRAP_Y = CFG_TRAP_Y;
+
+      function randomBetween(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      function updateEnergyUI() {
+        const ratio = Math.max(0, Math.min(1, energy / maxEnergy));
+        energyBar.style.width = (ratio * 100) + "%";
+        energyText.textContent = Math.round(energy) + " / " + maxEnergy;
+      }
+
+      function updateMissionUI() {
+        if (!missionEl) return;
+        missionEl.textContent =
+          "Mission: เหรียญ " + coinsCollected + "/" + MISSION_COIN_TARGET +
+          " • Double Jump " + totalDoubleJumps + "/" + MISSION_DJ_TARGET +
+          " • ผ่านอุปสรรค " + obstaclesPassed + "/" + MISSION_OBS_TARGET;
+      }
+
+      function clearArrays() {
+        obstacles.forEach(o => o.remove());
+        obstacles = [];
+        collectibles.forEach(c => c.remove());
+        collectibles = [];
+        platforms.forEach(p => p.remove());
+        platforms = [];
+        holes.forEach(h => h.remove());
+        holes = [];
+      }
+
+      function hideGameOverOverlay() {
+        if (!gameOverOverlay) return;
+        gameOverOverlay.classList.remove("show");
+      }
+
+      function showGameOverOverlay() {
+        if (!gameOverOverlay) return;
+        finalScoreEl.textContent = score;
+        finalCoinsEl.textContent = coins;
+
+        if (coins >= 20) {
+          reviveBtn.style.display = "block";
+        } else {
+          reviveBtn.style.display = "none";
+        }
+
+        gameOverOverlay.classList.add("show");
+      }
+
+      function resetGame() {
+        hideGameOverOverlay();
+        clearArrays();
+
+        score = 0;
+        coins = 0;
+        coinsCollected = 0;
+        totalDoubleJumps = 0;
+        obstaclesPassed = 0;
+        speed = CFG_START_SPEED;
+
+        scoreEl.textContent = "คะแนน: " + score;
+        coinsEl.textContent = "เหรียญ: " + coins;
+
+        gameOver = false;
+
+        isJumping = false;
+        isDucking = false;
+        playerY = groundY;
+        prevPlayerY = groundY;
+        jumpVelocity = 0;
+        jumpsLeft = maxJumps;
+        player.style.bottom = playerY + "px";
+        player.classList.remove("duck", "invincible", "giant", "double-jump");
+        player.style.transform = "";
+
+        invincible = false;
+        invincibleTimer = 0;
+        cheatEvents = [];
+        cheatTimerEl.textContent = "";
+
+        magnetActive = false;
+        magnetTimer = 0;
+        boostActive = false;
+        boostTimer = 0;
+        giantActive = false;
+        giantTimer = 0;
+
+        hitSlowTimer = 0;
+
+        energy = maxEnergy;
+        updateEnergyUI();
+
+        timeSinceLastObstacle = 0;
+        nextSpawnIn = 800 + Math.random() * 600;
+        timeSinceLastCollectible = 0;
+
+        timeSinceLastPlatform = 0;
+        nextPlatformIn = CFG_PLATFORM_MIN_INTERVAL + Math.random() * (CFG_PLATFORM_MAX_INTERVAL - CFG_PLATFORM_MIN_INTERVAL);
+
+        updateMissionUI();
+
+        messageEl.textContent = "หลบอุปสรรคและหลุมกับดักให้ได้มากที่สุด!";
+
+        if (boostBeam) {
+          boostBeam.style.opacity = 0;
+          boostBeam.style.left = "-9999px";
+        }
+
+        if (frameId) cancelAnimationFrame(frameId);
+        lastTime = null;
+        frameId = requestAnimationFrame(gameLoop);
+
+        spawnObstacle();
+      }
+
+      function spawnHole() {
+        const h = document.createElement("div");
+        h.classList.add("hole");
+        const width = randomBetween(80, 160);
+        h.style.width = width + "px";
+        h.style.left = gameContainer.offsetWidth + "px";
+        h.style.bottom = "0px";
+        gameContainer.appendChild(h);
+        holes.push(h);
+      }
+
+      function spawnObstacle() {
+        const isAir = Math.random() < 0.35;
+
+        // หลุมบนพื้น
+        if (!isAir && Math.random() < HOLE_CHANCE) {
+          spawnHole();
+          return;
+        }
+
+        const obs = document.createElement("div");
+        obs.classList.add("obstacle");
+
+        if (isAir) {
+          const airTypes = ["bird", "drone", "fireball"];
+          const kind = airTypes[Math.floor(Math.random() * airTypes.length)];
+          obs.classList.add("air", kind);
+
+          const height = randomBetween(24, 32);
+          const width = randomBetween(34, 40);
+          obs.style.width = width + "px";
+          obs.style.height = height + "px";
+          const bottom = randomBetween(95, 125);
+          obs.style.bottom = bottom + "px";
+        } else {
+          obs.classList.add("ground");
+          const groundTypes = ["tree", "bush", "rock", "spike", "crate", "barrel", "sign", "laser"];
+          const kind = groundTypes[Math.floor(Math.random() * groundTypes.length)];
+          obs.classList.add(kind);
+
+          const height = randomBetween(45, 80);
+          const width = randomBetween(22, 40);
+          obs.style.width = width + "px";
+          obs.style.height = height + "px";
+          obs.style.bottom = groundY + "px";
+        }
+
+        obs.style.left = gameContainer.offsetWidth + "px";
+        gameContainer.appendChild(obs);
+        obstacles.push(obs);
+      }
+
+      function spawnCollectible() {
+        const c = document.createElement("div");
+        c.classList.add("collectible");
+
+        const r = Math.random();
+        if (r < 0.85) {
+          c.classList.add("coin");
+        } else if (r > 0.84) {
+          c.classList.add("energy");
+          const sizes = ["small","medium","large"];
+          const gains = [CFG_HEART_SMALL_GAIN, CFG_HEART_MEDIUM_GAIN, CFG_HEART_LARGE_GAIN];
+          const idx = Math.floor(Math.random() * sizes.length);
+          c.classList.add(sizes[idx]);
+          c.dataset.energy = gains[idx];
+        } else if (r < 0.85) {
+          c.classList.add("magnet");
+        } else if (r < 0.93) {
+          c.classList.add("boost");
+        } else {
+          c.classList.add("giant");
+        }
+
+        // ตั้ง emoji ให้ตรงกับชนิดไอเท็ม
+        if (c.classList.contains("coin")) {
+          c.textContent = "🤑";
+        } else if (c.classList.contains("energy")) {
+          c.textContent = "❤️";
+        } else if (c.classList.contains("magnet")) {
+          c.textContent = "🧲";
+        } else if (c.classList.contains("boost")) {
+          c.textContent = "⚡";
+        } else if (c.classList.contains("giant")) {
+          c.textContent = "🌀";
+        }
+
+        const lane = Math.floor(Math.random() * 3);
+        let bottom;
+        if (lane === 0) bottom = groundY + 60;
+        else if (lane === 1) bottom = groundY + 110;
+        else bottom = groundY + 150;
+
+        c.style.bottom = bottom + "px";
+        c.style.left = gameContainer.offsetWidth + "px";
+
+        gameContainer.appendChild(c);
+        collectibles.push(c);
+      }
+
+      function spawnPlatformGroup() {
+        const num = Math.random() < 0.5 ? 2 : 3;
+        const baseBottom = groundY + randomBetween(45, 130);
+        const step = 24;
+        const goingUp = Math.random() < 0.5;
+        const baseLeft = gameContainer.offsetWidth + 80;
+
+        for (let i = 0; i < num; i++) {
+          const p = document.createElement("div");
+          p.classList.add("platform");
+          const width = randomBetween(80, 150);
+          const spacing = 20;
+          const left = baseLeft + i * (width + spacing);
+          const bottom = baseBottom + (goingUp ? i : -i) * step;
+
+          p.style.width = width + "px";
+          p.style.left = left + "px";
+          p.style.bottom = bottom + "px";
+
+          gameContainer.appendChild(p);
+          platforms.push(p);
+        }
+      }
+
+      // ความเร็วปัจจุบัน (คำนึงถึง Boost + Slow หลังชน)
+      function getEffectiveSpeed() {
+        let s = speed;
+        if (boostActive) s *= BOOST_MULTIPLIER;
+        if (hitSlowTimer > 0) s *= CFG_HIT_SLOW_FACTOR; // ลดลง 20%
+        return s;
+      }
+
+      // เอฟเฟกต์ตอนโดนชน (สั่นจอ + แฟลช)
+      function triggerHitVFX() {
+        gameContainer.classList.remove("shake");
+        void gameContainer.offsetWidth;
+        gameContainer.classList.add("shake");
+
+        document.body.classList.add("hit-blink");
+        setTimeout(() => {
+          document.body.classList.remove("hit-blink");
+        }, 120);
+      }
+
+      // ใช้ตอนให้ Magnet ดูดเหรียญ/หัวใจ → พุ่งเข้า PHANToM พร้อมแอนิเมชันแล้วค่อยคิดคะแนน
+      function pullCollectibleToPlayer(c) {
+        if (c.dataset.pulled === "1") return;
+        c.dataset.pulled = "1";
+
+        const pr = player.getBoundingClientRect();
+        const cr = c.getBoundingClientRect();
+
+        const targetX = pr.left + pr.width / 2;
+        const targetY = pr.top + pr.height / 2;
+        const cx = cr.left + cr.width / 2;
+        const cy = cr.top + cr.height / 2;
+
+        const dx = targetX - cx;
+        const dy = targetY - cy;
+
+        c.style.transition = "transform 0.2s linear, opacity 0.2s linear";
+        c.style.transform = "translate(" + dx + "px," + dy + "px) scale(0.8)";
+        c.style.opacity = "0.15";
+
+        setTimeout(() => {
+          if (!c.parentNode) return;
+          applyCollectibleEffect(c);
+          c.remove();
+          collectibles = collectibles.filter(item => item !== c);
+        }, 190);
+      }
+
+      // รวม logic เวลา “เก็บไอเท็มสำเร็จ”
+      function applyCollectibleEffect(c) {
+        if (c.classList.contains("coin")) {
+          coins += 1;
+          coinsCollected += 1;
+          score += 2;
+          coinsEl.textContent = "เหรียญ: " + coins;
+          scoreEl.textContent = "คะแนน: " + score;
+        } else if (c.classList.contains("energy")) {
+          const gain = parseInt(c.dataset.energy || "20", 10);
+          energy = Math.min(maxEnergy, energy + gain);
+          updateEnergyUI();
+        } else if (c.classList.contains("magnet")) {
+          magnetActive = true;
+          magnetTimer = CFG_MAGNET_DURATION;
+          messageEl.textContent = "Magnet: ดูดเหรียญและหัวใจแทบทั้งจอ ✨";
+        } else if (c.classList.contains("boost")) {
+          boostActive = true;
+          boostTimer = CFG_BOOST_DURATION;
+          invincible = true;
+          invincibleTimer = Math.max(invincibleTimer, CFG_BOOST_DURATION);
+          player.classList.add("invincible");
+          cheatTimerEl.textContent = "Boost: วิ่งเร็วขึ้น + อมตะชั่วคราว ⚡";
+          messageEl.textContent = "Boost: วิ่งเร็วขึ้น + อมตะชั่วคราว ⚡";
+        } else if (c.classList.contains("giant")) {
+          giantActive = true;
+          giantTimer = CFG_GIANT_DURATION;
+          player.classList.add("giant");
+          messageEl.textContent = "Giant: PHANToM ตัวใหญ่ ชนสิ่งกีดขวางแตกกระจาย 💥";
+        }
+
+        updateMissionUI();
+      }
+
+      function updateObstacles(delta) {
+        const moveX = getEffectiveSpeed() * (delta / 16.67);
+        const toRemove = [];
+
+        obstacles.forEach((obs, index) => {
+          if (gameOver) return;
+
+          const left = parseFloat(obs.style.left);
+          const newLeft = left - moveX;
+          obs.style.left = newLeft + "px";
+
+          if (newLeft + obs.offsetWidth < 0) {
+            toRemove.push(index);
+            score += 1;
+            obstaclesPassed += 1;
+            scoreEl.textContent = "คะแนน: " + score;
+            updateMissionUI();
+
+            if (CFG_SPEED_UP_EVERY_SCORE > 0 && score % CFG_SPEED_UP_EVERY_SCORE === 0) {
+              speed += CFG_SPEED_UP_AMOUNT;
+            }
+          }
+
+          if (!gameOver && isColliding(player, obs)) {
+            if (invincible || giantActive) {
+              score += 2;
+              obstaclesPassed += 1;
+              scoreEl.textContent = "คะแนน: " + score;
+              updateMissionUI();
+              toRemove.push(index);
+            } else {
+              const isAir = obs.classList.contains("air");
+              const dmg = isAir ? damageAir : damageGround;
+              energy -= dmg;
+
+              if (energy <= 0) {
+                energy = 0;
+                updateEnergyUI();
+                endGame();
+                return;
+              } else {
+                updateEnergyUI();
+
+                obs.style.opacity = "0.4";
+                setTimeout(() => { if (obs && obs.style) obs.style.opacity = "1"; }, 100);
+
+                triggerHitVFX();
+                hitSlowTimer = CFG_HIT_SLOW_DURATION;
+              }
+            }
+          }
+        });
+
+        toRemove.reverse().forEach(i => {
+          if (obstacles[i]) obstacles[i].remove();
+          obstacles.splice(i, 1);
+        });
+
+        timeSinceLastObstacle += delta;
+
+        const minInterval = Math.max(550, 1000 - score * 5);
+        const maxInterval = Math.max(minInterval + 300, 1600 - score * 8);
+
+        if (timeSinceLastObstacle >= nextSpawnIn) {
+          let canSpawn = true;
+          if (obstacles.length > 0) {
+            const lastObs = obstacles[obstacles.length - 1];
+            const lastRect = lastObs.getBoundingClientRect();
+            const containerRect = gameContainer.getBoundingClientRect();
+            const distance = containerRect.right - lastRect.right;
+            if (distance < 180) {
+              canSpawn = false;
+            }
+          }
+
+          if (canSpawn) {
+            spawnObstacle();
+            timeSinceLastObstacle = 0;
+            nextSpawnIn = randomBetween(minInterval, maxInterval);
+          } else {
+            timeSinceLastObstacle = minInterval - 50;
+          }
+        }
+      }
+
+      function updatePlatforms(delta) {
+        const moveX = getEffectiveSpeed() * (delta / 16.67);
+        const toRemove = [];
+
+        platforms.forEach((p, index) => {
+          const left = parseFloat(p.style.left);
+          const newLeft = left - moveX;
+          p.style.left = newLeft + "px";
+
+          if (newLeft + p.offsetWidth < 0) {
+            toRemove.push(index);
+          }
+        });
+
+        toRemove.reverse().forEach(i => {
+          if (platforms[i]) platforms[i].remove();
+          platforms.splice(i, 1);
+        });
+
+        timeSinceLastPlatform += delta;
+        if (timeSinceLastPlatform >= nextPlatformIn) {
+          if (platforms.length < 10) {
+            spawnPlatformGroup();
+          }
+          timeSinceLastPlatform = 0;
+          nextPlatformIn = CFG_PLATFORM_MIN_INTERVAL + Math.random() * (CFG_PLATFORM_MAX_INTERVAL - CFG_PLATFORM_MIN_INTERVAL);
+        }
+      }
+
+      function updateHoles(delta) {
+        const moveX = getEffectiveSpeed() * (delta / 16.67);
+        const toRemove = [];
+        holes.forEach((h, index) => {
+          const left = parseFloat(h.style.left);
+          const newLeft = left - moveX;
+          h.style.left = newLeft + "px";
+          if (newLeft + h.offsetWidth < 0) {
+            toRemove.push(index);
+          }
+        });
+        toRemove.reverse().forEach(i => {
+          if (holes[i]) holes[i].remove();
+          holes.splice(i, 1);
+        });
+      }
+
+      function updateCollectibles(delta) {
+        const moveX = getEffectiveSpeed() * (delta / 16.67);
+        const toRemove = [];
+
+        let playerCenterX = 0;
+        let playerCenterY = 0;
+        if (magnetActive) {
+          const pr = player.getBoundingClientRect();
+          playerCenterX = pr.left + pr.width / 2;
+          playerCenterY = pr.top + pr.height / 2;
+        }
+
+        collectibles.forEach((c, index) => {
+          // ถ้ากำลังถูก Magnet ดึงอยู่แล้ว ปล่อยให้แอนิเมชันจัดการเอง
+          if (c.dataset.pulled === "1") {
+            return;
+          }
+
+          const left = parseFloat(c.style.left);
+          const newLeft = left - moveX;
+          c.style.left = newLeft + "px";
+
+          if (newLeft + c.offsetWidth < 0) {
+            toRemove.push(index);
+            return;
+          }
+
+          // Magnet: ดูดเหรียญ/หัวใจเข้าหาตัวแบบมีแอนิเมชัน
+          if (
+            magnetActive &&
+            (c.classList.contains("coin") || c.classList.contains("energy"))
+          ) {
+            const cr = c.getBoundingClientRect();
+            const cx = cr.left + cr.width / 2;
+            const cy = cr.top + cr.height / 2;
+            const dx = playerCenterX - cx;
+            const dy = playerCenterY - cy;
+            const dist = Math.hypot(dx, dy);
+            if (dist < CFG_MAGNET_RADIUS) {
+              pullCollectibleToPlayer(c);
+              return;
+            }
+          }
+
+          let collected = false;
+
+          if (!gameOver && isColliding(player, c)) {
+            collected = true;
+          }
+
+          if (collected) {
+            applyCollectibleEffect(c);
+            toRemove.push(index);
+          }
+        });
+
+        toRemove.reverse().forEach(i => {
+          if (collectibles[i]) collectibles[i].remove();
+          collectibles.splice(i, 1);
+        });
+
+        timeSinceLastCollectible += delta;
+        const baseInterval = CFG_COLLECTIBLE_BASE_INTERVAL;
+        const minInterval = CFG_COLLECTIBLE_MIN_INTERVAL;
+        const interval = Math.max(minInterval, baseInterval - score * 4);
+
+        if (timeSinceLastCollectible >= interval) {
+          spawnCollectible();
+          timeSinceLastCollectible = 0;
+        }
+      }
+
+      function isColliding(a, b) {
+        const r1 = a.getBoundingClientRect();
+        const r2 = b.getBoundingClientRect();
+        return !(
+          r1.right < r2.left ||
+          r1.left > r2.right ||
+          r1.bottom < r2.top ||
+          r1.top > r2.bottom
+        );
+      }
+
+      function updatePlayer(delta) {
+        const factor = delta / 16.67;
+        prevPlayerY = playerY;
+
+        // ฟิสิกส์กระโดด
+        jumpVelocity -= gravity * factor;
+        playerY += jumpVelocity * factor;
+
+        let supportY = groundY;
+        const isFalling = jumpVelocity <= 0;
+
+        const playerRect = player.getBoundingClientRect();
+        const playerLeftScreen = playerRect.left;
+        const playerRightScreen = playerRect.right;
+
+        const playerStyleLeft = parseFloat(getComputedStyle(player).left);
+        const playerStyleRight = playerStyleLeft + player.offsetWidth;
+
+        // พื้นลอย
+        platforms.forEach(p => {
+          const pRect = p.getBoundingClientRect();
+          const pLeft = pRect.left;
+          const pRight = pRect.right;
+
+          const platformBottom = parseFloat(p.style.bottom);
+          const platformTop = platformBottom + p.offsetHeight;
+
+          const horizontallyOver = (playerRightScreen > pLeft + 5) && (playerLeftScreen < pRight - 5);
+
+          if (horizontallyOver && isFalling && prevPlayerY >= platformTop && playerY <= platformTop) {
+            if (platformTop > supportY) {
+              supportY = platformTop;
+            }
+          }
+        });
+
+        // ตรวจว่ามี "หลุมใต้วิ่ง" หรือไม่
+        let holeUnder = false;
+        holes.forEach(h => {
+          const hLeft = parseFloat(h.style.left);
+          const hRight = hLeft + h.offsetWidth;
+          if (hRight > playerStyleLeft + 5 && hLeft < playerStyleRight - 5) {
+            holeUnder = true;
+          }
+        });
+
+        if (playerY <= supportY) {
+          if (!(supportY === groundY && holeUnder)) {
+            playerY = supportY;
+            jumpVelocity = 0;
+            isJumping = false;
+            jumpsLeft = maxJumps;
+          }
+        }
+
+        player.style.bottom = playerY + "px";
+
+        // อัปเดตตำแหน่งลำแสง Boost ให้ตามตัว
+        if (boostBeam) {
+          if (boostActive) {
+            boostBeam.style.opacity = 1;
+            boostBeam.style.left = (playerBaseLeft - 90) + "px";
+            boostBeam.style.bottom = (playerY + 8) + "px";
+          } else if (!boostActive && boostBeam.style.opacity !== "0") {
+            boostBeam.style.opacity = 0;
+          }
+        }
+      }
+
+      // กับดักด้านล่างหลุม (ตกได้ แต่ถ้าตกลึกเกินไป = โดนกับดัก)
+      function checkHoleTrap() {
+        if (playerY < TRAP_Y) {
+          endGame();
+        }
+      }
+
+      function gameLoop(timestamp) {
+        if (gameOver) return;
+        if (!lastTime) lastTime = timestamp;
+        const delta = timestamp - lastTime;
+        lastTime = timestamp;
+
+        // Energy ลดเอง (ยกเว้นช่วงอมตะ)
+        if (!invincible) {
+          energy -= CFG_ENERGY_DECAY_PER_SEC * (delta / 1000);
+          if (energy <= 0) {
+            energy = 0;
+            updateEnergyUI();
+            endGame();
+            return;
+          }
+        }
+        updateEnergyUI();
+
+        updatePlayer(delta);
+        updatePlatforms(delta);
+        updateHoles(delta);
+        checkHoleTrap();
+        if (gameOver) {
+          frameId = requestAnimationFrame(gameLoop);
+          return;
+        }
+
+        updateObstacles(delta);
+        updateCollectibles(delta);
+
+        // อมตะ (โกง + Boost)
+        if (invincible) {
+          invincibleTimer -= delta;
+          if (invincibleTimer <= 0) {
+            invincible = false;
+            player.classList.remove("invincible");
+            cheatTimerEl.textContent = "";
+            if (!boostActive) {
+              messageEl.textContent = "โหมดอมตะหมดแล้ว! ระวังให้ดี 😈";
+            }
+          } else if (invincibleTimer <= 3000) {
+            const secs = Math.ceil(invincibleTimer / 1000);
+            cheatTimerEl.textContent = "นับถอยหลังโหมดอมตะ: " + secs + " วิ";
+          }
+        }
+
+        // Magnet timer
+        if (magnetActive) {
+          magnetTimer -= delta;
+          if (magnetTimer <= 0) {
+            magnetActive = false;
+          }
+        }
+
+        // Boost timer
+        if (boostActive) {
+          boostTimer -= delta;
+          if (boostTimer <= 0) {
+            boostActive = false;
+          }
+        }
+
+        // Giant timer
+        if (giantActive) {
+          giantTimer -= delta;
+          if (giantTimer <= 0) {
+            giantActive = false;
+            player.classList.remove("giant");
+          }
+        }
+
+        // Hit slow timer
+        if (hitSlowTimer > 0) {
+          hitSlowTimer -= delta;
+          if (hitSlowTimer < 0) hitSlowTimer = 0;
+        }
+
+        frameId = requestAnimationFrame(gameLoop);
+      }
+
+      function reviveGame() {
+        if (!gameOver) return;
+        if (coins < 20) return;
+
+        // หักเหรียญ 20
+        coins -= 20;
+        coinsEl.textContent = "เหรียญ: " + coins;
+
+        hideGameOverOverlay();
+
+        // เคลียร์สิ่งกีดขวาง / หลุม / platform รอบ ๆ เพื่อไม่ให้ spawn ซ้ำที่เดิมแล้วโดนทันที
+        clearArrays();
+
+        // รีเซ็ตสถานะพื้นฐาน แต่ "ไม่รีเซ็ตคะแนน"
+        gameOver = false;
+        isJumping = false;
+        isDucking = false;
+        jumpVelocity = 0;
+        jumpsLeft = maxJumps;
+        playerY = groundY;
+        prevPlayerY = groundY;
+        player.style.bottom = playerY + "px";
+        player.classList.remove("duck", "double-jump", "giant", "invincible");
+
+        // เติมพลังกลับเต็ม
+        energy = maxEnergy;
+        updateEnergyUI();
+
+        // ลบ buff ต่าง ๆ
+        invincible = false;
+        invincibleTimer = 0;
+        magnetActive = false;
+        magnetTimer = 0;
+        boostActive = false;
+        boostTimer = 0;
+        giantActive = false;
+        giantTimer = 0;
+        hitSlowTimer = 0;
+        cheatTimerEl.textContent = "";
+
+        if (boostBeam) {
+          boostBeam.style.opacity = 0;
+          boostBeam.style.left = "-9999px";
+        }
+
+        // เริ่ม loop ต่อ
+        lastTime = null;
+        frameId = requestAnimationFrame(gameLoop);
+
+        messageEl.textContent = "คืนชีพแล้ว! ใช้เหรียญ 20 เหรียญ ระวังครั้งต่อไปนะ 🧬";
+      }
+
+      function endGame() {
+        if (gameOver) return;
+        gameOver = true;
+        if (frameId) cancelAnimationFrame(frameId);
+
+        if (score > bestScore) {
+          bestScore = score;
+          localStorage.setItem("phantom_runner_best", bestScore);
+        }
+        bestScoreEl.textContent = "สถิติสูงสุด: " + bestScore;
+
+        cheatTimerEl.textContent = "";
+        messageEl.textContent =
+          "Game Over! คะแนน: " + score +
+          " • เหรียญ: " + coins +
+          ' • กด "เริ่มเกม / เล่นใหม่" หรือ Space เพื่อเริ่มใหม่';
+
+        if (boostBeam) {
+          boostBeam.style.opacity = 0;
+        }
+
+        showGameOverOverlay();
+      }
+
+      function handleJump() {
+        if (gameOver) {
+          resetGame();
+          return;
+        }
+
+        if (jumpsLeft > 0) {
+          if (isDucking) {
+            setDuck(false);
+          }
+          if (jumpsLeft === 1) {
+            totalDoubleJumps += 1;
+            updateMissionUI();
+            player.classList.remove("double-jump");
+            void player.offsetWidth;
+            player.classList.add("double-jump");
+          }
+          isJumping = true;
+          jumpVelocity = CFG_JUMP_STRENGTH;
+          jumpsLeft -= 1;
+        }
+      }
+
+      function setDuck(state) {
+        if (gameOver) return;
+        if (state && !isDucking) {
+          isDucking = true;
+          player.classList.add("duck");
+        } else if (!state && isDucking) {
+          isDucking = false;
+          player.classList.remove("duck");
+        }
+      }
+
+      // สูตรโกง: DDD UUU (U = ↑ หรือ Space)
+      function registerCheat(code) {
+        const now = performance.now();
+        if (code !== "ArrowDown" && code !== "ArrowUp" && code !== "Space") return;
+
+        const symbol = (code === "ArrowDown") ? "D" : "U";
+        cheatEvents.push({ symbol, time: now });
+
+        const cutoff = now - CFG_CHEAT_WINDOW;
+        cheatEvents = cheatEvents.filter(e => e.time >= cutoff);
+
+        const lastSix = cheatEvents.slice(-6);
+        if (lastSix.length === 6) {
+          const pattern = lastSix.map(e => e.symbol).join("");
+          if (pattern === "DDDUUU" && !gameOver) {
+            activateCheat();
+            cheatEvents = [];
+          }
+        }
+      }
+
+      function activateCheat() {
+        invincible = true;
+        invincibleTimer = Math.max(invincibleTimer, CHEAT_INVINCIBLE_DURATION);
+        player.classList.add("invincible");
+        cheatTimerEl.textContent = "โหมดโกง: PHANToM อมตะ 10 วิ 🎃";
+        messageEl.textContent = "โหมดโกงเปิดแล้ว! ชนอะไรก็ไม่ตาย 10 วิ";
+      }
+
+      // Fullscreen toggle
+      function toggleFullscreen(){
+        const elem = document.documentElement;
+        if (!document.fullscreenElement){
+          if (elem.requestFullscreen) elem.requestFullscreen();
+          else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+          else if (elem.msRequestFullscreen) elem.msRequestFullscreen();
+        } else {
+          if (document.exitFullscreen) document.exitFullscreen();
+          else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+          else if (document.msExitFullscreen) document.msExitFullscreen();
+        }
+      }
+
+      if (fullscreenBtn){
+        fullscreenBtn.addEventListener("click",(e)=>{
+          e.preventDefault();
+          toggleFullscreen();
+        });
+      }
+
+      document.addEventListener("fullscreenchange", () => {
+        if (!fullscreenBtn) return;
+        if (document.fullscreenElement){
+          fullscreenBtn.textContent = "ออกจากโหมดเต็มจอ";
+          document.body.classList.add("fullscreen-game");
+        } else {
+          fullscreenBtn.textContent = "โหมดเต็มจอ";
+          document.body.classList.remove("fullscreen-game");
+        }
+      });
+
+      // คีย์บอร์ด
+      document.addEventListener("keydown", (e) => {
+        if (e.code === "Space" || e.code === "ArrowUp") {
+          e.preventDefault();
+          handleJump();
+          registerCheat(e.code);
+        } else if (e.code === "ArrowDown") {
+          e.preventDefault();
+          setDuck(true);
+          registerCheat(e.code);
+        }
+      });
+
+      document.addEventListener("keyup", (e) => {
+        if (e.code === "ArrowDown") {
+          setDuck(false);
+        }
+      });
+
+      // ปุ่มบนหน้าจอ
+      if (btnJump) {
+        btnJump.addEventListener("pointerdown", (e) => {
+          e.preventDefault();
+          handleJump();
+          registerCheat("Space");
+        });
+      }
+
+      if (btnDuck) {
+        btnDuck.addEventListener("pointerdown", (e) => {
+          e.preventDefault();
+          setDuck(true);
+          registerCheat("ArrowDown");
+        });
+        btnDuck.addEventListener("pointerup", (e) => {
+          e.preventDefault();
+          setDuck(false);
+        });
+        btnDuck.addEventListener("pointercancel", (e) => {
+          e.preventDefault();
+          setDuck(false);
+        });
+        btnDuck.addEventListener("pointerleave", (e) => {
+          if (isDucking) setDuck(false);
+        });
+      }
+
+      // ปุ่มใน Pop-up Game Over
+      if (restartBtnOverlay) {
+        restartBtnOverlay.addEventListener("click", (e) => {
+          e.preventDefault();
+          resetGame();
+        });
+      }
+
+      if (reviveBtn) {
+        reviveBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          reviveGame();
+        });
+      }
+
+      // ปุ่มเริ่มเกมหลัก
+      startBtn.addEventListener("click", resetGame);
+
+      // เริ่มต้น
+      updateEnergyUI();
+      updateMissionUI();
+    })();
+  </script>
+</body>
+</html>
