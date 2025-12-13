@@ -132,6 +132,27 @@
       to   { transform: rotate(360deg); }
     }
 
+    /* ลำแสงตอน Boost */
+    #boostBeam {
+      position: absolute;
+      width: 140px;
+      height: 80px;
+      left: -9999px; /* ซ่อนเริ่มต้น */
+      bottom: 40px;
+      background: linear-gradient(
+        90deg,
+        rgba(34,197,94,0),
+        rgba(34,197,94,0.9),
+        rgba(56,189,248,0.0)
+      );
+      filter: blur(8px);
+      opacity: 0;
+      transition: opacity 0.12s ease;
+      pointer-events: none;
+      z-index: 4;
+      mix-blend-mode: screen;
+    }
+
     .obstacle {
       position: absolute;
       bottom: 40px;
@@ -365,7 +386,7 @@
     }
 
     #coins {
-      color: #FFCC66;
+      color: #facc15;
     }
 
     #cheatTimer {
@@ -571,6 +592,9 @@
 
   <div id="gameContainer">
     <div id="ground"></div>
+    <!-- ลำแสง Boost -->
+    <div id="boostBeam"></div>
+
     <div id="player">
       <!-- เปลี่ยนชื่อไฟล์รูปได้ -->
       <img src="phantom-runner.png" alt="PHANToM" />
@@ -611,7 +635,7 @@
   <div id="itemGuide">
     <strong>คำอธิบายไอเท็ม:</strong>
     <ul>
-      <li>💸 <b>เหรียญ (Coin)</b> : +2 คะแนนต่อเหรียญ ช่วยเพิ่มสกอร์รวม</li>
+      <li>🤑 <b>เหรียญ (Coin)</b> : +2 คะแนนต่อเหรียญ ช่วยเพิ่มสกอร์รวม</li>
       <li>❤️ <b>หัวใจ (Energy)</b> : เพิ่มค่า Energy ตามขนาดหัวใจ (เล็ก/กลาง/ใหญ่)</li>
       <li>🧲 <b>Magnet</b> : ดูดเหรียญและหัวใจรอบ ๆ แรงมาก เกือบทั้งจอ ชั่วคราว</li>
       <li>⚡ <b>Boost</b> : วิ่งเร็วขึ้น + อมตะชั่วคราว (ชนสิ่งกีดขวางไม่โดนดาเมจ)</li>
@@ -652,7 +676,7 @@
       const CFG_BOOST_MULTIPLIER = 1.6;     // ตัวคูณความเร็วเมื่อได้ Boost
 
       // ชะลอความเร็วเมื่อชน (ถ้ายังไม่ตาย)
-      const CFG_HIT_SLOW_FACTOR = 0.8;      // ลดลง 20% → ใช้ speed * 0.8
+      const CFG_HIT_SLOW_FACTOR = 0.8;      // ลดลง 20%
       const CFG_HIT_SLOW_DURATION = 500;    // ชะลอเป็นเวลา 0.5 วินาที (ms)
 
       // 4) หลุมกับดัก
@@ -705,8 +729,10 @@
       const energyText = document.getElementById("energyText");
       const coinsEl = document.getElementById("coins");
       const missionEl = document.getElementById("mission");
+      const boostBeam = document.getElementById("boostBeam");
 
       const groundY = 40;
+      const playerBaseLeft = parseFloat(getComputedStyle(player).left) || 80;
 
       // ฟิสิกส์กระโดด + Double Jump (ใช้ค่าจาก CONFIG)
       const gravity = CFG_GRAVITY;
@@ -772,7 +798,6 @@
       let magnetActive = false;
       let magnetTimer = 0;
       const MAGNET_DURATION = CFG_MAGNET_DURATION;
-      const MAGNET_RADIUS = CFG_MAGNET_RADIUS;
 
       let boostActive = false;
       let boostTimer = 0;
@@ -873,6 +898,11 @@
 
         messageEl.textContent = "หลบอุปสรรคและหลุมกับดักให้ได้มากที่สุด!";
 
+        if (boostBeam) {
+          boostBeam.style.opacity = 0;
+          boostBeam.style.left = "-9999px";
+        }
+
         if (frameId) cancelAnimationFrame(frameId);
         lastTime = null;
         frameId = requestAnimationFrame(gameLoop);
@@ -956,7 +986,7 @@
 
         // ตั้ง emoji ให้ตรงกับชนิดไอเท็ม
         if (c.classList.contains("coin")) {
-          c.textContent = "💸";
+          c.textContent = "🤑";
         } else if (c.classList.contains("energy")) {
           c.textContent = "❤️";
         } else if (c.classList.contains("magnet")) {
@@ -1014,16 +1044,76 @@
 
       // เอฟเฟกต์ตอนโดนชน (สั่นจอ + แฟลช)
       function triggerHitVFX() {
-        // รีสตาร์ท animation shake
         gameContainer.classList.remove("shake");
         void gameContainer.offsetWidth;
         gameContainer.classList.add("shake");
 
-        // แฟลชทั้งจอ
         document.body.classList.add("hit-blink");
         setTimeout(() => {
           document.body.classList.remove("hit-blink");
         }, 120);
+      }
+
+      // ใช้ตอนให้ Magnet ดูดเหรียญ/หัวใจ → พุ่งเข้า PHANToM พร้อมแอนิเมชันแล้วค่อยคิดคะแนน
+      function pullCollectibleToPlayer(c) {
+        if (c.dataset.pulled === "1") return;
+        c.dataset.pulled = "1";
+
+        const pr = player.getBoundingClientRect();
+        const cr = c.getBoundingClientRect();
+
+        const targetX = pr.left + pr.width / 2;
+        const targetY = pr.top + pr.height / 2;
+        const cx = cr.left + cr.width / 2;
+        const cy = cr.top + cr.height / 2;
+
+        const dx = targetX - cx;
+        const dy = targetY - cy;
+
+        c.style.transition = "transform 0.2s linear, opacity 0.2s linear";
+        c.style.transform = "translate(" + dx + "px," + dy + "px) scale(0.8)";
+        c.style.opacity = "0.15";
+
+        setTimeout(() => {
+          if (!c.parentNode) return;
+          applyCollectibleEffect(c);
+          c.remove();
+          collectibles = collectibles.filter(item => item !== c);
+        }, 190);
+      }
+
+      // รวม logic เวลา “เก็บไอเท็มสำเร็จ” (ชนเองหรือถูกดูดด้วย Magnet ก็มาที่นี่)
+      function applyCollectibleEffect(c) {
+        if (c.classList.contains("coin")) {
+          coins += 1;
+          coinsCollected += 1;
+          score += 2;
+          coinsEl.textContent = "เหรียญ: " + coins;
+          scoreEl.textContent = "คะแนน: " + score;
+        } else if (c.classList.contains("energy")) {
+          const gain = parseInt(c.dataset.energy || "20", 10);
+          energy = Math.min(maxEnergy, energy + gain);
+          updateEnergyUI();
+        } else if (c.classList.contains("magnet")) {
+          magnetActive = true;
+          magnetTimer = CFG_MAGNET_DURATION;
+          messageEl.textContent = "Magnet: ดูดเหรียญและหัวใจแทบทั้งจอ ✨";
+        } else if (c.classList.contains("boost")) {
+          boostActive = true;
+          boostTimer = CFG_BOOST_DURATION;
+          invincible = true;
+          invincibleTimer = Math.max(invincibleTimer, CFG_BOOST_DURATION);
+          player.classList.add("invincible");
+          cheatTimerEl.textContent = "Boost: วิ่งเร็วขึ้น + อมตะชั่วคราว ⚡";
+          messageEl.textContent = "Boost: วิ่งเร็วขึ้น + อมตะชั่วคราว ⚡";
+        } else if (c.classList.contains("giant")) {
+          giantActive = true;
+          giantTimer = CFG_GIANT_DURATION;
+          player.classList.add("giant");
+          messageEl.textContent = "Giant: PHANToM ตัวใหญ่ ชนสิ่งกีดขวางแตกกระจาย 💥";
+        }
+
+        updateMissionUI();
       }
 
       function updateObstacles(delta) {
@@ -1051,14 +1141,12 @@
 
           if (!gameOver && isColliding(player, obs)) {
             if (invincible || giantActive) {
-              // โหมดอมตะ / Giant ชนแล้วทำลายสิ่งกีดขวาง + ได้คะแนนเพิ่ม
               score += 2;
               obstaclesPassed += 1;
               scoreEl.textContent = "คะแนน: " + score;
               updateMissionUI();
               toRemove.push(index);
             } else {
-              // ชนปกติ → เสียพลัง + ชะลอความเร็ว 20% เป็นเวลา 0.5 วิ + เอฟเฟกต์สั่น/แฟลช
               const isAir = obs.classList.contains("air");
               const dmg = isAir ? damageAir : damageGround;
               energy -= dmg;
@@ -1069,16 +1157,12 @@
                 endGame();
                 return;
               } else {
-                // ยังไม่ตาย → อัปเดตพลัง + เอฟเฟกต์กระพริบอุปสรรค + สั่นจอ/แฟลช + ตั้ง timer ช้าชั่วคราว
                 updateEnergyUI();
 
                 obs.style.opacity = "0.4";
                 setTimeout(() => { if (obs && obs.style) obs.style.opacity = "1"; }, 100);
 
-                // เอฟเฟกต์ VFX
                 triggerHitVFX();
-
-                // 🔻 Slow 20% ชั่วคราว 0.5 วินาที
                 hitSlowTimer = CFG_HIT_SLOW_DURATION;
               }
             }
@@ -1176,6 +1260,11 @@
         }
 
         collectibles.forEach((c, index) => {
+          // ถ้ากำลังถูก Magnet ดึงอยู่แล้ว ปล่อยให้แอนิเมชันจัดการเอง
+          if (c.dataset.pulled === "1") {
+            return;
+          }
+
           const left = parseFloat(c.style.left);
           const newLeft = left - moveX;
           c.style.left = newLeft + "px";
@@ -1185,57 +1274,31 @@
             return;
           }
 
-          let collected = false;
-
-          if (!gameOver) {
-            if (magnetActive && (c.classList.contains("coin") || c.classList.contains("energy"))) {
-              const cr = c.getBoundingClientRect();
-              const cx = cr.left + cr.width / 2;
-              const cy = cr.top + cr.height / 2;
-              const dx = playerCenterX - cx;
-              const dy = playerCenterY - cy;
-              const dist = Math.hypot(dx, dy);
-              if (dist < CFG_MAGNET_RADIUS) {
-                collected = true;
-              }
-            }
-
-            if (!collected && isColliding(player, c)) {
-              collected = true;
+          // Magnet: ดูดเหรียญ/หัวใจเข้าหาตัวแบบมีแอนิเมชัน
+          if (
+            magnetActive &&
+            (c.classList.contains("coin") || c.classList.contains("energy"))
+          ) {
+            const cr = c.getBoundingClientRect();
+            const cx = cr.left + cr.width / 2;
+            const cy = cr.top + cr.height / 2;
+            const dx = playerCenterX - cx;
+            const dy = playerCenterY - cy;
+            const dist = Math.hypot(dx, dy);
+            if (dist < CFG_MAGNET_RADIUS) {
+              pullCollectibleToPlayer(c);
+              return;
             }
           }
 
-          if (collected) {
-            if (c.classList.contains("coin")) {
-              coins += 1;
-              coinsCollected += 1;
-              score += 2;
-              coinsEl.textContent = "เหรียญ: " + coins;
-              scoreEl.textContent = "คะแนน: " + score;
-            } else if (c.classList.contains("energy")) {
-              const gain = parseInt(c.dataset.energy || "20", 10);
-              energy = Math.min(maxEnergy, energy + gain);
-              updateEnergyUI();
-            } else if (c.classList.contains("magnet")) {
-              magnetActive = true;
-              magnetTimer = MAGNET_DURATION;
-              messageEl.textContent = "Magnet: ดูดเหรียญและหัวใจแทบทั้งจอ ✨";
-            } else if (c.classList.contains("boost")) {
-              boostActive = true;
-              boostTimer = BOOST_DURATION;
-              invincible = true;
-              invincibleTimer = Math.max(invincibleTimer, BOOST_DURATION);
-              player.classList.add("invincible");
-              cheatTimerEl.textContent = "Boost: วิ่งเร็วขึ้น + อมตะชั่วคราว ⚡";
-              messageEl.textContent = "Boost: วิ่งเร็วขึ้น + อมตะชั่วคราว ⚡";
-            } else if (c.classList.contains("giant")) {
-              giantActive = true;
-              giantTimer = GIANT_DURATION;
-              player.classList.add("giant");
-              messageEl.textContent = "Giant: PHANToM ตัวใหญ่ ชนสิ่งกีดขวางแตกกระจาย 💥";
-            }
+          let collected = false;
 
-            updateMissionUI();
+          if (!gameOver && isColliding(player, c)) {
+            collected = true;
+          }
+
+          if (collected) {
+            applyCollectibleEffect(c);
             toRemove.push(index);
           }
         });
@@ -1282,7 +1345,6 @@
         const playerLeftScreen = playerRect.left;
         const playerRightScreen = playerRect.right;
 
-        // ตำแหน่ง player แบบ style (ใช้เทียบกับ holes)
         const playerStyleLeft = parseFloat(getComputedStyle(player).left);
         const playerStyleRight = playerStyleLeft + player.offsetWidth;
 
@@ -1304,7 +1366,7 @@
           }
         });
 
-        // ตรวจว่ามี "หลุมใต้วิ่ง" หรือไม่ (ทับกับช่วง x ของ hole)
+        // ตรวจว่ามี "หลุมใต้วิ่ง" หรือไม่
         let holeUnder = false;
         holes.forEach(h => {
           const hLeft = parseFloat(h.style.left);
@@ -1314,9 +1376,7 @@
           }
         });
 
-        // ถ้าอยู่ต่ำกว่าระดับพื้นรองรับ
         if (playerY <= supportY) {
-          // ถ้าระดับนั้นคือพื้นหลัก และตรงนั้นเป็นหลุม → ไม่ให้ยืน ปล่อยให้ตก
           if (!(supportY === groundY && holeUnder)) {
             playerY = supportY;
             jumpVelocity = 0;
@@ -1326,6 +1386,17 @@
         }
 
         player.style.bottom = playerY + "px";
+
+        // อัปเดตตำแหน่งลำแสง Boost ให้ตามตัว
+        if (boostBeam) {
+          if (boostActive) {
+            boostBeam.style.opacity = 1;
+            boostBeam.style.left = (playerBaseLeft - 90) + "px";
+            boostBeam.style.bottom = (playerY + 8) + "px";
+          } else if (!boostActive && boostBeam.style.opacity !== "0") {
+            boostBeam.style.opacity = 0;
+          }
+        }
       }
 
       // กับดักด้านล่างหลุม (ตกได้ แต่ถ้าตกลึกเกินไป = โดนกับดัก)
@@ -1406,7 +1477,7 @@
           }
         }
 
-        // Hit slow timer (ลดความเร็วชั่วคราว)
+        // Hit slow timer
         if (hitSlowTimer > 0) {
           hitSlowTimer -= delta;
           if (hitSlowTimer < 0) hitSlowTimer = 0;
@@ -1431,6 +1502,10 @@
           "Game Over! คะแนน: " + score +
           " • เหรียญ: " + coins +
           ' • กด "เริ่มเกม / เล่นใหม่" หรือ Space เพื่อเริ่มใหม่';
+
+        if (boostBeam) {
+          boostBeam.style.opacity = 0;
+        }
       }
 
       function handleJump() {
@@ -1444,7 +1519,6 @@
             setDuck(false);
           }
           if (jumpsLeft === 1) {
-            // Double jump
             totalDoubleJumps += 1;
             updateMissionUI();
             player.classList.remove("double-jump");
