@@ -521,7 +521,7 @@
 <body>
   <h1>PHANToM Runner</h1>
   <div id="hint">
-    Space / ↑ = กระโดด (2 จังหวะ) • ↓ = หมอบ • มีพื้นลอย/บันได • หลุมกับดัก • เก็บเหรียญ / หัวใจ / Magnet / Boost(อมตะ) / Giant
+    Space / ↑ = กระโดด (2 จังหวะ) • ↓ = หมอบ • มีพื้นลอย/บันได • หลุมกับดัก (ตกได้ ไม่ตายทันที) • เก็บเหรียญ / หัวใจ / Magnet / Boost(อมตะ) / Giant
   </div>
 
   <div id="gameContainer">
@@ -582,8 +582,8 @@
       const groundY = 40;
 
       // ฟิสิกส์กระโดด + Double Jump
-      const gravity = 0.9;      // ตกเร็ว
-      const jumpStrength = 13.5; // กระโดดสูงขึ้น (ชดเชย gravity)
+      const gravity = 0.9;       // ตกเร็ว
+      const jumpStrength = 13.5; // กระโดดสูงขึ้น
       const maxJumps = 2;
       let playerY = groundY;
       let prevPlayerY = groundY;
@@ -635,10 +635,6 @@
 
       let timeSinceLastPlatform = 0;
       let nextPlatformIn = 2500;
-
-      // ตกหลุม (อนิเมชันก่อน Game Over)
-      let dyingInHole = false;
-      let holeFallVelocity = 0;
 
       // โหมดอมตะรวม (โกง + Boost)
       let invincible = false;
@@ -706,8 +702,6 @@
         coinsEl.textContent = "เหรียญ: " + coins;
 
         gameOver = false;
-        dyingInHole = false;
-        holeFallVelocity = 0;
 
         isJumping = false;
         isDucking = false;
@@ -868,7 +862,7 @@
         const toRemove = [];
 
         obstacles.forEach((obs, index) => {
-          if (gameOver || dyingInHole) return;
+          if (gameOver) return;
 
           const left = parseFloat(obs.style.left);
           const newLeft = left - moveX;
@@ -886,7 +880,7 @@
             }
           }
 
-          if (!gameOver && !dyingInHole && isColliding(player, obs)) {
+          if (!gameOver && isColliding(player, obs)) {
             if (invincible || giantActive) {
               score += 2;
               obstaclesPassed += 1;
@@ -1013,7 +1007,7 @@
 
           let collected = false;
 
-          if (!gameOver && !dyingInHole) {
+          if (!gameOver) {
             if (magnetActive && (c.classList.contains("coin") || c.classList.contains("energy"))) {
               const cr = c.getBoundingClientRect();
               const cx = cr.left + cr.width / 2;
@@ -1105,8 +1099,12 @@
         const isFalling = jumpVelocity <= 0;
 
         const playerRect = player.getBoundingClientRect();
-        const playerLeft = playerRect.left;
-        const playerRight = playerRect.right;
+        const playerLeftScreen = playerRect.left;
+        const playerRightScreen = playerRect.right;
+
+        // ตำแหน่ง player แบบ style (ใช้เทียบกับ holes)
+        const playerStyleLeft = parseFloat(getComputedStyle(player).left);
+        const playerStyleRight = playerStyleLeft + player.offsetWidth;
 
         // พื้นลอย
         platforms.forEach(p => {
@@ -1117,7 +1115,7 @@
           const platformBottom = parseFloat(p.style.bottom);
           const platformTop = platformBottom + p.offsetHeight;
 
-          const horizontallyOver = (playerRight > pLeft + 5) && (playerLeft < pRight - 5);
+          const horizontallyOver = (playerRightScreen > pLeft + 5) && (playerLeftScreen < pRight - 5);
 
           if (horizontallyOver && isFalling && prevPlayerY >= platformTop && playerY <= platformTop) {
             if (platformTop > supportY) {
@@ -1126,50 +1124,35 @@
           }
         });
 
-        if (playerY <= supportY) {
-          playerY = supportY;
-          jumpVelocity = 0;
-          isJumping = false;
-          jumpsLeft = maxJumps;
-        } else {
-          isJumping = true;
-        }
-
-        player.style.bottom = playerY + "px";
-      }
-
-      function checkHoleDeath() {
-        // ถ้าอยู่ระดับพื้น (ไม่ใช่บน platform/กลางอากาศ) และอยู่บนหลุม → เริ่มตกหลุม
-        if (playerY > groundY + 1) return;
-        const left = parseFloat(getComputedStyle(player).left);
-        const right = left + player.offsetWidth;
-        for (const h of holes) {
+        // ตรวจว่ามี "หลุมใต้วิ่ง" หรือไม่ (ทับกับช่วง x ของ hole)
+        let holeUnder = false;
+        holes.forEach(h => {
           const hLeft = parseFloat(h.style.left);
           const hRight = hLeft + h.offsetWidth;
-          if (hRight > left + 5 && hLeft < right - 5) {
-            triggerHoleDeath();
-            return;
+          if (hRight > playerStyleLeft + 5 && hLeft < playerStyleRight - 5) {
+            holeUnder = true;
+          }
+        });
+
+        // ปกติ: ถ้า player ต่ำกว่าพื้นรองรับ → ให้ยืนบนพื้น
+        // แต่ถ้าพื้นนั้นคือพื้นหลัก (groundY) และตรงนั้นเป็นหลุม → "ไม่ให้ยืน" ปล่อยให้ตกต่อไป
+        if (playerY <= supportY) {
+          if (!(supportY === groundY && holeUnder)) {
+            playerY = supportY;
+            jumpVelocity = 0;
+            isJumping = false;
+            jumpsLeft = maxJumps;
           }
         }
-      }
 
-      function triggerHoleDeath() {
-        if (dyingInHole || gameOver) return;
-        dyingInHole = true;
-        holeFallVelocity = -3;
-        // รีเซ็ตท่าทางให้ไม่หมอบ/ไม่ double-jump
-        player.classList.remove("duck", "double-jump");
-        messageEl.textContent = "คุณตกหลุมกับดัก! ☠️";
-      }
-
-      function animateHoleDeath(delta) {
-        const factor = delta / 16.67;
-        holeFallVelocity -= gravity * factor * 1.8;
-        playerY += holeFallVelocity * factor;
         player.style.bottom = playerY + "px";
-        player.style.transform = "scale(0.85) rotate(20deg)";
-        if (playerY < -80) {
-          dyingInHole = false;
+      }
+
+      // กับดักด้านล่างหลุม (ปล่อยให้ตกได้ แต่ถ้าตกลึกเกินไป = ชนกับดัก)
+      function checkHoleTrap() {
+        // ถ้า y ต่ำกว่าจุดนี้ แปลว่าตกลึกไปถึงระดับกับดักแล้ว
+        const TRAP_Y = -60;
+        if (playerY < TRAP_Y) {
           endGame();
         }
       }
@@ -1179,13 +1162,6 @@
         if (!lastTime) lastTime = timestamp;
         const delta = timestamp - lastTime;
         lastTime = timestamp;
-
-        // ถ้ากำลังตกหลุม → เล่นอนิเมชัน แล้วไม่ทำ logic อื่น
-        if (dyingInHole) {
-          animateHoleDeath(delta);
-          frameId = requestAnimationFrame(gameLoop);
-          return;
-        }
 
         // Energy ลดเอง (ยกเว้นช่วงอมตะ)
         if (!invincible) {
@@ -1202,8 +1178,8 @@
         updatePlayer(delta);
         updatePlatforms(delta);
         updateHoles(delta);
-        checkHoleDeath();
-        if (gameOver || dyingInHole) {
+        checkHoleTrap();
+        if (gameOver) {
           frameId = requestAnimationFrame(gameLoop);
           return;
         }
@@ -1278,7 +1254,6 @@
           resetGame();
           return;
         }
-        if (dyingInHole) return;
 
         if (jumpsLeft > 0) {
           if (isDucking) {
@@ -1299,7 +1274,7 @@
       }
 
       function setDuck(state) {
-        if (gameOver || dyingInHole) return;
+        if (gameOver) return;
         if (state && !isDucking) {
           isDucking = true;
           player.classList.add("duck");
@@ -1323,7 +1298,7 @@
         const lastSix = cheatEvents.slice(-6);
         if (lastSix.length === 6) {
           const pattern = lastSix.map(e => e.symbol).join("");
-          if (pattern === "DDDUUU" && !gameOver && !dyingInHole) {
+          if (pattern === "DDDUUU" && !gameOver) {
             activateCheat();
             cheatEvents = [];
           }
