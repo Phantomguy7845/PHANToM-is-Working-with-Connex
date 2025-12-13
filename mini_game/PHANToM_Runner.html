@@ -69,7 +69,7 @@
       to   { transform: translateX(-50%); }
     }
 
-    /* ==== ตัวละครใช้รูปภาพ + แสงแบบ drop-shadow ==== */
+    /* ==== ตัวละครใช้รูปภาพ ==== */
     #player {
       position: absolute;
       bottom: 40px;
@@ -78,7 +78,7 @@
       height: 60px;
       transform-origin: center bottom;
       transition: transform 0.08s ease, width 0.12s ease, height 0.12s ease;
-      box-shadow: none; /* ไม่ใช้ box-shadow แล้ว */
+      box-shadow: none;   /* ไม่ใช้ box-shadow เพื่อเลี่ยงกรอบสี่เหลี่ยม */
       z-index: 5;
     }
 
@@ -89,54 +89,40 @@
       pointer-events: none;
       user-select: none;
       background: transparent;
-
-      /* เงาปกติ: เหมือนเงามืดหลังตัวละคร */
-      filter:
-        drop-shadow(0 0 4px rgba(15,23,42,0.9))
-        drop-shadow(0 0 10px rgba(15,23,42,0.7));
-      transition: filter 0.15s ease, transform 0.12s ease;
+      /* แสงปกติ ใช้ drop-shadow ตาม alpha ของ PNG */
+      filter: drop-shadow(0 0 16px rgba(56,189,248,0.8));
     }
 
-    /* หมอบ: หดตัว + เงาน้ำเงินฟ้า */
+    /* หมอบ */
     #player.duck {
       transform: translateY(-8px) scaleY(0.7);
     }
     #player.duck img {
-      filter:
-        drop-shadow(0 0 4px rgba(56,189,248,1))
-        drop-shadow(0 0 12px rgba(56,189,248,0.9))
-        drop-shadow(0 0 24px rgba(56,189,248,0.6));
+      /* Glow ตอนหมอบ */
+      filter: drop-shadow(0 0 14px rgba(56,189,248,0.9));
     }
 
-    /* อมตะ (โหมดโกง / Boost) = แสงเหลืองทองรอบตัว */
+    /* อมตะ (โหมดโกง / Boost) */
     #player.invincible img {
+      /* แสงทองอมตะ ตามรูป ไม่ใช่กรอบสี่เหลี่ยม */
       filter:
-        drop-shadow(0 0 6px rgba(250,204,21,1))
-        drop-shadow(0 0 14px rgba(250,204,21,0.9))
-        drop-shadow(0 0 26px rgba(250,204,21,0.7));
+        drop-shadow(0 0 26px rgba(250,204,21,1))
+        drop-shadow(0 0 70px rgba(250,204,21,0.7));
     }
 
-    /* ขยายร่าง (Giant) = ตัวโต + แสงน้ำเงินม่วง */
+    /* ขยายร่าง (Giant) */
     #player.giant {
       width: 80px;
       height: 80px;
     }
     #player.giant img {
+      /* แสงฟ้าใหญ่ */
       filter:
-        drop-shadow(0 0 6px rgba(59,130,246,1))
-        drop-shadow(0 0 16px rgba(59,130,246,0.9))
-        drop-shadow(0 0 28px rgba(129,140,248,0.7));
+        drop-shadow(0 0 26px rgba(59,130,246,1))
+        drop-shadow(0 0 70px rgba(59,130,246,0.7));
     }
 
-    /* ถ้าทั้ง Giant + Invincible ให้ใช้เอฟเฟกต์อมตะเป็นหลัก (ประกาศไว้ล่างสุดกว่า) */
-    #player.giant.invincible img {
-      filter:
-        drop-shadow(0 0 6px rgba(250,204,21,1))
-        drop-shadow(0 0 16px rgba(250,204,21,0.9))
-        drop-shadow(0 0 30px rgba(250,204,21,0.75));
-    }
-
-    /* เอฟเฟกต์ double jump: หมุนตัว (หมุนเฉพาะรูป) */
+    /* เอฟเฟกต์ double jump: หมุนตัว */
     #player.double-jump img {
       animation: djumpSpin 0.25s linear;
     }
@@ -638,7 +624,6 @@
       const CFG_TRAP_Y = -60;               // ระดับความลึกที่ถือว่าโดนกับดักใต้หลุมแล้ว (ยิ่งติดลบมาก = ตกได้ลึกก่อนตาย)
 
       // 5) เวลา buff / cheat (หน่วย ms)
-      const CFG_CHEAT_INVENCIBLE_DURATION = 10000; // (ชื่อพิมพ์ผิดไม่ได้ใช้ แต่เก็บไว้)
       const CFG_CHEAT_INVINCIBLE_DURATION = 10000; // สูตรโกง DDD+UUU อมตะกี่ ms (10 วิ = 10000)
       const CFG_MAGNET_DURATION = 10000;           // ระยะเวลา Magnet
       const CFG_BOOST_DURATION = 5000;             // ระยะเวลา Boost (วิ่งเร็ว + อมตะ)
@@ -1003,24 +988,32 @@
 
           if (!gameOver && isColliding(player, obs)) {
             if (invincible || giantActive) {
+              // โหมดอมตะ / Giant ชนแล้วทำลายสิ่งกีดขวาง + ได้คะแนนเพิ่ม
               score += 2;
               obstaclesPassed += 1;
               scoreEl.textContent = "คะแนน: " + score;
               updateMissionUI();
               toRemove.push(index);
             } else {
+              // ชนปกติ → เสียพลัง + ชะลอความเร็ว
               const isAir = obs.classList.contains("air");
               const dmg = isAir ? damageAir : damageGround;
               energy -= dmg;
+
               if (energy <= 0) {
                 energy = 0;
                 updateEnergyUI();
                 endGame();
                 return;
               } else {
+                // ยังไม่ตาย → อัปเดตพลัง + เอฟเฟกต์กระพริบ + ลดความเร็ว 30%
                 updateEnergyUI();
+
                 obs.style.opacity = "0.4";
                 setTimeout(() => { if (obs && obs.style) obs.style.opacity = "1"; }, 100);
+
+                // 🔻 ชนแล้วแต่ยังมี Energy → ชะลอความเร็วลง 30% (เหลือ 70%) แต่ไม่ให้ต่ำกว่า 3
+                speed = Math.max(3, speed * 0.7);
               }
             }
           }
@@ -1426,7 +1419,7 @@
 
       function activateCheat() {
         invincible = true;
-        invincibleTimer = Math.max(invincibleTimer, CFG_CHEAT_INVINCIBLE_DURATION);
+        invincibleTimer = Math.max(invincibleTimer, CHEAT_INVINCIBLE_DURATION);
         player.classList.add("invincible");
         cheatTimerEl.textContent = "โหมดโกง: PHANToM อมตะ 10 วิ 🎃";
         messageEl.textContent = "โหมดโกงเปิดแล้ว! ชนอะไรก็ไม่ตาย 10 วิ";
