@@ -127,6 +127,7 @@
       z-index: 3;
     }
 
+    /* อุปสรรคพื้น (แบบต่างๆ) */
     .obstacle.ground.tree {
       background: linear-gradient(to top, #14532d, #16a34a);
       border-radius: 4px 4px 0 0;
@@ -142,11 +143,61 @@
       border-radius: 40% 60% 30% 70%;
     }
 
-    /* นก (อุปสรรคที่ต้องหมอบ) = สี่เหลี่ยมเข้ม */
+    .obstacle.ground.spike {
+      background: repeating-linear-gradient(135deg, #fecaca 0, #fecaca 6px, #b91c1c 6px, #b91c1c 12px);
+    }
+
+    .obstacle.ground.crate {
+      background: linear-gradient(135deg, #78350f, #fbbf24);
+      box-shadow: 0 0 12px rgba(124,45,18,0.9);
+    }
+
+    .obstacle.ground.barrel {
+      background: linear-gradient(180deg, #f97316, #c2410c);
+      box-shadow: 0 0 14px rgba(249,115,22,0.95);
+      border-radius: 6px;
+    }
+
+    .obstacle.ground.sign {
+      background: linear-gradient(180deg, #facc15, #eab308);
+      box-shadow: 0 0 14px rgba(234,179,8,0.95);
+      position: relative;
+    }
+    .obstacle.ground.sign::before {
+      content: "!";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -60%);
+      color: #1f2937;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .obstacle.ground.laser {
+      background: linear-gradient(180deg, #ef4444, #f97316);
+      box-shadow: 0 0 18px rgba(248,113,113,1);
+    }
+
+    /* อุปสรรคลอย (ต้องหมอบ/กระโดดหลบ) */
     .obstacle.air.bird {
-      background: linear-gradient(to bottom, #1f2937, #020617);
-      border-radius: 4px;
-      box-shadow: 0 0 10px rgba(15,23,42,0.95);
+      background: linear-gradient(135deg, #fee2e2, #ef4444, #7f1d1d);
+      border: 2px solid #fecaca;
+      box-shadow: 0 0 16px rgba(239,68,68,0.95);
+      border-radius: 6px;
+    }
+
+    .obstacle.air.drone {
+      background: radial-gradient(circle at 30% 30%, #e5e7eb, #64748b, #020617);
+      border-radius: 40%;
+      border: 2px solid #e5e7eb;
+      box-shadow: 0 0 14px rgba(148,163,184,0.9);
+    }
+
+    .obstacle.air.fireball {
+      background: radial-gradient(circle at 30% 30%, #fef9c3, #f97316, #7c2d12);
+      border-radius: 50%;
+      box-shadow: 0 0 16px rgba(249,115,22,0.95);
     }
 
     /* พื้น/ชั้นพิเศษ (วิ่งได้ แต่ไม่ทำดาเมจ) */
@@ -158,6 +209,17 @@
       box-shadow: 0 6px 14px rgba(15,23,42,0.95);
       border: 1px solid rgba(148,163,184,0.35);
       z-index: 2;
+    }
+
+    /* หลุม */
+    .hole {
+      position: absolute;
+      bottom: 0;
+      height: 40px;
+      background: radial-gradient(circle at 50% 0, #000000, #020617);
+      border-radius: 6px 6px 0 0;
+      box-shadow: inset 0 0 24px rgba(0,0,0,0.9);
+      z-index: 1;
     }
 
     /* ไอเท็มเก็บได้: Coin / Hearts / Power-up */
@@ -428,13 +490,13 @@
 <body>
   <h1>PHANToM Runner</h1>
   <div id="hint">
-    Space / ↑ = กระโดด (2 จังหวะ) • ↓ = หมอบ • มีพื้นลอย/บันไดให้เหยียบ • เก็บเหรียญ / หัวใจ / Magnet / Boost(อมตะ) / Giant
+    Space / ↑ = กระโดด (2 จังหวะ) • ↓ = หมอบ • มีพื้นลอย/บันได • หลุมพื้น • เก็บเหรียญ / หัวใจ / Magnet / Boost(อมตะ) / Giant
   </div>
 
   <div id="gameContainer">
     <div id="ground"></div>
     <div id="player">
-      <!-- ชื่อไฟล์รูป เปลี่ยนได้ตามที่ตั้ง -->
+      <!-- เปลี่ยนชื่อไฟล์รูปได้ -->
       <img src="phantom-runner.png" alt="PHANToM" />
     </div>
   </div>
@@ -488,8 +550,8 @@
 
       const groundY = 40;
 
-      // ฟิสิกส์กระโดด + Double Jump
-      const gravity = 0.6;
+      // ฟิสิกส์กระโดด + Double Jump (เพิ่มความแรงของแรงโน้มถ่วงให้ตกเร็วขึ้น)
+      const gravity = 0.9;
       const jumpStrength = 11;
       const maxJumps = 2;
       let playerY = groundY;
@@ -504,9 +566,9 @@
       // Energy
       const maxEnergy = 100;
       let energy = maxEnergy;
-      const energyDecayPerSec = 4; // พลังลดเองต่อวินาที
-      const damageGround = 25;     // ชนสิ่งกีดขวางพื้น
-      const damageAir = 35;        // ชนนก/อากาศ
+      const energyDecayPerSec = 4;
+      const damageGround = 25;
+      const damageAir = 35;
 
       // คะแนน + เหรียญ + ภารกิจ
       let score = 0;
@@ -526,8 +588,10 @@
       let obstacles = [];
       let collectibles = [];
       let platforms = [];
+      let holes = [];
       let speed = 6;
       const BOOST_MULTIPLIER = 1.6;
+      const HOLE_CHANCE = 0.18;
 
       let gameOver = false;
       let frameId = null;
@@ -541,16 +605,16 @@
       let timeSinceLastPlatform = 0;
       let nextPlatformIn = 2500;
 
-      // โหมดโกง/อมตะรวม
+      // โหมดอมตะรวม (โกง + Boost)
       let invincible = false;
       let invincibleTimer = 0;
-      const CHEAT_INVINCIBLE_DURATION = 10000; // 10 วิ สำหรับสูตรโกง
+      const CHEAT_INVINCIBLE_DURATION = 10000;
 
       // Power-ups
       let magnetActive = false;
       let magnetTimer = 0;
       const MAGNET_DURATION = 10000;
-      const MAGNET_RADIUS = 260;
+      const MAGNET_RADIUS = 900; // แรงมาก เกือบทั้งจอ
 
       let boostActive = false;
       let boostTimer = 0;
@@ -561,8 +625,8 @@
       const GIANT_DURATION = 6000;
 
       // ตรวจจับสูตรโกง
-      const CHEAT_WINDOW = 1000; // 1 วิ
-      let cheatEvents = []; // {symbol: 'D'|'U', time}
+      const CHEAT_WINDOW = 1000;
+      let cheatEvents = [];
 
       function randomBetween(min, max) {
         return Math.random() * (max - min) + min;
@@ -589,6 +653,8 @@
         collectibles = [];
         platforms.forEach(p => p.remove());
         platforms = [];
+        holes.forEach(h => h.remove());
+        holes = [];
       }
 
       function resetGame() {
@@ -639,7 +705,7 @@
 
         updateMissionUI();
 
-        messageEl.textContent = "หลบต้นไม้/ก้อนหิน (กระโดด) และนก (หมอบ) ให้ได้นานที่สุด!";
+        messageEl.textContent = "หลบอุปสรรคและหลุมให้ได้มากที่สุด!";
 
         if (frameId) cancelAnimationFrame(frameId);
         lastTime = null;
@@ -648,14 +714,34 @@
         spawnObstacle();
       }
 
+      function spawnHole() {
+        const h = document.createElement("div");
+        h.classList.add("hole");
+        const width = randomBetween(80, 160);
+        h.style.width = width + "px";
+        h.style.left = gameContainer.offsetWidth + "px";
+        h.style.bottom = "0px";
+        gameContainer.appendChild(h);
+        holes.push(h);
+      }
+
       function spawnObstacle() {
+        const isAir = Math.random() < 0.35;
+
+        // หลุมบนพื้น
+        if (!isAir && Math.random() < HOLE_CHANCE) {
+          spawnHole();
+          return;
+        }
+
         const obs = document.createElement("div");
         obs.classList.add("obstacle");
 
-        const isAir = Math.random() < 0.35; // 35% เป็นนก
-
         if (isAir) {
-          obs.classList.add("air", "bird");
+          const airTypes = ["bird", "drone", "fireball"];
+          const kind = airTypes[Math.floor(Math.random() * airTypes.length)];
+          obs.classList.add("air", kind);
+
           const height = randomBetween(24, 32);
           const width = randomBetween(34, 40);
           obs.style.width = width + "px";
@@ -664,8 +750,8 @@
           obs.style.bottom = bottom + "px";
         } else {
           obs.classList.add("ground");
-          const types = ["tree", "bush", "rock"];
-          const kind = types[Math.floor(Math.random() * types.length)];
+          const groundTypes = ["tree", "bush", "rock", "spike", "crate", "barrel", "sign", "laser"];
+          const kind = groundTypes[Math.floor(Math.random() * groundTypes.length)];
           obs.classList.add(kind);
 
           const height = randomBetween(45, 80);
@@ -686,23 +772,23 @@
 
         const r = Math.random();
         if (r < 0.55) {
-           c.classList.add("coin");
+          c.classList.add("coin");
         } else if (r < 0.70) {
-           c.classList.add("energy");
-           const sizes = ["small","medium","large"];
-           const gains = [15, 25, 40];
-           const idx = Math.floor(Math.random() * sizes.length);
-           c.classList.add(sizes[idx]);
-           c.dataset.energy = gains[idx];
+          c.classList.add("energy");
+          const sizes = ["small","medium","large"];
+          const gains = [15, 25, 40];
+          const idx = Math.floor(Math.random() * sizes.length);
+          c.classList.add(sizes[idx]);
+          c.dataset.energy = gains[idx];
         } else if (r < 0.85) {
-           c.classList.add("magnet");
+          c.classList.add("magnet");
         } else if (r < 0.93) {
-           c.classList.add("boost");
+          c.classList.add("boost");
         } else {
-           c.classList.add("giant");
+          c.classList.add("giant");
         }
 
-        const lane = Math.floor(Math.random() * 3); // 0 = ต่ำ, 1 = กลาง, 2 = สูง
+        const lane = Math.floor(Math.random() * 3);
         let bottom;
         if (lane === 0) bottom = groundY + 60;
         else if (lane === 1) bottom = groundY + 110;
@@ -764,7 +850,6 @@
 
           if (!gameOver && isColliding(player, obs)) {
             if (invincible || giantActive) {
-              // Giant หรือ Boost/โกง ชนแล้วทำลาย
               score += 2;
               obstaclesPassed += 1;
               scoreEl.textContent = "คะแนน: " + score;
@@ -849,6 +934,23 @@
         }
       }
 
+      function updateHoles(delta) {
+        const moveX = speed * (boostActive ? BOOST_MULTIPLIER : 1) * (delta / 16.67);
+        const toRemove = [];
+        holes.forEach((h, index) => {
+          const left = parseFloat(h.style.left);
+          const newLeft = left - moveX;
+          h.style.left = newLeft + "px";
+          if (newLeft + h.offsetWidth < 0) {
+            toRemove.push(index);
+          }
+        });
+        toRemove.reverse().forEach(i => {
+          if (holes[i]) holes[i].remove();
+          holes.splice(i, 1);
+        });
+      }
+
       function updateCollectibles(delta) {
         const moveX = speed * (boostActive ? BOOST_MULTIPLIER : 1) * (delta / 16.67);
         const toRemove = [];
@@ -905,13 +1007,13 @@
             } else if (c.classList.contains("magnet")) {
               magnetActive = true;
               magnetTimer = MAGNET_DURATION;
-              messageEl.textContent = "Magnet: ดูดเหรียญและหัวใจรอบ ๆ ระยะกว้าง ✨";
+              messageEl.textContent = "Magnet: ดูดเหรียญและหัวใจแทบทั้งจอ ✨";
             } else if (c.classList.contains("boost")) {
               boostActive = true;
               boostTimer = BOOST_DURATION;
               invincible = true;
-              // ถ้าเคยมีเวลาอมตะอยู่แล้ว ให้ใช้ค่ามากสุด
               invincibleTimer = Math.max(invincibleTimer, BOOST_DURATION);
+              player.classList.add("invincible");
               cheatTimerEl.textContent = "Boost: วิ่งเร็วขึ้น + อมตะชั่วคราว ⚡";
               messageEl.textContent = "Boost: วิ่งเร็วขึ้น + อมตะชั่วคราว ⚡";
             } else if (c.classList.contains("giant")) {
@@ -957,7 +1059,7 @@
         const factor = delta / 16.67;
         prevPlayerY = playerY;
 
-        // ใช้ฟิสิกส์ตลอดเวลา
+        // ฟิสิกส์กระโดด
         jumpVelocity -= gravity * factor;
         playerY += jumpVelocity * factor;
 
@@ -968,6 +1070,7 @@
         const playerLeft = playerRect.left;
         const playerRight = playerRect.right;
 
+        // พื้นลอย
         platforms.forEach(p => {
           const pRect = p.getBoundingClientRect();
           const pLeft = pRect.left;
@@ -985,6 +1088,21 @@
           }
         });
 
+        // ถ้าอยู่บนหลุม → พื้นระดับ groundY หายไป
+        let holeUnder = false;
+        const playerStyleLeft = parseFloat(getComputedStyle(player).left);
+        const playerStyleRight = playerStyleLeft + player.offsetWidth;
+        holes.forEach(h => {
+          const left = parseFloat(h.style.left);
+          const right = left + h.offsetWidth;
+          if (right > playerStyleLeft + 5 && left < playerStyleRight - 5) {
+            holeUnder = true;
+          }
+        });
+        if (holeUnder && supportY === groundY) {
+          supportY = 0; // ไม่มีพื้นรองรับ
+        }
+
         if (playerY <= supportY) {
           playerY = supportY;
           jumpVelocity = 0;
@@ -995,6 +1113,21 @@
         }
 
         player.style.bottom = playerY + "px";
+      }
+
+      function checkHoleDeath() {
+        // ถ้าอยู่ระดับพื้น (ไม่ใช่บน platform) และอยู่บนหลุม → ตายทันที
+        if (playerY > groundY + 1) return; // บน platform หรือกลางอากาศ
+        const left = parseFloat(getComputedStyle(player).left);
+        const right = left + player.offsetWidth;
+        for (const h of holes) {
+          const hLeft = parseFloat(h.style.left);
+          const hRight = hLeft + h.offsetWidth;
+          if (hRight > left + 5 && hLeft < right - 5) {
+            endGame();
+            return;
+          }
+        }
       }
 
       function gameLoop(timestamp) {
@@ -1017,10 +1150,14 @@
 
         updatePlayer(delta);
         updatePlatforms(delta);
+        updateHoles(delta);
+        checkHoleDeath();
+        if (gameOver) return;
+
         updateObstacles(delta);
         updateCollectibles(delta);
 
-        // อมตะ (ทั้งจากสูตรโกง + Boost)
+        // อมตะ (โกง + Boost)
         if (invincible) {
           invincibleTimer -= delta;
           if (invincibleTimer <= 0) {
@@ -1030,11 +1167,9 @@
             if (!boostActive) {
               messageEl.textContent = "โหมดอมตะหมดแล้ว! ระวังให้ดี 😈";
             }
-          } else {
-            if (invincibleTimer <= 3000) {
-              const secs = Math.ceil(invincibleTimer / 1000);
-              cheatTimerEl.textContent = "นับถอยหลังโหมดอมตะ: " + secs + " วิ";
-            }
+          } else if (invincibleTimer <= 3000) {
+            const secs = Math.ceil(invincibleTimer / 1000);
+            cheatTimerEl.textContent = "นับถอยหลังโหมดอมตะ: " + secs + " วิ";
           }
         }
 
@@ -1093,13 +1228,12 @@
           if (isDucking) {
             setDuck(false);
           }
-          // ถ้าเป็นจังหวะที่ 2 = Double Jump (มี 1 กระโดดเหลือก่อนกด)
           if (jumpsLeft === 1) {
+            // Double jump
             totalDoubleJumps += 1;
             updateMissionUI();
-            // รีสตาร์ท animation double-jump
             player.classList.remove("double-jump");
-            void player.offsetWidth; // force reflow
+            void player.offsetWidth;
             player.classList.add("double-jump");
           }
           isJumping = true;
@@ -1119,7 +1253,7 @@
         }
       }
 
-      // ↓↓↓ สูตรโกง: DDD UUU (U = ↑ หรือ Space)
+      // สูตรโกง: DDD UUU (U = ↑ หรือ Space)
       function registerCheat(code) {
         const now = performance.now();
         if (code !== "ArrowDown" && code !== "ArrowUp" && code !== "Space") return;
@@ -1153,7 +1287,7 @@
         if (e.code === "Space" || e.code === "ArrowUp") {
           e.preventDefault();
           handleJump();
-          registerCheat(e.code); // Space/↑ นับเป็น U
+          registerCheat(e.code);
         } else if (e.code === "ArrowDown") {
           e.preventDefault();
           setDuck(true);
@@ -1167,7 +1301,7 @@
         }
       });
 
-      // ปุ่มบนหน้าจอ (เมาส์ + ทัช)
+      // ปุ่มบนหน้าจอ
       if (btnJump) {
         btnJump.addEventListener("pointerdown", (e) => {
           e.preventDefault();
@@ -1197,7 +1331,7 @@
 
       startBtn.addEventListener("click", resetGame);
 
-      // ตั้งค่า UI เริ่มต้น
+      // เริ่มต้น
       updateEnergyUI();
       updateMissionUI();
     })();
