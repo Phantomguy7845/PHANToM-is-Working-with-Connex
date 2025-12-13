@@ -559,6 +559,103 @@
       opacity: 1;
     }
 
+    /* === Game Over Overlay === */
+    #gameOverOverlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, rgba(15,23,42,0.88), rgba(2,6,23,0.98));
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease;
+    }
+
+    #gameOverOverlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .go-panel {
+      min-width: 260px;
+      max-width: 320px;
+      padding: 18px 20px;
+      border-radius: 16px;
+      background: radial-gradient(circle at top left, #1f2937, #020617);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.85);
+      border: 1px solid rgba(148,163,184,0.7);
+      text-align: center;
+    }
+
+    .go-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .go-summary {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-bottom: 10px;
+    }
+    .go-summary span {
+      color:#e5e7eb;
+    }
+
+    .go-buttons {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #reviveBtn {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      background: linear-gradient(to right, #22c55e, #22d3ee);
+      color: #022c22;
+      box-shadow: 0 10px 25px rgba(34,197,94,0.35);
+    }
+
+    #reviveBtn:hover {
+      filter: brightness(1.05);
+      box-shadow: 0 14px 32px rgba(34,197,94,0.55);
+    }
+
+    #reviveBtn:active {
+      transform: translateY(1px);
+      box-shadow: 0 6px 16px rgba(34,197,94,0.4);
+    }
+
+    #restartBtnOverlay {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+      background: radial-gradient(circle at 20% 0, #1f2937, #020617);
+      color: #e5e7eb;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    #restartBtnOverlay:hover {
+      border-color: #38bdf8;
+      box-shadow: 0 0 14px rgba(56,189,248,0.7);
+    }
+
+    #restartBtnOverlay:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 4px 10px rgba(15,23,42,0.9);
+    }
+
     @media (max-width: 600px) {
       #gameContainer { height: 230px; }
       #player { left: 40px; }
@@ -580,6 +677,10 @@
       #energyText {
         width: 54px;
         font-size: 10px;
+      }
+
+      .go-panel {
+        max-width: 90vw;
       }
     }
   </style>
@@ -652,6 +753,20 @@
   <!-- overlay ไว้ทำแฟลชทั้งจอ -->
   <div id="hitFlash"></div>
 
+  <!-- Game Over Popup -->
+  <div id="gameOverOverlay">
+    <div class="go-panel">
+      <div class="go-title">Game Over</div>
+      <div class="go-summary">
+        คะแนน: <span id="finalScore">0</span> • เหรียญ: <span id="finalCoins">0</span>
+      </div>
+      <div class="go-buttons">
+        <button id="reviveBtn">คืนชีพ (ใช้ 20 เหรียญ)</button>
+        <button id="restartBtnOverlay">เริ่มเกมใหม่</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
       // =========================
@@ -681,7 +796,7 @@
 
       // 4) หลุมกับดัก
       const CFG_HOLE_CHANCE = 0.18;         // โอกาสที่ "อุปสรรคบนพื้น" จะกลายเป็นหลุม (0–1)
-      const CFG_TRAP_Y = -60;               // ระดับความลึกที่ถือว่าโดนกับดักใต้หลุมแล้ว (ยิ่งติดลบมาก = ตกได้ลึกก่อนตาย)
+      const CFG_TRAP_Y = -60;               // ระดับความลึกที่ถือว่าโดนกับดักใต้หลุมแล้ว
 
       // 5) เวลา buff / cheat (หน่วย ms)
       const CFG_CHEAT_INVINCIBLE_DURATION = 10000; // สูตรโกง DDD+UUU อมตะกี่ ms (10 วิ = 10000)
@@ -690,7 +805,7 @@
       const CFG_GIANT_DURATION = 6000;             // ระยะเวลา Giant (ตัวใหญ่ ชนสิ่งกีดขวางแตก)
 
       // 6) ระยะดูดเหรียญ/หัวใจของ Magnet (px ตามหน้าจอ)
-      const CFG_MAGNET_RADIUS = 400;       // ยิ่งมาก = ดูดไกลขึ้น เกือบทั้งจอ
+      const CFG_MAGNET_RADIUS = 400;       // ปรับได้เอง (ยิ่งมาก = ดูดไกลขึ้น)
 
       // 7) ค่าพลังจากหัวใจแต่ละขนาด
       const CFG_HEART_SMALL_GAIN = 15;     // หัวใจเล็ก +energy
@@ -704,9 +819,9 @@
 
       // 9) ความถี่การเกิดไอเท็ม/แพลตฟอร์ม (ms)
       const CFG_COLLECTIBLE_BASE_INTERVAL = 1500;  // ยิ่งน้อย = ไอเท็มออกถี่ขึ้น
-      const CFG_COLLECTIBLE_MIN_INTERVAL = 700;   // ระยะห่างต่ำสุดระหว่างไอเท็ม
-      const CFG_PLATFORM_MIN_INTERVAL = 2000;     // เวลาเกิด platform ล็อตใหม่ขั้นต่ำ
-      const CFG_PLATFORM_MAX_INTERVAL = 4500;     // เวลาเกิด platform ล็อตใหม่สูงสุด
+      const CFG_COLLECTIBLE_MIN_INTERVAL = 700;    // ระยะห่างต่ำสุดระหว่างไอเท็ม
+      const CFG_PLATFORM_MIN_INTERVAL = 2000;      // เวลาเกิด platform ล็อตใหม่ขั้นต่ำ
+      const CFG_PLATFORM_MAX_INTERVAL = 4500;      // เวลาเกิด platform ล็อตใหม่สูงสุด
 
       // 10) สูตรโกง
       const CFG_CHEAT_WINDOW = 1000;       // ต้องกด DDD+UUU ให้ครบในกี่ ms (1 วิ = 1000)
@@ -731,10 +846,16 @@
       const missionEl = document.getElementById("mission");
       const boostBeam = document.getElementById("boostBeam");
 
+      const gameOverOverlay = document.getElementById("gameOverOverlay");
+      const finalScoreEl = document.getElementById("finalScore");
+      const finalCoinsEl = document.getElementById("finalCoins");
+      const restartBtnOverlay = document.getElementById("restartBtnOverlay");
+      const reviveBtn = document.getElementById("reviveBtn");
+
       const groundY = 40;
       const playerBaseLeft = parseFloat(getComputedStyle(player).left) || 80;
 
-      // ฟิสิกส์กระโดด + Double Jump (ใช้ค่าจาก CONFIG)
+      // ฟิสิกส์กระโดด + Double Jump
       const gravity = CFG_GRAVITY;
       const jumpStrength = CFG_JUMP_STRENGTH;
       const maxJumps = CFG_MAX_JUMPS;
@@ -747,7 +868,7 @@
       // หมอบ
       let isDucking = false;
 
-      // Energy (ใช้ CONFIG)
+      // Energy
       const maxEnergy = CFG_MAX_ENERGY;
       let energy = maxEnergy;
       const energyDecayPerSec = CFG_ENERGY_DECAY_PER_SEC;
@@ -797,24 +918,21 @@
       // Power-ups
       let magnetActive = false;
       let magnetTimer = 0;
-      const MAGNET_DURATION = CFG_MAGNET_DURATION;
 
       let boostActive = false;
       let boostTimer = 0;
-      const BOOST_DURATION = CFG_BOOST_DURATION;
 
       let giantActive = false;
       let giantTimer = 0;
-      const GIANT_DURATION = CFG_GIANT_DURATION;
 
       // Slow หลังชน
-      let hitSlowTimer = 300; // ms ที่ยังชะลอความเร็วอยู่
+      let hitSlowTimer = 0; // ms ที่ยังชะลอความเร็วอยู่
 
       // ตรวจจับสูตรโกง
       const CHEAT_WINDOW = CFG_CHEAT_WINDOW;
       let cheatEvents = [];
 
-      const TRAP_Y = CFG_TRAP_Y; // ระดับกับดักใต้หลุม
+      const TRAP_Y = CFG_TRAP_Y;
 
       function randomBetween(min, max) {
         return Math.random() * (max - min) + min;
@@ -845,7 +963,27 @@
         holes = [];
       }
 
+      function hideGameOverOverlay() {
+        if (!gameOverOverlay) return;
+        gameOverOverlay.classList.remove("show");
+      }
+
+      function showGameOverOverlay() {
+        if (!gameOverOverlay) return;
+        finalScoreEl.textContent = score;
+        finalCoinsEl.textContent = coins;
+
+        if (coins >= 20) {
+          reviveBtn.style.display = "block";
+        } else {
+          reviveBtn.style.display = "none";
+        }
+
+        gameOverOverlay.classList.add("show");
+      }
+
       function resetGame() {
+        hideGameOverOverlay();
         clearArrays();
 
         score = 0;
@@ -1082,7 +1220,7 @@
         }, 190);
       }
 
-      // รวม logic เวลา “เก็บไอเท็มสำเร็จ” (ชนเองหรือถูกดูดด้วย Magnet ก็มาที่นี่)
+      // รวม logic เวลา “เก็บไอเท็มสำเร็จ”
       function applyCollectibleEffect(c) {
         if (c.classList.contains("coin")) {
           coins += 1;
@@ -1486,6 +1624,58 @@
         frameId = requestAnimationFrame(gameLoop);
       }
 
+      function reviveGame() {
+        if (!gameOver) return;
+        if (coins < 20) return;
+
+        // หักเหรียญ 20
+        coins -= 20;
+        coinsEl.textContent = "เหรียญ: " + coins;
+
+        hideGameOverOverlay();
+
+        // เคลียร์สิ่งกีดขวาง / หลุม / platform รอบ ๆ เพื่อไม่ให้ spawn ซ้ำที่เดิมแล้วโดนทันที
+        clearArrays();
+
+        // รีเซ็ตสถานะพื้นฐาน แต่ "ไม่รีเซ็ตคะแนน"
+        gameOver = false;
+        isJumping = false;
+        isDucking = false;
+        jumpVelocity = 0;
+        jumpsLeft = maxJumps;
+        playerY = groundY;
+        prevPlayerY = groundY;
+        player.style.bottom = playerY + "px";
+        player.classList.remove("duck", "double-jump", "giant", "invincible");
+
+        // เติมพลังกลับเต็ม
+        energy = maxEnergy;
+        updateEnergyUI();
+
+        // ลบ buff ต่าง ๆ
+        invincible = false;
+        invincibleTimer = 0;
+        magnetActive = false;
+        magnetTimer = 0;
+        boostActive = false;
+        boostTimer = 0;
+        giantActive = false;
+        giantTimer = 0;
+        hitSlowTimer = 0;
+        cheatTimerEl.textContent = "";
+
+        if (boostBeam) {
+          boostBeam.style.opacity = 0;
+          boostBeam.style.left = "-9999px";
+        }
+
+        // เริ่ม loop ต่อ
+        lastTime = null;
+        frameId = requestAnimationFrame(gameLoop);
+
+        messageEl.textContent = "คืนชีพแล้ว! ใช้เหรียญ 20 เหรียญ ระวังครั้งต่อไปนะ 🧬";
+      }
+
       function endGame() {
         if (gameOver) return;
         gameOver = true;
@@ -1506,6 +1696,8 @@
         if (boostBeam) {
           boostBeam.style.opacity = 0;
         }
+
+        showGameOverOverlay();
       }
 
       function handleJump() {
@@ -1650,6 +1842,22 @@
         });
       }
 
+      // ปุ่มใน Pop-up Game Over
+      if (restartBtnOverlay) {
+        restartBtnOverlay.addEventListener("click", (e) => {
+          e.preventDefault();
+          resetGame();
+        });
+      }
+
+      if (reviveBtn) {
+        reviveBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          reviveGame();
+        });
+      }
+
+      // ปุ่มเริ่มเกมหลัก
       startBtn.addEventListener("click", resetGame);
 
       // เริ่มต้น
