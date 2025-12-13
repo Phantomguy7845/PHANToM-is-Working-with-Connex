@@ -1105,9 +1105,9 @@
         c.classList.add("collectible");
 
         const r = Math.random();
-        if (r < 0.95) {
+        if (r < 0.85) {
           c.classList.add("coin");
-        } else if (r < 0.70) {
+        } else if (r > 0.84) {
           c.classList.add("energy");
           const sizes = ["small","medium","large"];
           const gains = [CFG_HEART_SMALL_GAIN, CFG_HEART_MEDIUM_GAIN, CFG_HEART_LARGE_GAIN];
