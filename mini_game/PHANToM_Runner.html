@@ -91,11 +91,14 @@
       border-radius:999px;
       border:1px solid rgba(148,163,184,0.35);
       background: rgba(2,6,23,0.55);
-      color:#e5e7eb;
+      color: #e5e7eb;
       font-size:12px;
       cursor:pointer;
       box-shadow:0 8px 18px rgba(0,0,0,0.22);
       user-select:none;
+      display:flex;
+      align-items:center;
+      gap:6px;
     }
     .ig-btn:hover{ border-color: rgba(99,102,241,0.65); }
     .ig-btn:active{ transform: translateY(1px) scale(0.99); }
@@ -187,7 +190,7 @@
       border-radius: 8px;
       z-index: 3;
 
-      /* poison look - no glow */
+      /* poison look - no glow (now themeable) */
       background: linear-gradient(135deg, var(--obs-a), var(--obs-b), var(--obs-c), var(--obs-d));
       border: 1px solid var(--obs-border);
       box-shadow:
@@ -392,9 +395,7 @@
       user-select:none;
     }
 
-    #coinsBox{
-      color: #facc15;
-    }
+    #coinsBox{ color: #facc15; }
     #coinsBox small{ color:#9ca3af; font-size: 11px; margin-left: 6px; }
 
     #miniActions{
@@ -664,7 +665,7 @@
     }
     #shopModal.show{ display:flex; }
     .shop-card{
-      width: min(720px, 96vw);
+      width: min(760px, 96vw);
       border-radius: 18px;
       border: 1px solid rgba(148,163,184,0.35);
       background: rgba(15,23,42,0.95);
@@ -714,17 +715,38 @@
       gap: 10px;
       margin-top: 10px;
     }
+    .shop-section-title{
+      grid-column: 1 / -1;
+      margin-top: 6px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #e5e7eb;
+      opacity: 0.95;
+    }
+    .shop-section-note{
+      grid-column: 1 / -1;
+      margin-top: -6px;
+      font-size: 12px;
+      color:#9ca3af;
+      line-height:1.35;
+    }
+
     .shop-item{
       border-radius: 14px;
       border: 1px solid rgba(148,163,184,0.25);
       background: rgba(2,6,23,0.35);
       padding: 12px;
       box-shadow: 0 14px 30px rgba(0,0,0,0.22);
+      overflow:hidden;
     }
     .shop-item h3{
       font-size: 14px;
       color:#e5e7eb;
       margin-bottom: 6px;
+      display:flex;
+      align-items:center;
+      gap:10px;
     }
     .shop-item p{
       font-size: 12px;
@@ -760,6 +782,126 @@
       opacity: 0.45;
       cursor:not-allowed;
     }
+    .swatch{
+      width: 26px;
+      height: 26px;
+      border-radius: 10px;
+      border: 1px solid rgba(148,163,184,0.25);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 10px 20px rgba(0,0,0,0.25);
+      flex: 0 0 auto;
+    }
+
+    /* Sound modal */
+    #soundModal{
+      position: fixed;
+      inset: 0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      z-index: 1350;
+      background: rgba(2,6,23,0.78);
+      backdrop-filter: blur(4px);
+    }
+    #soundModal.show{ display:flex; }
+    .sound-card{
+      width: min(640px, 96vw);
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: rgba(15,23,42,0.95);
+      box-shadow: 0 28px 70px rgba(0,0,0,0.6);
+      padding: 14px 14px 12px;
+    }
+    .sound-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .sound-title{
+      font-weight: 950;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color:#facc15;
+      text-shadow: 0 0 18px rgba(250,204,21,0.20);
+    }
+    .sound-sub{
+      font-size: 12px;
+      color:#9ca3af;
+      margin-top: 4px;
+      line-height:1.4;
+    }
+    .sound-close{
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: rgba(2,6,23,0.55);
+      color:#e5e7eb;
+      cursor:pointer;
+      user-select:none;
+    }
+    .sound-close:hover{ border-color: rgba(99,102,241,0.65); }
+    .sound-close:active{ transform: translateY(1px); }
+
+    .sound-body{
+      margin-top: 10px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .s-row{
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,0.25);
+      background: rgba(2,6,23,0.35);
+      padding: 12px;
+      box-shadow: 0 14px 30px rgba(0,0,0,0.18);
+    }
+    .s-row h3{
+      font-size: 13px;
+      color:#e5e7eb;
+      margin-bottom: 8px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .s-line{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .toggle{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      user-select:none;
+    }
+    .toggle input{ transform: scale(1.1); }
+    .range-wrap{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex: 1;
+      min-width: 240px;
+    }
+    .range-wrap input[type="range"]{
+      width: 100%;
+      accent-color: #facc15;
+    }
+    .pct{
+      width: 56px;
+      text-align:right;
+      font-size: 12px;
+      color:#e5e7eb;
+      font-weight: 800;
+    }
+    .s-note{
+      margin-top: 8px;
+      font-size: 12px;
+      color:#9ca3af;
+      line-height: 1.4;
+    }
 
     /* Bottom hint (moved to bottom) */
     #hint {
@@ -780,6 +922,7 @@
       #energyContainer { font-size: 12px; }
       #energyText { width: 70px; font-size: 10px; }
       .shop-grid{ grid-template-columns: 1fr; }
+      .range-wrap{ min-width: 200px; }
     }
   </style>
 </head>
@@ -797,10 +940,9 @@
         <span id="statusPill">READY</span>
       </div>
 
-      <!-- ✅ Sound toggle + Pause -->
-      <div style="display:flex; gap:8px; align-items:center; pointer-events:none;">
-        <button id="soundBtn" class="ig-btn" title="ปิดเสียง" style="pointer-events:auto;">🔊</button>
-        <button id="pauseBtn" class="ig-btn" style="pointer-events:auto;">Pause</button>
+      <div style="display:flex; gap:8px; align-items:center; pointer-events:auto;">
+        <button id="audioQuickBtn" class="ig-btn" title="เปิด/ปิดเสียง">🔊</button>
+        <button id="pauseBtn" class="ig-btn">Pause</button>
       </div>
     </div>
 
@@ -846,6 +988,7 @@
 
   <div id="miniActions">
     <button id="fullscreenBtn" class="mini-btn">โหมดเต็มจอ</button>
+    <button id="soundBtn" class="mini-btn">เสียง</button>
     <button id="shopBtn" class="mini-btn">ร้านค้า</button>
     <button id="restartOutsideBtn" class="mini-btn">เริ่มใหม่</button>
   </div>
@@ -894,13 +1037,70 @@
       <div class="shop-header">
         <div>
           <div class="shop-title">SHOP</div>
-          <div class="shop-sub">ร้านค้าเริ่มต้น (cosmetic): ซื้อ/เลือก “ฉากหลังสนาม” ด้วยเหรียญสะสม</div>
+          <div class="shop-sub">ซื้อ/เลือก “ธีมฉากหลัง” และ “ธีมอุปสรรค” ด้วยเหรียญสะสม (อนาคตเปลี่ยนเป็นรูปภาพได้)</div>
           <div class="shop-balance">เหรียญสะสม: <b id="shopWalletCoins">0</b></div>
         </div>
         <button id="shopCloseBtn" class="shop-close">ปิด</button>
       </div>
 
       <div class="shop-grid" id="shopGrid"></div>
+    </div>
+  </div>
+
+  <!-- SOUND MODAL -->
+  <div id="soundModal" aria-modal="true" role="dialog">
+    <div class="sound-card">
+      <div class="sound-header">
+        <div>
+          <div class="sound-title">SOUND</div>
+          <div class="sound-sub">ตั้งค่าเสียงแบบแยก BGM / SFX และจำค่าหลังรีเฟรช (localStorage)</div>
+        </div>
+        <button id="soundCloseBtn" class="sound-close">ปิด</button>
+      </div>
+
+      <div class="sound-body">
+        <div class="s-row">
+          <h3>Master</h3>
+          <div class="s-line">
+            <label class="toggle">
+              <input type="checkbox" id="audioMasterToggle">
+              <span>เปิดเสียงทั้งหมด</span>
+            </label>
+            <button id="audioTestBtn" class="shop-action" style="border-radius:12px;">ทดสอบเสียง</button>
+          </div>
+          <div class="s-note">หมายเหตุ: บางเบราว์เซอร์ต้อง “แตะ/คลิก” ก่อนถึงจะเล่นเสียงได้</div>
+        </div>
+
+        <div class="s-row">
+          <h3>BGM</h3>
+          <div class="s-line">
+            <label class="toggle">
+              <input type="checkbox" id="bgmToggle">
+              <span>เปิดเสียง BGM</span>
+            </label>
+            <div class="range-wrap">
+              <input type="range" id="bgmVolRange" min="0" max="100" value="65">
+              <div class="pct" id="bgmPct">65%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="s-row">
+          <h3>SFX</h3>
+          <div class="s-line">
+            <label class="toggle">
+              <input type="checkbox" id="sfxToggle">
+              <span>เปิดเสียง SFX</span>
+            </label>
+            <div class="range-wrap">
+              <input type="range" id="sfxVolRange" min="0" max="100" value="80">
+              <div class="pct" id="sfxPct">80%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="s-note">Tip: ปุ่ม “🔊/🔇” มุมขวาบนในเกม = ปิด/เปิดเสียงทั้งหมดแบบเร็ว</div>
+      </div>
     </div>
   </div>
 
@@ -952,9 +1152,9 @@
       const CFG_HEART_BASE_INTERVAL = 1200;   // small/medium heart
       const CFG_HEART_MIN_INTERVAL  = 650;
 
-      // ✅ powerups appear LESS (2x less frequent)
-      const CFG_POWERUP_BASE_INTERVAL = 1200; // was 600
-      const CFG_POWERUP_MIN_INTERVAL  = 640;  // was 320
+      // ✅ powerups appear 2x more frequent (interval half)
+      const CFG_POWERUP_BASE_INTERVAL = 600;
+      const CFG_POWERUP_MIN_INTERVAL  = 320;
 
       const CFG_BIG_HEART_EVERY_MS = 40000;
 
@@ -971,8 +1171,19 @@
       // localStorage keys
       const LS_BEST = "phantom_runner_best";
       const LS_WALLET = "phantom_runner_wallet_coins";
+
+      // themes
       const LS_BACKDROPS_UNLOCK = "phantom_runner_backdrops_unlocked";
       const LS_BACKDROP_SELECTED = "phantom_runner_backdrop_selected";
+      const LS_OBS_UNLOCK = "phantom_runner_obstacles_unlocked";
+      const LS_OBS_SELECTED = "phantom_runner_obstacles_selected";
+
+      // audio settings
+      const LS_AUDIO_MASTER = "phantom_runner_audio_master";
+      const LS_AUDIO_BGM_ON = "phantom_runner_audio_bgm_on";
+      const LS_AUDIO_SFX_ON = "phantom_runner_audio_sfx_on";
+      const LS_AUDIO_BGM_VOL = "phantom_runner_audio_bgm_vol";
+      const LS_AUDIO_SFX_VOL = "phantom_runner_audio_sfx_vol";
 
       // =========================
       // DOM
@@ -998,7 +1209,6 @@
       const restartOutsideBtn = document.getElementById("restartOutsideBtn");
 
       const pauseBtn = document.getElementById("pauseBtn");
-      const soundBtn = document.getElementById("soundBtn"); // ✅ NEW
       const pauseOverlay = document.getElementById("pauseOverlay");
       const resumeBtnOverlay = document.getElementById("resumeBtnOverlay");
       const statusPill = document.getElementById("statusPill");
@@ -1018,6 +1228,20 @@
       const shopGrid = document.getElementById("shopGrid");
       const shopWalletCoins = document.getElementById("shopWalletCoins");
 
+      // sound UI
+      const audioQuickBtn = document.getElementById("audioQuickBtn");
+      const soundBtn = document.getElementById("soundBtn");
+      const soundModal = document.getElementById("soundModal");
+      const soundCloseBtn = document.getElementById("soundCloseBtn");
+      const audioMasterToggle = document.getElementById("audioMasterToggle");
+      const bgmToggle = document.getElementById("bgmToggle");
+      const sfxToggle = document.getElementById("sfxToggle");
+      const bgmVolRange = document.getElementById("bgmVolRange");
+      const sfxVolRange = document.getElementById("sfxVolRange");
+      const bgmPct = document.getElementById("bgmPct");
+      const sfxPct = document.getElementById("sfxPct");
+      const audioTestBtn = document.getElementById("audioTestBtn");
+
       // =========================
       // SOUND
       // =========================
@@ -1033,25 +1257,82 @@
         click: new Audio("sfx_click.mp3"),
       };
 
-      let audioUnlocked = false;
-      let audioEnabled = true;
+      // base mix (we'll multiply by sliders)
+      const BASE_VOL = {
+        bgm: 0.22,
+        countdown: 0.35,
+        jump: 0.35,
+        coin: 0.35,
+        powerup: 0.40,
+        hit: 0.45,
+        gameover: 0.50,
+        revive: 0.45,
+        click: 0.35,
+      };
 
-      // configure bgm
       Sounds.bgm.loop = true;
-      Sounds.bgm.volume = 0.22;
 
-      // sfx volumes
-      Sounds.countdown.volume = 0.35;
-      Sounds.jump.volume = 0.35;
-      Sounds.coin.volume = 0.35;
-      Sounds.powerup.volume = 0.40;
-      Sounds.hit.volume = 0.45;
-      Sounds.gameover.volume = 0.50;
-      Sounds.revive.volume = 0.45;
-      Sounds.click.volume = 0.35;
+      let audioUnlocked = false;
 
-      function safePlay(a){
-        if (!audioEnabled) return;
+      function loadBool(key, def){
+        try{
+          const v = localStorage.getItem(key);
+          if (v === null || v === undefined) return def;
+          return v === "1" || v === "true";
+        }catch(_){ return def; }
+      }
+      function loadNum(key, def){
+        try{
+          const v = parseFloat(localStorage.getItem(key));
+          return Number.isFinite(v) ? v : def;
+        }catch(_){ return def; }
+      }
+      function saveBool(key, v){ try{ localStorage.setItem(key, v ? "1" : "0"); }catch(_){ } }
+      function saveNum(key, v){ try{ localStorage.setItem(key, String(v)); }catch(_){ } }
+
+      // persisted audio settings
+      let audioEnabled = loadBool(LS_AUDIO_MASTER, true);
+      let bgmEnabled = loadBool(LS_AUDIO_BGM_ON, true);
+      let sfxEnabled = loadBool(LS_AUDIO_SFX_ON, true);
+      let bgmVolume = clamp(loadNum(LS_AUDIO_BGM_VOL, 0.65), 0, 1);
+      let sfxVolume = clamp(loadNum(LS_AUDIO_SFX_VOL, 0.80), 0, 1);
+
+      function unlockAudioOnce(){
+        if (audioUnlocked) return;
+        audioUnlocked = true;
+        // Unlock by playing a silent sound once on user gesture
+        try{
+          const prev = Sounds.click.volume;
+          Sounds.click.volume = 0;
+          const p = Sounds.click.play();
+          if (p && p.catch) p.catch(()=>{});
+          setTimeout(()=>{ try{ Sounds.click.pause(); Sounds.click.currentTime = 0; Sounds.click.volume = prev; }catch(_){ } }, 80);
+        }catch(_){}
+      }
+      document.addEventListener("pointerdown", unlockAudioOnce, { once:true });
+
+      function applyAudioVolumes(){
+        // BGM
+        Sounds.bgm.volume = BASE_VOL.bgm * bgmVolume;
+
+        // SFX
+        const s = sfxVolume;
+        Sounds.countdown.volume = BASE_VOL.countdown * s;
+        Sounds.jump.volume      = BASE_VOL.jump * s;
+        Sounds.coin.volume      = BASE_VOL.coin * s;
+        Sounds.powerup.volume   = BASE_VOL.powerup * s;
+        Sounds.hit.volume       = BASE_VOL.hit * s;
+        Sounds.gameover.volume  = BASE_VOL.gameover * s;
+        Sounds.revive.volume    = BASE_VOL.revive * s;
+        Sounds.click.volume     = BASE_VOL.click * s;
+      }
+
+      function updateAudioQuickBtn(){
+        audioQuickBtn.textContent = audioEnabled ? "🔊" : "🔇";
+      }
+
+      function playSFX(a){
+        if (!audioEnabled || !sfxEnabled) return;
         if (!a) return;
         try{
           a.currentTime = 0;
@@ -1060,19 +1341,8 @@
         }catch(_){}
       }
 
-      function unlockAudioOnce(){
-        if (audioUnlocked) return;
-        audioUnlocked = true;
-        try{
-          const p = Sounds.click.play();
-          if (p && p.catch) p.catch(()=>{});
-          setTimeout(()=>{ try{ Sounds.click.pause(); Sounds.click.currentTime = 0; }catch(_){ } }, 60);
-        }catch(_){}
-      }
-      document.addEventListener("pointerdown", unlockAudioOnce, { once:true });
-
       function bgmPlay(){
-        if (!audioEnabled) return;
+        if (!audioEnabled || !bgmEnabled) return;
         try{
           const p = Sounds.bgm.play();
           if (p && p.catch) p.catch(()=>{});
@@ -1082,114 +1352,235 @@
         try{ Sounds.bgm.pause(); }catch(_){}
       }
 
-      // ✅ NEW: Sound button UI + toggle
-      function updateSoundBtnUI(){
-        if (!soundBtn) return;
-        soundBtn.textContent = audioEnabled ? "🔊" : "🔇";
-        soundBtn.title = audioEnabled ? "ปิดเสียง" : "เปิดเสียง";
-      }
+      function applyAudioSettings(){
+        applyAudioVolumes();
+        updateAudioQuickBtn();
 
-      if (soundBtn){
-        soundBtn.addEventListener("click", () => {
-          unlockAudioOnce();
+        // sync UI
+        audioMasterToggle.checked = !!audioEnabled;
+        bgmToggle.checked = !!bgmEnabled;
+        sfxToggle.checked = !!sfxEnabled;
 
-          if (audioEnabled){
-            safePlay(Sounds.click);   // click ก่อนปิด
-            audioEnabled = false;
-            bgmPause();
-          } else {
-            audioEnabled = true;
-            safePlay(Sounds.click);
-            if (isRunning && !isPaused && !gameOver) bgmPlay();
-          }
-          updateSoundBtnUI();
-        });
-      }
+        bgmVolRange.value = String(Math.round(bgmVolume * 100));
+        sfxVolRange.value = String(Math.round(sfxVolume * 100));
+        bgmPct.textContent = Math.round(bgmVolume * 100) + "%";
+        sfxPct.textContent = Math.round(sfxVolume * 100) + "%";
 
-      // =========================
-      // Shop (starter / cosmetic backdrops)
-      // =========================
-      const Backdrops = [
-        { id:"toxic",  name:"Toxic Lab (Default)", desc:"ฉากหลังเข้ม ๆ โทนพิษ", price:0, css:{ "--bg1":"#1d2337", "--bg2":"#020617" } },
-        { id:"nebula", name:"Purple Nebula", desc:"ม่วงลึก ๆ แบบจักรวาล", price:120, css:{ "--bg1":"#20102e", "--bg2":"#050312" } },
-        { id:"neon",   name:"Neon City", desc:"โทนนีออนเข้ม ๆ", price:150, css:{ "--bg1":"#0b1b2e", "--bg2":"#020617" } },
-        { id:"dusk",   name:"Midnight Dusk", desc:"เข้มสลับน้ำเงิน", price:180, css:{ "--bg1":"#0a1224", "--bg2":"#020617" } },
-      ];
-
-      function loadUnlockedBackdrops(){
-        try{
-          const raw = localStorage.getItem(LS_BACKDROPS_UNLOCK);
-          if (!raw) return { toxic:true };
-          const obj = JSON.parse(raw);
-          if (!obj || typeof obj !== "object") return { toxic:true };
-          obj.toxic = true;
-          return obj;
-        }catch(_){
-          return { toxic:true };
+        // if master off, kill bgm immediately
+        if (!audioEnabled || !bgmEnabled) bgmPause();
+        else {
+          // resume only if running and not paused
+          if (isRunning && !gameOver && !isPaused) bgmPlay();
         }
       }
-      function saveUnlockedBackdrops(obj){
-        try{ localStorage.setItem(LS_BACKDROPS_UNLOCK, JSON.stringify(obj)); }catch(_){}
+
+      // =========================
+      // Shop (themes)
+      // =========================
+      const Backdrops = [
+        { id:"toxic",  name:"Toxic Lab (Default)", desc:"ฉากหลังเข้ม ๆ โทนพิษ", price:0,   css:{ "--bg1":"#1d2337", "--bg2":"#020617" } },
+        { id:"nebula", name:"Purple Nebula",       desc:"ม่วงลึก ๆ แบบจักรวาล", price:120, css:{ "--bg1":"#20102e", "--bg2":"#050312" } },
+        { id:"neon",   name:"Neon City",           desc:"น้ำเงิน/นีออนเข้ม ๆ",  price:150, css:{ "--bg1":"#0b1b2e", "--bg2":"#020617" } },
+        { id:"dusk",   name:"Midnight Dusk",       desc:"เข้มสลับน้ำเงิน",      price:180, css:{ "--bg1":"#0a1224", "--bg2":"#020617" } },
+        { id:"sunset", name:"Sunset Ember",        desc:"ส้ม/แดงเข้มแบบพระอาทิตย์ตก", price:220, css:{ "--bg1":"#2a0f10", "--bg2":"#07040a" } },
+        { id:"arctic", name:"Arctic Cyan",         desc:"ฟ้า/ไซแอนเย็น ๆ",      price:240, css:{ "--bg1":"#061a2b", "--bg2":"#020617" } },
+      ];
+
+      const ObstacleThemes = [
+        {
+          id:"poison",
+          name:"Poison Slate (Default)",
+          desc:"โทนพิษมืด ๆ",
+          price:0,
+          css:{
+            "--obs-a":"#111827",
+            "--obs-b":"#0b1020",
+            "--obs-c":"#2e1065",
+            "--obs-d":"#0b1020",
+            "--obs-border":"rgba(148,163,184,0.16)",
+            "--obs-shadow":"rgba(0,0,0,0.35)",
+          }
+        },
+        {
+          id:"ember",
+          name:"Ember Core",
+          desc:"แดง/ส้มเดือด ๆ",
+          price:140,
+          css:{
+            "--obs-a":"#2b0a0a",
+            "--obs-b":"#3b0a0a",
+            "--obs-c":"#7f1d1d",
+            "--obs-d":"#1f0a0a",
+            "--obs-border":"rgba(248,113,113,0.18)",
+            "--obs-shadow":"rgba(0,0,0,0.38)",
+          }
+        },
+        {
+          id:"cyber",
+          name:"Cyber Neon",
+          desc:"น้ำเงิน/ม่วงนีออน",
+          price:170,
+          css:{
+            "--obs-a":"#0a1020",
+            "--obs-b":"#0b2a3a",
+            "--obs-c":"#5b21b6",
+            "--obs-d":"#0b1020",
+            "--obs-border":"rgba(56,189,248,0.18)",
+            "--obs-shadow":"rgba(0,0,0,0.36)",
+          }
+        },
+        {
+          id:"forest",
+          name:"Deep Forest",
+          desc:"เขียวเข้ม/ดำ",
+          price:190,
+          css:{
+            "--obs-a":"#07110b",
+            "--obs-b":"#0a1a12",
+            "--obs-c":"#14532d",
+            "--obs-d":"#07110b",
+            "--obs-border":"rgba(34,197,94,0.16)",
+            "--obs-shadow":"rgba(0,0,0,0.36)",
+          }
+        },
+        {
+          id:"ice",
+          name:"Frost Byte",
+          desc:"ฟ้าเย็น/น้ำเงิน",
+          price:210,
+          css:{
+            "--obs-a":"#07141f",
+            "--obs-b":"#0b2a3a",
+            "--obs-c":"#1d4ed8",
+            "--obs-d":"#07141f",
+            "--obs-border":"rgba(147,197,253,0.18)",
+            "--obs-shadow":"rgba(0,0,0,0.34)",
+          }
+        },
+      ];
+
+      function loadUnlockedObj(key, defaultId){
+        try{
+          const raw = localStorage.getItem(key);
+          let obj = raw ? JSON.parse(raw) : {};
+          if (!obj || typeof obj !== "object") obj = {};
+          obj[defaultId] = true;
+          return obj;
+        }catch(_){
+          const o = {}; o[defaultId] = true; return o;
+        }
       }
-      function loadSelectedBackdrop(){
-        return localStorage.getItem(LS_BACKDROP_SELECTED) || "toxic";
+      function saveUnlockedObj(key, obj){
+        try{ localStorage.setItem(key, JSON.stringify(obj)); }catch(_){}
       }
-      function saveSelectedBackdrop(id){
-        try{ localStorage.setItem(LS_BACKDROP_SELECTED, id); }catch(_){}
+      function loadSelectedId(key, fallback){
+        return localStorage.getItem(key) || fallback;
+      }
+      function saveSelectedId(key, id){
+        try{ localStorage.setItem(key, id); }catch(_){}
       }
 
-      let unlockedBackdrops = loadUnlockedBackdrops();
-      let selectedBackdrop = loadSelectedBackdrop();
+      let unlockedBackdrops = loadUnlockedObj(LS_BACKDROPS_UNLOCK, "toxic");
+      let selectedBackdrop = loadSelectedId(LS_BACKDROP_SELECTED, "toxic");
       if (!unlockedBackdrops[selectedBackdrop]) selectedBackdrop = "toxic";
+
+      let unlockedObsThemes = loadUnlockedObj(LS_OBS_UNLOCK, "poison");
+      let selectedObsTheme = loadSelectedId(LS_OBS_SELECTED, "poison");
+      if (!unlockedObsThemes[selectedObsTheme]) selectedObsTheme = "poison";
+
+      function applyThemeVars(cssObj){
+        for (const k in cssObj){
+          document.documentElement.style.setProperty(k, cssObj[k]);
+        }
+      }
 
       function applyBackdrop(id){
         const b = Backdrops.find(x=>x.id===id) || Backdrops[0];
-        for (const k in b.css){
-          document.documentElement.style.setProperty(k, b.css[k]);
-        }
+        applyThemeVars(b.css);
         selectedBackdrop = b.id;
-        saveSelectedBackdrop(selectedBackdrop);
+        saveSelectedId(LS_BACKDROP_SELECTED, selectedBackdrop);
       }
+      function applyObstacleTheme(id){
+        const t = ObstacleThemes.find(x=>x.id===id) || ObstacleThemes[0];
+        applyThemeVars(t.css);
+        selectedObsTheme = t.id;
+        saveSelectedId(LS_OBS_SELECTED, selectedObsTheme);
+      }
+
       applyBackdrop(selectedBackdrop);
+      applyObstacleTheme(selectedObsTheme);
+
+      function swatchBackdrop(b){
+        const c1 = b.css["--bg1"] || "#111827";
+        const c2 = b.css["--bg2"] || "#020617";
+        return `background: linear-gradient(180deg, ${c1}, ${c2});`;
+      }
+      function swatchObstacle(t){
+        const a = t.css["--obs-a"], b = t.css["--obs-b"], c = t.css["--obs-c"], d = t.css["--obs-d"];
+        return `background: linear-gradient(135deg, ${a}, ${b}, ${c}, ${d});`;
+      }
 
       function renderShop(){
         shopWalletCoins.textContent = String(walletCoins);
         shopGrid.innerHTML = "";
 
-        Backdrops.forEach(b=>{
-          const unlocked = !!unlockedBackdrops[b.id];
-          const selected = (selectedBackdrop === b.id);
+        const addSection = (title, note) => {
+          const h = document.createElement("div");
+          h.className = "shop-section-title";
+          h.textContent = title;
+          shopGrid.appendChild(h);
 
+          const n = document.createElement("div");
+          n.className = "shop-section-note";
+          n.textContent = note;
+          shopGrid.appendChild(n);
+        };
+
+        const addItem = (item, kind, unlocked, selected, swatchStyle) => {
           const el = document.createElement("div");
           el.className = "shop-item";
+          const priceText = item.price === 0 ? "ฟรี" : (item.price + " เหรียญ");
           el.innerHTML = `
-            <h3>${b.name}</h3>
-            <p>${b.desc}</p>
+            <h3><span class="swatch" style="${swatchStyle}"></span>${item.name}</h3>
+            <p>${item.desc}</p>
             <div class="shop-row">
-              <div class="price">${b.price === 0 ? "ฟรี" : (b.price + " เหรียญ")}</div>
+              <div class="price">${priceText}</div>
               <div style="display:flex; gap:10px; align-items:center;">
-                <button class="shop-action" data-act="buy" data-id="${b.id}" ${unlocked || b.price===0 ? "disabled" : ""}>
-                  ซื้อ
-                </button>
-                <button class="shop-action" data-act="select" data-id="${b.id}" ${!unlocked && b.price>0 ? "disabled" : ""}>
+                <button class="shop-action" data-kind="${kind}" data-act="buy" data-id="${item.id}" ${unlocked || item.price===0 ? "disabled" : ""}>ซื้อ</button>
+                <button class="shop-action" data-kind="${kind}" data-act="select" data-id="${item.id}" ${(!unlocked && item.price>0) ? "disabled" : ""}>
                   ${selected ? "กำลังใช้" : "เลือก"}
                 </button>
               </div>
             </div>
           `;
           shopGrid.appendChild(el);
+        };
+
+        addSection("Background Themes", "ธีมสีฉากหลังสนาม (อนาคตใส่รูปภาพได้)");
+        Backdrops.forEach(b=>{
+          const unlocked = !!unlockedBackdrops[b.id];
+          const selected = (selectedBackdrop === b.id);
+          addItem(b, "backdrop", unlocked, selected, swatchBackdrop(b));
+        });
+
+        addSection("Obstacle Themes", "ธีมสีของอุปสรรค (ใช้ตัวแปร CSS เปลี่ยนได้ทันที)");
+        ObstacleThemes.forEach(t=>{
+          const unlocked = !!unlockedObsThemes[t.id];
+          const selected = (selectedObsTheme === t.id);
+          addItem(t, "obstacle", unlocked, selected, swatchObstacle(t));
         });
       }
 
       function openShop(){
-        safePlay(Sounds.click);
+        unlockAudioOnce();
+        playSFX(Sounds.click);
         if (isRunning && !gameOver && !isPaused) pauseGame(true);
-
         renderShop();
         shopModal.classList.add("show");
       }
       function closeShop(){
-        safePlay(Sounds.click);
+        unlockAudioOnce();
+        playSFX(Sounds.click);
         shopModal.classList.remove("show");
       }
 
@@ -1202,29 +1593,41 @@
       shopGrid.addEventListener("click", (e)=>{
         const btn = e.target.closest("button");
         if (!btn) return;
+
+        unlockAudioOnce();
+
         const id = btn.getAttribute("data-id");
         const act = btn.getAttribute("data-act");
-        const b = Backdrops.find(x=>x.id===id);
-        if (!b) return;
+        const kind = btn.getAttribute("data-kind");
+
+        const list = (kind === "obstacle") ? ObstacleThemes : Backdrops;
+        const item = list.find(x=>x.id===id);
+        if (!item) return;
+
+        const unlockedObj = (kind === "obstacle") ? unlockedObsThemes : unlockedBackdrops;
+        const saveUnlockKey = (kind === "obstacle") ? LS_OBS_UNLOCK : LS_BACKDROPS_UNLOCK;
 
         if (act === "buy"){
-          if (unlockedBackdrops[id] || b.price===0) return;
-          if (walletCoins < b.price) return;
+          if (unlockedObj[id] || item.price===0) return;
+          if (walletCoins < item.price) return;
 
-          walletCoins -= b.price;
+          walletCoins -= item.price;
           saveWallet();
           updateCoinsUI();
 
-          unlockedBackdrops[id] = true;
-          saveUnlockedBackdrops(unlockedBackdrops);
-          safePlay(Sounds.click);
+          unlockedObj[id] = true;
+          saveUnlockedObj(saveUnlockKey, unlockedObj);
+          playSFX(Sounds.click);
           renderShop();
         }
 
         if (act === "select"){
-          if (!unlockedBackdrops[id] && b.price>0) return;
-          applyBackdrop(id);
-          safePlay(Sounds.click);
+          if (!unlockedObj[id] && item.price>0) return;
+
+          if (kind === "obstacle") applyObstacleTheme(id);
+          else applyBackdrop(id);
+
+          playSFX(Sounds.click);
           renderShop();
         }
       });
@@ -1333,30 +1736,23 @@
           " • ผ่านอุปสรรค " + obstaclesPassed + "/" + CFG_MISSION_OBS_TARGET;
       }
 
-      function setStatus(text){
-        statusPill.textContent = text;
-      }
+      function setStatus(text){ statusPill.textContent = text; }
 
       function showStartOverlay(){
         startOverlay.classList.remove("hidden");
         countdownText.textContent = "";
         setStatus("READY");
       }
-      function hideStartOverlay(){
-        startOverlay.classList.add("hidden");
-      }
+      function hideStartOverlay(){ startOverlay.classList.add("hidden"); }
 
       function showPauseOverlay(){
         pauseOverlay.classList.add("show");
         setStatus("PAUSED");
       }
-      function hidePauseOverlay(){
-        pauseOverlay.classList.remove("show");
-      }
+      function hidePauseOverlay(){ pauseOverlay.classList.remove("show"); }
 
-      function hideGameOverModal(){
-        gameOverModal.classList.remove("show");
-      }
+      function hideGameOverModal(){ gameOverModal.classList.remove("show"); }
+
       function showGameOverModal(){
         const canRevive = (!revivedThisRun && walletCoins >= CFG_REVIVE_COST);
         reviveBtn.style.display = canRevive ? "block" : "none";
@@ -1422,14 +1818,6 @@
       // Game Setup (no auto-run; uses countdown)
       // =========================
       function prepareNewRun(){
-        // ✅ prevent countdown ghost-timer bug
-        if (countdownTimer){
-          clearInterval(countdownTimer);
-          countdownTimer = null;
-        }
-        countdownLeft = 0;
-        startGameBtn.disabled = false;
-
         clearArrays();
         hideGameOverModal();
         hidePauseOverlay();
@@ -1473,6 +1861,7 @@
         timeSinceLastPlatform = 0;
         nextPlatformIn = 2000 + Math.random() * (4500 - 2000);
 
+        // revive & penalty reset
         revivedThisRun = false;
         postReviveActive = false;
         postScoreAcc = 0; postScoreCredited = 0;
@@ -1501,8 +1890,6 @@
 
         bgmPause();
         showStartOverlay();
-
-        updateSoundBtnUI();
       }
 
       // =========================
@@ -1513,25 +1900,27 @@
         if (gameOver) return;
 
         unlockAudioOnce();
-        safePlay(Sounds.click);
+        playSFX(Sounds.click);
 
         countdownLeft = CFG_COUNTDOWN_SECONDS;
         countdownText.textContent = String(countdownLeft);
         startGameBtn.disabled = true;
         setStatus("COUNTDOWN");
 
-        safePlay(Sounds.countdown);
+        // beep immediately for the first number
+        playSFX(Sounds.countdown);
 
         countdownTimer = setInterval(() => {
           countdownLeft -= 1;
           if (countdownLeft > 0){
             countdownText.textContent = String(countdownLeft);
-            safePlay(Sounds.countdown);
+            playSFX(Sounds.countdown);
             return;
           }
 
+          // GO!
           countdownText.textContent = "GO!";
-          safePlay(Sounds.countdown);
+          playSFX(Sounds.countdown);
 
           clearInterval(countdownTimer);
           countdownTimer = null;
@@ -1555,6 +1944,7 @@
           ? "ต่อจากนี้โหมดหลังคืนชีพ: คะแนน -15% / เหรียญ -50%"
           : "หลบอุปสรรคและหลุมกับดักให้ได้มากที่สุด!";
 
+        // spawn first obstacle
         spawnObstacle();
         lastTime = null;
 
@@ -1570,7 +1960,10 @@
         if (isPaused) return;
         isPaused = true;
 
-        if (!silent) safePlay(Sounds.click);
+        if (!silent){
+          unlockAudioOnce();
+          playSFX(Sounds.click);
+        }
         showPauseOverlay();
 
         bgmPause();
@@ -1584,7 +1977,8 @@
         if (!isPaused) return;
         isPaused = false;
 
-        safePlay(Sounds.click);
+        unlockAudioOnce();
+        playSFX(Sounds.click);
         hidePauseOverlay();
         setStatus("RUN");
 
@@ -1631,6 +2025,7 @@
         } else {
           obs.classList.add("ground");
 
+          // include low type (shorter 30-40%)
           const groundTypes = ["tree", "bush", "rock", "spike", "crate", "barrel", "sign", "laser", "low"];
           const kind = groundTypes[Math.floor(Math.random() * groundTypes.length)];
           obs.classList.add(kind);
@@ -1814,10 +2209,12 @@
         if (c.classList.contains("coin")) {
           coinsCollected += 1;
 
+          // coin adds score too
           addCoins(1);
           addScore(2);
 
-          safePlay(Sounds.coin);
+          unlockAudioOnce();
+          playSFX(Sounds.coin);
 
           scoreEl.textContent = "คะแนน: " + score;
           updateCoinsUI();
@@ -1830,7 +2227,8 @@
         else if (c.classList.contains("magnet")) {
           magnetActive = true;
           magnetTimer = CFG_MAGNET_DURATION;
-          safePlay(Sounds.powerup);
+          unlockAudioOnce();
+          playSFX(Sounds.powerup);
           messageEl.textContent = "Magnet: ดูดเหรียญและหัวใจรอบ ๆ ✨";
         }
         else if (c.classList.contains("boost")) {
@@ -1841,7 +2239,8 @@
           invincibleTimer = Math.max(invincibleTimer, CFG_BOOST_DURATION);
 
           player.classList.add("invincible");
-          safePlay(Sounds.powerup);
+          unlockAudioOnce();
+          playSFX(Sounds.powerup);
 
           cheatTimerEl.textContent = "Boost: วิ่งเร็วขึ้น + อมตะชั่วคราว ⚡";
           messageEl.textContent = "Boost: วิ่งเร็วขึ้น + อมตะชั่วคราว ⚡";
@@ -1850,7 +2249,8 @@
           giantActive = true;
           giantTimer = CFG_GIANT_DURATION;
           player.classList.add("giant");
-          safePlay(Sounds.powerup);
+          unlockAudioOnce();
+          playSFX(Sounds.powerup);
 
           messageEl.textContent = "Giant: PHANToM ตัวใหญ่ ชนอุปสรรคพื้นพังได้ 💥";
         }
@@ -1903,7 +2303,8 @@
               const dmg = isAir ? CFG_DAMAGE_AIR : CFG_DAMAGE_GROUND;
 
               energy -= dmg;
-              safePlay(Sounds.hit);
+              unlockAudioOnce();
+              playSFX(Sounds.hit);
 
               if (energy <= 0) {
                 energy = 0;
@@ -2112,6 +2513,7 @@
       }
 
       function updateSpawners(delta){
+        // coins
         timeSinceLastCoin += delta;
         const coinInterval = Math.max(CFG_COIN_MIN_INTERVAL, CFG_COIN_BASE_INTERVAL - score * 2);
         if (timeSinceLastCoin >= coinInterval) {
@@ -2119,6 +2521,7 @@
           timeSinceLastCoin = 0;
         }
 
+        // small/medium hearts
         timeSinceLastHeart += delta;
         const heartInterval = Math.max(CFG_HEART_MIN_INTERVAL, CFG_HEART_BASE_INTERVAL - Math.floor(score/4)*10);
         if (timeSinceLastHeart >= heartInterval) {
@@ -2126,17 +2529,15 @@
           timeSinceLastHeart = 0;
         }
 
-        // ✅ powerups (ออกน้อยลง 2 เท่า + เร่งความถี่น้อยลงครึ่งหนึ่ง)
+        // powerups
         timeSinceLastPowerup += delta;
-        const powerInterval = Math.max(
-          CFG_POWERUP_MIN_INTERVAL,
-          CFG_POWERUP_BASE_INTERVAL - Math.floor(score/5)*4   // was *8
-        );
+        const powerInterval = Math.max(CFG_POWERUP_MIN_INTERVAL, CFG_POWERUP_BASE_INTERVAL - Math.floor(score/5)*8);
         if (timeSinceLastPowerup >= powerInterval) {
           spawnPowerup();
           timeSinceLastPowerup = 0;
         }
 
+        // big heart forced every 40s
         timeSinceLastBigHeart += delta;
         if (timeSinceLastBigHeart >= CFG_BIG_HEART_EVERY_MS) {
           spawnLargeHeartForced();
@@ -2154,6 +2555,7 @@
         const delta = timestamp - lastTime;
         lastTime = timestamp;
 
+        // energy decay (not during invincible)
         if (!invincible) {
           energy -= CFG_ENERGY_DECAY_PER_SEC * (delta / 1000);
           if (energy <= 0) {
@@ -2175,6 +2577,7 @@
         updateCollectibles(delta);
         updateSpawners(delta);
 
+        // timers
         if (invincible) {
           invincibleTimer -= delta;
           if (invincibleTimer <= 0) {
@@ -2234,7 +2637,8 @@
         lastTime = null;
 
         bgmPause();
-        safePlay(Sounds.gameover);
+        unlockAudioOnce();
+        playSFX(Sounds.gameover);
 
         if (score > bestScore) {
           bestScore = score;
@@ -2260,7 +2664,8 @@
         if (revivedThisRun) return;
         if (walletCoins < CFG_REVIVE_COST) return;
 
-        safePlay(Sounds.revive);
+        unlockAudioOnce();
+        playSFX(Sounds.revive);
 
         walletCoins -= CFG_REVIVE_COST;
         saveWallet();
@@ -2269,12 +2674,14 @@
         revivedThisRun = true;
         postReviveActive = true;
 
+        // reset penalty accumulators to apply only AFTER revive
         postScoreAcc = 0; postScoreCredited = 0;
         postCoinAcc  = 0; postCoinCredited  = 0;
 
         hideGameOverModal();
         clearArrays();
 
+        // restore
         energy = clamp(CFG_REVIVE_ENERGY, 1, CFG_MAX_ENERGY);
         updateEnergyUI();
 
@@ -2291,12 +2698,13 @@
         jumpsLeft = CFG_MAX_JUMPS;
         player.style.bottom = playerY + "px";
 
+        // restart loop (no countdown)
         gameOver = false;
         isRunning = true;
         isPaused = false;
         setStatus("RUN");
 
-        messageEl.textContent = "คืนชีพแล้ว! ต่อจากนี้คะแนน -15% / เหรียญ -50% (ปัดขึ้น)";
+        messageEl.textContent = "คืนชีพแล้ว! ต่อจากนี้คะแนน -15% / เหรียญ -50%";
 
         timeSinceLastObstacle = 0;
         nextSpawnIn = 650 + Math.random() * 500;
@@ -2341,7 +2749,9 @@
 
           jumpVelocity = CFG_JUMP_STRENGTH;
           jumpsLeft -= 1;
-          safePlay(Sounds.jump);
+
+          unlockAudioOnce();
+          playSFX(Sounds.jump);
         }
       }
 
@@ -2401,7 +2811,8 @@
 
       fullscreenBtn.addEventListener("click",(e)=>{
         e.preventDefault();
-        safePlay(Sounds.click);
+        unlockAudioOnce();
+        playSFX(Sounds.click);
         toggleFullscreen();
       });
 
@@ -2476,6 +2887,79 @@
       btnDuck.addEventListener("pointerleave", () => { if (isDucking) setDuck(false); });
 
       // =========================
+      // Sound modal + quick toggle
+      // =========================
+      function openSound(){
+        unlockAudioOnce();
+        playSFX(Sounds.click);
+        if (isRunning && !gameOver && !isPaused) pauseGame(true);
+        soundModal.classList.add("show");
+        applyAudioSettings(); // refresh UI
+      }
+      function closeSound(){
+        unlockAudioOnce();
+        playSFX(Sounds.click);
+        soundModal.classList.remove("show");
+      }
+
+      soundBtn.addEventListener("click", openSound);
+      soundCloseBtn.addEventListener("click", closeSound);
+      soundModal.addEventListener("click", (e)=>{
+        if (e.target === soundModal) closeSound();
+      });
+
+      audioQuickBtn.addEventListener("click", ()=>{
+        unlockAudioOnce();
+        audioEnabled = !audioEnabled;
+        saveBool(LS_AUDIO_MASTER, audioEnabled);
+        applyAudioSettings();
+        // click feedback (only if now enabled)
+        playSFX(Sounds.click);
+      });
+
+      audioMasterToggle.addEventListener("change", ()=>{
+        unlockAudioOnce();
+        audioEnabled = !!audioMasterToggle.checked;
+        saveBool(LS_AUDIO_MASTER, audioEnabled);
+        applyAudioSettings();
+        playSFX(Sounds.click);
+      });
+
+      bgmToggle.addEventListener("change", ()=>{
+        unlockAudioOnce();
+        bgmEnabled = !!bgmToggle.checked;
+        saveBool(LS_AUDIO_BGM_ON, bgmEnabled);
+        applyAudioSettings();
+        playSFX(Sounds.click);
+      });
+
+      sfxToggle.addEventListener("change", ()=>{
+        unlockAudioOnce();
+        sfxEnabled = !!sfxToggle.checked;
+        saveBool(LS_AUDIO_SFX_ON, sfxEnabled);
+        applyAudioSettings();
+        playSFX(Sounds.click);
+      });
+
+      bgmVolRange.addEventListener("input", ()=>{
+        bgmVolume = clamp(parseInt(bgmVolRange.value,10)/100, 0, 1);
+        saveNum(LS_AUDIO_BGM_VOL, bgmVolume);
+        applyAudioSettings();
+      });
+      sfxVolRange.addEventListener("input", ()=>{
+        sfxVolume = clamp(parseInt(sfxVolRange.value,10)/100, 0, 1);
+        saveNum(LS_AUDIO_SFX_VOL, sfxVolume);
+        applyAudioSettings();
+      });
+
+      audioTestBtn.addEventListener("click", ()=>{
+        unlockAudioOnce();
+        playSFX(Sounds.click);
+        setTimeout(()=> playSFX(Sounds.jump), 90);
+        setTimeout(()=> playSFX(Sounds.coin), 180);
+      });
+
+      // =========================
       // Init
       // =========================
       function updateBestUI(){
@@ -2486,7 +2970,8 @@
       updateCoinsUI();
       updateEnergyUI();
       updateMissionUI();
-      updateSoundBtnUI();
+
+      applyAudioSettings();
       prepareNewRun();
     })();
   </script>
