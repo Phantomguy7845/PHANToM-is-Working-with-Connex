@@ -158,67 +158,68 @@
     }
 
     /* อุปสรรคพื้น (แบบต่างๆ) */
-    .obstacle.ground.tree {
-      background: linear-gradient(to top, #14532d, #16a34a);
-      border-radius: 4px 4px 0 0;
-    }
-    .obstacle.ground.bush {
-      background: linear-gradient(to top, #166534, #22c55e);
-      border-radius: 16px;
-    }
-    .obstacle.ground.rock {
-      background: radial-gradient(circle at 30% 20%, #9ca3af, #4b5563);
-      border-radius: 40% 60% 30% 70%;
-    }
-    .obstacle.ground.spike {
-      background: repeating-linear-gradient(135deg, #fecaca 0, #fecaca 6px, #b91c1c 6px, #b91c1c 12px);
-    }
-    .obstacle.ground.crate {
-      background: linear-gradient(135deg, #78350f, #fbbf24);
-      box-shadow: 0 0 12px rgba(124,45,18,0.9);
-    }
-    .obstacle.ground.barrel {
-      background: linear-gradient(180deg, #f97316, #c2410c);
-      box-shadow: 0 0 14px rgba(249,115,22,0.95);
-      border-radius: 6px;
-    }
-    .obstacle.ground.sign {
-      background: linear-gradient(180deg, #facc15, #eab308);
-      box-shadow: 0 0 14px rgba(234,179,8,0.95);
-      position: relative;
-    }
+    .obstacle.ground.tree { border-radius: 4px 4px 0 0; }
+    .obstacle.ground.bush { border-radius: 16px; }
+    .obstacle.ground.rock { border-radius: 40% 60% 30% 70%; }
+    .obstacle.ground.spike { }
+    .obstacle.ground.crate { }
+    .obstacle.ground.barrel { border-radius: 6px; }
+    .obstacle.ground.sign { position: relative; }
     .obstacle.ground.sign::before {
-      content: "!";
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -60%);
-      color: #1f2937;
-      font-weight: 700;
-      font-size: 18px;
+      /* ปิดสัญลักษณ์ ! เพื่อให้ทุกชิ้นดูเป็นธีมเดียวกัน */
+      content: "";
     }
-    .obstacle.ground.laser {
-      background: linear-gradient(180deg, #ef4444, #f97316);
-      box-shadow: 0 0 18px rgba(248,113,113,1);
-    }
+    .obstacle.ground.laser { }
 
     /* อุปสรรคลอย */
-    .obstacle.air.bird {
-      background: linear-gradient(135deg, #fee2e2, #ef4444, #7f1d1d);
-      border: 2px solid #fecaca;
-      box-shadow: 0 0 16px rgba(239,68,68,0.95);
-      border-radius: 6px;
+    .obstacle.air.bird { border-radius: 6px; }
+    .obstacle.air.drone { border-radius: 40%; }
+    .obstacle.air.fireball { border-radius: 50%; }
+
+    /* =========================
+       🔥 ทำให้อุปสรรค "ทุกชิ้น" เป็นสีเดียวกัน (ไฟ: แดง-ส้ม-เหลือง)
+       ========================= */
+    :root{
+      --flame-red: #ef4444;
+      --flame-orange: #f97316;
+      --flame-yellow: #facc15;
+      --flame-glow: rgba(249,115,22,0.95);
+      --flame-glow2: rgba(250,204,21,0.35);
     }
-    .obstacle.air.drone {
-      background: radial-gradient(circle at 30% 30%, #e5e7eb, #64748b, #020617);
-      border-radius: 40%;
-      border: 2px solid #e5e7eb;
-      box-shadow: 0 0 14px rgba(148,163,184,0.9);
+
+    .obstacle,
+    .obstacle.ground,
+    .obstacle.air,
+    .obstacle.ground.tree,
+    .obstacle.ground.bush,
+    .obstacle.ground.rock,
+    .obstacle.ground.spike,
+    .obstacle.ground.crate,
+    .obstacle.ground.barrel,
+    .obstacle.ground.sign,
+    .obstacle.ground.laser,
+    .obstacle.air.bird,
+    .obstacle.air.drone,
+    .obstacle.air.fireball{
+      background: linear-gradient(135deg, var(--flame-red), var(--flame-orange), var(--flame-yellow)) !important;
+      border: 1px solid rgba(250,204,21,0.28) !important;
+      box-shadow:
+        0 0 16px var(--flame-glow),
+        0 0 38px var(--flame-glow2),
+        0 12px 24px rgba(0,0,0,0.25) !important;
     }
-    .obstacle.air.fireball {
-      background: radial-gradient(circle at 30% 30%, #fef9c3, #f97316, #7c2d12);
-      border-radius: 50%;
-      box-shadow: 0 0 16px rgba(249,115,22,0.95);
+
+    /* เงาไฟเล็ก ๆ ให้ดูเหมือนเปลว */
+    .obstacle::after{
+      content:"";
+      position:absolute;
+      inset:-6px;
+      border-radius: inherit;
+      background: radial-gradient(circle at 30% 25%, rgba(250,204,21,0.35), transparent 60%);
+      filter: blur(10px);
+      opacity: 0.55;
+      pointer-events:none;
+      mix-blend-mode: screen;
     }
 
     /* พื้นลอย */
@@ -588,7 +589,6 @@
       border-color: rgba(56,189,248,0.55);
     }
     #restartBtn {
-      /* ปุ่มเริ่มใหม่อยู่ล่างสุด */
       background: linear-gradient(90deg, #22c55e, #2dd4bf);
       color: #022c22;
       border-color: rgba(34,197,94,0.55);
@@ -741,20 +741,19 @@
       const CFG_MISSION_OBS_TARGET = 30;
 
       // Spawner แยกเป็น 2 สาย + บังคับหัวใจใหญ่ทุก 40 วิ
-      const CFG_COIN_BASE_INTERVAL = 520;  // เหรียญออกถี่ขึ้น (ยิ่งน้อยยิ่งถี่)
+      const CFG_COIN_BASE_INTERVAL = 520;
       const CFG_COIN_MIN_INTERVAL  = 250;
-      const CFG_SPECIAL_BASE_INTERVAL = 1200; // special แบบเดิม (energyเล็ก/กลาง + magnet/boost/giant)
+      const CFG_SPECIAL_BASE_INTERVAL = 1200;
       const CFG_SPECIAL_MIN_INTERVAL  = 650;
-
-      const CFG_BIG_HEART_EVERY_MS = 40000; // ทุก 40 วิ
+      const CFG_BIG_HEART_EVERY_MS = 40000;
 
       // สูตรโกง
       const CFG_CHEAT_WINDOW = 1000;
 
       // Game Over / Revive
       const CFG_REVIVE_COST = 20;
-      const CFG_REVIVE_ENERGY = 55;           // คืนชีพแล้วให้พลังเท่าไร
-      const CFG_REVIVE_INVINCIBLE_MS = 1200;  // กันตายซ้ำหลังคืนชีพ
+      const CFG_REVIVE_ENERGY = 55;
+      const CFG_REVIVE_INVINCIBLE_MS = 1200;
 
       // localStorage keys
       const LS_BEST = "phantom_runner_best";
@@ -857,7 +856,7 @@
       let giantTimer = 0;
 
       // Slow + i-frames หลังชน
-      let hitSlowTimer = 0;        // ✅ ต้องเริ่ม 0
+      let hitSlowTimer = 0;
       let hitIFramesTimer = 0;
 
       // Cheat
@@ -1036,12 +1035,26 @@
           obs.style.bottom = randomBetween(95, 125) + "px";
         } else {
           obs.classList.add("ground");
-          const groundTypes = ["tree", "bush", "rock", "spike", "crate", "barrel", "sign", "laser"];
+
+          // ✅ เพิ่มอุปสรรคใหม่: "low" (เตี้ยกว่าเดิม ~30-40%) ยังต้องกระโดดหลบ
+          const groundTypes = ["tree", "bush", "rock", "spike", "crate", "barrel", "sign", "laser", "low"];
           const kind = groundTypes[Math.floor(Math.random() * groundTypes.length)];
           obs.classList.add(kind);
 
-          obs.style.height = randomBetween(45, 80) + "px";
-          obs.style.width = randomBetween(22, 40) + "px";
+          let height, width;
+
+          if (kind === "low") {
+            // เดิม 45-80 → ลดลง ~30-40% => ประมาณ 28-55
+            height = randomBetween(28, 52);
+            width  = randomBetween(28, 48); // ให้ดูเป็นกองไฟเตี้ย ๆ
+            obs.style.borderRadius = "14px";
+          } else {
+            height = randomBetween(45, 80);
+            width  = randomBetween(22, 40);
+          }
+
+          obs.style.width = width + "px";
+          obs.style.height = height + "px";
           obs.style.bottom = groundY + "px";
         }
 
@@ -1110,14 +1123,11 @@
       }
 
       function spawnSpecial() {
-        // สุ่มแบบเดิม (ตัด coin ออกไป เพราะ coin มี spawner แยกแล้ว)
-        // เดิมสัดส่วน non-coin: energy 33.3%, magnet 33.3%, boost 17.8%, giant 15.6%
         const r = Math.random();
         const c = makeCollectibleBase();
 
         if (r < 0.333) {
           c.classList.add("energy");
-          // ให้เป็นเล็ก/กลางแบบสุ่ม (ใหญ่สุดบังคับออกทุก 40 วิอยู่แล้ว)
           const sizes = ["small","medium"];
           const gains = [CFG_HEART_SMALL_GAIN, CFG_HEART_MEDIUM_GAIN];
           const idx = Math.floor(Math.random() * sizes.length);
@@ -1159,7 +1169,6 @@
         setTimeout(() => document.body.classList.remove("hit-blink"), 120);
       }
 
-      // Magnet pull animation
       function pullCollectibleToPlayer(c) {
         if (!c || c.dataset.pulled === "1" || c.dataset.dead === "1") return;
         c.dataset.pulled = "1";
@@ -1249,7 +1258,6 @@
       function updateObstacles(delta) {
         const moveX = getEffectiveSpeed() * (delta / 16.67);
 
-        // remove by filter (ปลอดภัยกว่า index)
         obstacles = obstacles.filter(obs => {
           if (!obs || !obs.isConnected) return false;
 
@@ -1271,10 +1279,8 @@
             return false;
           }
 
-          // collision
           if (!gameOver && isColliding(player, obs)) {
             if (invincible || giantActive) {
-              // giant/อมตะ: ชนแล้วพัง
               score += 2;
               obstaclesPassed += 1;
               scoreEl.textContent = "คะแนน: " + score;
@@ -1283,7 +1289,6 @@
               obs.remove();
               return false;
             } else {
-              // ถ้ากำลัง i-frame อยู่ ไม่โดนซ้ำ
               if (hitIFramesTimer > 0) return true;
 
               const isAir = obs.classList.contains("air");
@@ -1299,7 +1304,6 @@
 
               updateEnergyUI();
 
-              // feedback + slow
               triggerHitVFX();
               hitSlowTimer = CFG_HIT_SLOW_DURATION;
               hitIFramesTimer = CFG_HIT_IFRAMES;
@@ -1389,7 +1393,6 @@
         collectibles.forEach(c => {
           if (!c || c.dataset.dead === "1") return;
 
-          // ถ้ากำลังถูก Magnet ดึงอยู่ ไม่ต้องขยับ left อีก
           if (c.dataset.pulled === "1") return;
 
           const left = parseFloat(c.style.left);
@@ -1402,7 +1405,6 @@
             return;
           }
 
-          // Magnet ดูดเฉพาะ coin/energy
           if (
             magnetActive &&
             (c.classList.contains("coin") || c.classList.contains("energy"))
@@ -1425,7 +1427,6 @@
           }
         });
 
-        // cleanup array แบบปลอดภัย
         collectibles = collectibles.filter(c => c && c.isConnected && c.dataset.dead !== "1");
       }
 
@@ -1446,7 +1447,6 @@
         const playerStyleLeft = parseFloat(getComputedStyle(player).left);
         const playerStyleRight = playerStyleLeft + player.offsetWidth;
 
-        // พื้นลอย
         platforms.forEach(p => {
           if (!p || !p.isConnected) return;
           const pRect = p.getBoundingClientRect();
@@ -1462,7 +1462,6 @@
           }
         });
 
-        // ตรวจหลุมใต้วิ่ง
         let holeUnder = false;
         holes.forEach(h => {
           if (!h || !h.isConnected) return;
@@ -1481,7 +1480,6 @@
 
         player.style.bottom = playerY + "px";
 
-        // boost beam ตามตัว
         if (boostBeam) {
           if (boostActive) {
             const baseLeft = parseFloat(getComputedStyle(player).left) || 80;
@@ -1499,7 +1497,6 @@
       }
 
       function updateSpawners(delta){
-        // coin spawner (ถี่ขึ้น)
         timeSinceLastCoin += delta;
         const coinInterval = Math.max(
           CFG_COIN_MIN_INTERVAL,
@@ -1510,7 +1507,6 @@
           timeSinceLastCoin = 0;
         }
 
-        // special spawner (สุ่มเหมือนเดิม)
         timeSinceLastSpecial += delta;
         const specialInterval = Math.max(
           CFG_SPECIAL_MIN_INTERVAL,
@@ -1521,7 +1517,6 @@
           timeSinceLastSpecial = 0;
         }
 
-        // บังคับหัวใจใหญ่ทุก 40 วิ
         timeSinceLastBigHeart += delta;
         if (timeSinceLastBigHeart >= CFG_BIG_HEART_EVERY_MS) {
           spawnLargeHeartForced();
@@ -1535,7 +1530,6 @@
         const delta = timestamp - lastTime;
         lastTime = timestamp;
 
-        // Energy ลดเอง (ยกเว้นช่วงอมตะ)
         if (!invincible) {
           energy -= CFG_ENERGY_DECAY_PER_SEC * (delta / 1000);
           if (energy <= 0) {
@@ -1556,10 +1550,8 @@
         updateObstacles(delta);
         updateCollectibles(delta);
 
-        // spawn
         updateSpawners(delta);
 
-        // Timers
         if (invincible) {
           invincibleTimer -= delta;
           if (invincibleTimer <= 0) {
@@ -1690,7 +1682,6 @@
         messageEl.textContent = "โหมดโกงเปิดแล้ว! ชนอะไรก็ไม่ตาย 10 วิ";
       }
 
-      // Fullscreen
       function toggleFullscreen(){
         const elem = document.documentElement;
         if (!document.fullscreenElement){
@@ -1700,7 +1691,7 @@
         } else {
           if (document.exitFullscreen) document.exitFullscreen();
           else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-          else if (document.msExitFullscreen) document.msExitFullscreen();
+          else if (document.msExitFullscreen) document.msRequestFullscreen();
         }
       }
 
@@ -1722,7 +1713,6 @@
         }
       });
 
-      // Keyboard
       document.addEventListener("keydown", (e) => {
         if (e.code === "Space" || e.code === "ArrowUp") {
           e.preventDefault();
@@ -1739,7 +1729,6 @@
         if (e.code === "ArrowDown") setDuck(false);
       });
 
-      // Touch buttons
       if (btnJump) {
         btnJump.addEventListener("pointerdown", (e) => {
           e.preventDefault();
@@ -1759,11 +1748,9 @@
         btnDuck.addEventListener("pointerleave", () => { if (isDucking) setDuck(false); });
       }
 
-      // Start / Restart
       if (startBtn) startBtn.addEventListener("click", resetGame);
       if (restartBtn) restartBtn.addEventListener("click", resetGame);
 
-      // Revive
       function reviveNow(){
         if (!gameOver) return;
         if (revivedThisRun) return;
@@ -1776,14 +1763,11 @@
         revivedThisRun = true;
         hideGameOverModal();
 
-        // กลับมาเล่นต่อ
         gameOver = false;
         lastTime = null;
 
-        // เคลียร์สิ่งที่อาจชนซ้ำทันที
         clearArrays();
 
-        // ฟื้นพลัง + กันตายซ้ำ
         energy = clamp(CFG_REVIVE_ENERGY, 1, maxEnergy);
         updateEnergyUI();
 
@@ -1794,7 +1778,6 @@
         hitSlowTimer = 0;
         hitIFramesTimer = CFG_HIT_IFRAMES;
 
-        // วางตัวกลับพื้น
         playerY = groundY;
         prevPlayerY = groundY;
         jumpVelocity = 0;
@@ -1804,16 +1787,12 @@
         messageEl.textContent = "คืนชีพแล้ว! ระวังต่ออีกนิด 🔥";
         cheatTimerEl.textContent = "Revive: อมตะกันตายซ้ำ " + Math.ceil(CFG_REVIVE_INVINCIBLE_MS/1000) + " วิ";
 
-        // รีเซ็ต spawner แบบนุ่ม ๆ
         timeSinceLastObstacle = 0;
         nextSpawnIn = 650 + Math.random() * 500;
         timeSinceLastCoin = 0;
         timeSinceLastSpecial = 0;
 
-        // เริ่ม loop ต่อ
         frameId = requestAnimationFrame(gameLoop);
-
-        // เกิดอุปสรรคใหม่
         spawnObstacle();
       }
 
