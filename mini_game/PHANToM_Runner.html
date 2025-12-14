@@ -35,6 +35,7 @@
       align-items: center;
       padding-top: 22px;
       padding-bottom: 18px;
+      overscroll-behavior: none; /* ✅ ลดอาการเด้ง/ลากหน้าจอ */
     }
 
     body.fullscreen-game{ padding-top: 12px; }
@@ -56,6 +57,7 @@
       border-radius: 16px;
       background: radial-gradient(circle at top, var(--bg1) 0, var(--bg2) 55%, var(--bg2) 100%);
       box-shadow: 0 20px 40px rgba(15, 23, 42, 0.9);
+      touch-action: none; /* ✅ ป้องกัน gesture ทำให้ pointer ค้างบนบางเครื่อง */
     }
 
     /* in-game top bar */
@@ -99,6 +101,7 @@
       display:flex;
       align-items:center;
       gap:6px;
+      touch-action: manipulation;
     }
     .ig-btn:hover{ border-color: rgba(99,102,241,0.65); }
     .ig-btn:active{ transform: translateY(1px) scale(0.99); }
@@ -353,6 +356,8 @@
       box-shadow: 0 8px 18px rgba(15,23,42,0.9);
       text-transform: uppercase;
       user-select:none;
+      touch-action: none; /* ✅ สำคัญสำหรับมือถือ */
+      -webkit-tap-highlight-color: transparent;
     }
     .ctrl-btn span {
       font-size: 11px;
@@ -434,6 +439,8 @@
       cursor:pointer;
       box-shadow:0 8px 18px rgba(15,23,42,0.9);
       user-select:none;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
     .mini-btn:hover{ border-color: rgba(99,102,241,0.65); }
     .mini-btn:active{ transform: translateY(1px) scale(0.98); }
@@ -537,6 +544,8 @@
       background: linear-gradient(90deg, rgba(34,197,94,0.95), rgba(45,212,191,0.95));
       color: #022c22;
       box-shadow: 0 18px 44px rgba(34,197,94,0.22);
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
     #startGameBtn:hover{ filter: brightness(1.03); transform: translateY(-1px); }
     #startGameBtn:active{ transform: translateY(1px); }
@@ -587,6 +596,8 @@
       background: rgba(2,6,23,0.65);
       color:#e5e7eb;
       box-shadow: 0 14px 34px rgba(0,0,0,0.28);
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
     #resumeBtnOverlay:hover{ border-color: rgba(99,102,241,0.65); }
     #resumeBtnOverlay:active{ transform: translateY(1px); }
@@ -646,6 +657,8 @@
       box-shadow: 0 10px 24px rgba(0,0,0,0.25);
       transition: transform 0.08s ease, filter 0.12s ease, opacity 0.12s ease;
       user-select:none;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
     .modal-btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
     .modal-btn:active { transform: translateY(1px); }
@@ -699,6 +712,7 @@
       overflow:auto;
       padding-right: 4px;
       margin-top: 6px;
+      -webkit-overflow-scrolling: touch;
     }
 
     .shop-header{
@@ -730,6 +744,8 @@
       color:#e5e7eb;
       cursor:pointer;
       user-select:none;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
     .shop-close:hover{ border-color: rgba(99,102,241,0.65); }
     .shop-close:active{ transform: translateY(1px); }
@@ -806,6 +822,8 @@
       cursor:pointer;
       user-select:none;
       font-weight: 900;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
     .shop-action:hover{ filter: brightness(1.06); }
     .shop-action:active{ transform: translateY(1px); }
@@ -844,6 +862,7 @@
       box-shadow: 0 28px 70px rgba(0,0,0,0.6);
       padding: 14px 14px 12px;
       overflow:auto;
+      -webkit-overflow-scrolling: touch;
     }
     .sound-header{
       display:flex;
@@ -873,6 +892,8 @@
       color:#e5e7eb;
       cursor:pointer;
       user-select:none;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
     }
     .sound-close:hover{ border-color: rgba(99,102,241,0.65); }
     .sound-close:active{ transform: translateY(1px); }
@@ -1273,6 +1294,12 @@
       const audioTestBtn = document.getElementById("audioTestBtn");
 
       // =========================
+      // Helpers (basic)
+      // =========================
+      function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+      function randomBetween(min, max) { return Math.random() * (max - min) + min; }
+
+      // =========================
       // SOUND
       // =========================
       const Sounds = {
@@ -1480,121 +1507,6 @@
         return `background: linear-gradient(135deg, ${a}, ${b}, ${c}, ${d});`;
       }
 
-      function renderShop(){
-        shopWalletCoins.textContent = String(walletCoins);
-        shopGrid.innerHTML = "";
-
-        const addSection = (title, note) => {
-          const h = document.createElement("div");
-          h.className = "shop-section-title";
-          h.textContent = title;
-          shopGrid.appendChild(h);
-
-          const n = document.createElement("div");
-          n.className = "shop-section-note";
-          n.textContent = note;
-          shopGrid.appendChild(n);
-        };
-
-        const addItem = (item, kind, unlocked, selected, swatchStyle) => {
-          const el = document.createElement("div");
-          el.className = "shop-item";
-          const priceText = item.price === 0 ? "ฟรี" : (item.price + " เหรียญ");
-          el.innerHTML = `
-            <h3><span class="swatch" style="${swatchStyle}"></span>${item.name}</h3>
-            <p>${item.desc}</p>
-            <div class="shop-row">
-              <div class="price">${priceText}</div>
-              <div style="display:flex; gap:10px; align-items:center;">
-                <button class="shop-action" data-kind="${kind}" data-act="buy" data-id="${item.id}" ${unlocked || item.price===0 ? "disabled" : ""}>ซื้อ</button>
-                <button class="shop-action" data-kind="${kind}" data-act="select" data-id="${item.id}" ${(!unlocked && item.price>0) ? "disabled" : ""}>
-                  ${selected ? "กำลังใช้" : "เลือก"}
-                </button>
-              </div>
-            </div>
-          `;
-          shopGrid.appendChild(el);
-        };
-
-        addSection("Background Themes", "ธีมสีฉากหลังสนาม (อนาคตใส่รูปภาพได้)");
-        Backdrops.forEach(b=>{
-          const unlocked = !!unlockedBackdrops[b.id];
-          const selected = (selectedBackdrop === b.id);
-          addItem(b, "backdrop", unlocked, selected, swatchBackdrop(b));
-        });
-
-        addSection("Obstacle Themes", "ธีมสีของอุปสรรค (ใช้ตัวแปร CSS เปลี่ยนได้ทันที)");
-        ObstacleThemes.forEach(t=>{
-          const unlocked = !!unlockedObsThemes[t.id];
-          const selected = (selectedObsTheme === t.id);
-          addItem(t, "obstacle", unlocked, selected, swatchObstacle(t));
-        });
-      }
-
-      function openShop(){
-        unlockAudioOnce();
-        playSFX(Sounds.click);
-        if (isRunning && !gameOver && !isPaused) pauseGame(true);
-        renderShop();
-        shopModal.classList.add("show");
-        // ✅ ensure scroll starts at top
-        const body = shopModal.querySelector(".shop-body");
-        if (body) body.scrollTop = 0;
-      }
-      function closeShop(){
-        unlockAudioOnce();
-        playSFX(Sounds.click);
-        shopModal.classList.remove("show");
-      }
-
-      shopBtn.addEventListener("click", openShop);
-      shopCloseBtn.addEventListener("click", closeShop);
-      shopModal.addEventListener("click", (e)=>{
-        if (e.target === shopModal) closeShop();
-      });
-
-      shopGrid.addEventListener("click", (e)=>{
-        const btn = e.target.closest("button");
-        if (!btn) return;
-
-        unlockAudioOnce();
-
-        const id = btn.getAttribute("data-id");
-        const act = btn.getAttribute("data-act");
-        const kind = btn.getAttribute("data-kind");
-
-        const list = (kind === "obstacle") ? ObstacleThemes : Backdrops;
-        const item = list.find(x=>x.id===id);
-        if (!item) return;
-
-        const unlockedObj = (kind === "obstacle") ? unlockedObsThemes : unlockedBackdrops;
-        const saveUnlockKey = (kind === "obstacle") ? LS_OBS_UNLOCK : LS_BACKDROPS_UNLOCK;
-
-        if (act === "buy"){
-          if (unlockedObj[id] || item.price===0) return;
-          if (walletCoins < item.price) return;
-
-          walletCoins -= item.price;
-          saveWallet();
-          updateCoinsUI();
-
-          unlockedObj[id] = true;
-          saveUnlockedObj(saveUnlockKey, unlockedObj);
-          playSFX(Sounds.click);
-          renderShop();
-        }
-
-        if (act === "select"){
-          if (!unlockedObj[id] && item.price>0) return;
-
-          if (kind === "obstacle") applyObstacleTheme(id);
-          else applyBackdrop(id);
-
-          playSFX(Sounds.click);
-          renderShop();
-        }
-      });
-
       // =========================
       // State
       // =========================
@@ -1671,11 +1583,8 @@
       let postCoinCredited = 0;
 
       // =========================
-      // Helpers
+      // UI helpers
       // =========================
-      function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
-      function randomBetween(min, max) { return Math.random() * (max - min) + min; }
-
       function saveWallet(){ try{ localStorage.setItem(LS_WALLET, String(walletCoins)); }catch(_){ } }
 
       function updateCoinsUI(){
@@ -1731,6 +1640,21 @@
         gameOverModal.classList.add("show");
       }
 
+      // ✅ NEW: กัน countdown ค้าง / กันโมดอลค้าง
+      function cancelCountdown(){
+        if (!countdownTimer) return;
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+        countdownLeft = 0;
+        countdownText.textContent = "";
+        startGameBtn.disabled = false;
+        setStatus("READY");
+      }
+      function closeAllModals(){
+        shopModal.classList.remove("show");
+        soundModal.classList.remove("show");
+      }
+
       function clearArrays() {
         obstacles.forEach(o => o && o.remove());
         obstacles = [];
@@ -1740,6 +1664,23 @@
         platforms = [];
         holes.forEach(h => h && h.remove());
         holes = [];
+      }
+
+      function resetPowerupsAndVFX(){
+        invincible = false; invincibleTimer = 0;
+        magnetActive = false; magnetTimer = 0;
+        boostActive = false; boostTimer = 0;
+        giantActive = false; giantTimer = 0;
+        hitSlowTimer = 0;
+        hitIFramesTimer = 0;
+
+        player.classList.remove("invincible","giant");
+        cheatTimerEl.textContent = "";
+
+        if (boostBeam) {
+          boostBeam.style.opacity = 0;
+          boostBeam.style.left = "-9999px";
+        }
       }
 
       function addScore(base){
@@ -1773,6 +1714,8 @@
       }
 
       function prepareNewRun(){
+        cancelCountdown();     // ✅
+        closeAllModals();      // ✅
         clearArrays();
         hideGameOverModal();
         hidePauseOverlay();
@@ -1793,15 +1736,7 @@
         player.classList.remove("duck", "invincible", "giant", "double-jump");
         player.style.bottom = playerY + "px";
 
-        invincible = false;
-        invincibleTimer = 0;
-
-        magnetActive = false; magnetTimer = 0;
-        boostActive = false; boostTimer = 0;
-        giantActive = false; giantTimer = 0;
-
-        hitSlowTimer = 0;
-        hitIFramesTimer = 0;
+        resetPowerupsAndVFX(); // ✅ ป้องกันค้างจากรอบก่อน
 
         energy = CFG_MAX_ENERGY;
 
@@ -1829,17 +1764,11 @@
         frameId = null;
         lastTime = null;
 
-        if (boostBeam) {
-          boostBeam.style.opacity = 0;
-          boostBeam.style.left = "-9999px";
-        }
-
         scoreEl.textContent = "คะแนน: " + score;
         updateCoinsUI();
         updateEnergyUI();
         updateMissionUI();
 
-        cheatTimerEl.textContent = "";
         messageEl.textContent = "กด “เริ่มเกม” บนหน้าจอเกม หรือกด Space เพื่อเริ่ม";
 
         bgmPause();
@@ -1849,6 +1778,10 @@
       function startCountdown(){
         if (countdownTimer) return;
         if (gameOver) return;
+
+        // ✅ ถ้าเปิด shop/sound อยู่ หรือเคยกดค้าง ให้ปิดก่อน + เคลียร์
+        closeAllModals();
+        hidePauseOverlay();
 
         unlockAudioOnce();
         playSFX(Sounds.click);
@@ -1932,6 +1865,11 @@
         frameId = requestAnimationFrame(gameLoop);
       }
 
+      // ✅ NEW: สลับแท็บ/จอหาย Pause อัตโนมัติ
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden && isRunning && !gameOver && !isPaused) pauseGame(true);
+      });
+
       // =========================
       // Spawners
       // =========================
@@ -1952,22 +1890,13 @@
         obs.style.fontSize = fs + "px";
       }
 
-      // ✅ obstacle emojis + stalactites
-      const EMOJI_GROUND = {
-        tree:"🪵", bush:"🪴", rock:"🪨", spike:"🔺", crate:"📦", barrel:"🛢️", sign:"🚧", laser:"💀", low:"🧱"
-      };
-      const EMOJI_AIR = {
-        bird:"🐦", drone:"🛸", fireball:"🔥"
-      };
-      const EMOJI_STAL = {
-        stal1:"🔻", stal2:"🪨", stal3:"🧊"
-      };
+      const EMOJI_GROUND = { tree:"🪵", bush:"🪴", rock:"🪨", spike:"🔺", crate:"📦", barrel:"🛢️", sign:"🚧", laser:"💀", low:"🧱" };
+      const EMOJI_AIR = { bird:"🐦", drone:"🛸", fireball:"🔥" };
+      const EMOJI_STAL = { stal1:"🔻", stal2:"🪨", stal3:"🧊" };
 
       function spawnObstacle() {
-        // 0.18 ceiling stalactite, 0.32 air, rest ground
         const roll = Math.random();
 
-        // ✅ ceiling stalactites (duck to avoid)
         if (roll < 0.18) {
           const obs = document.createElement("div");
           obs.classList.add("obstacle", "ceiling");
@@ -1978,9 +1907,7 @@
 
           const height = randomBetween(68, 104);
           const width  = randomBetween(34, 52);
-
-          // important: bottom band that hits standing but not duck
-          const bottom = randomBetween(groundY + 22, groundY + 38); // ~62-78
+          const bottom = randomBetween(groundY + 22, groundY + 38);
 
           obs.style.width = width + "px";
           obs.style.height = height + "px";
@@ -1996,7 +1923,6 @@
 
         const isAir = roll < 0.50;
 
-        // hole chance on ground
         if (!isAir && Math.random() < CFG_HOLE_CHANCE) {
           spawnHole();
           return;
@@ -2257,7 +2183,7 @@
         obstacles = obstacles.filter(obs => {
           if (!obs || !obs.isConnected) return false;
 
-          const left = parseFloat(obs.style.left);
+          const left = parseFloat(obs.style.left) || 0;
           const newLeft = left - moveX;
           obs.style.left = newLeft + "px";
 
@@ -2348,7 +2274,7 @@
         platforms = platforms.filter(p => {
           if (!p || !p.isConnected) return false;
 
-          const left = parseFloat(p.style.left);
+          const left = parseFloat(p.style.left) || 0;
           const newLeft = left - moveX;
           p.style.left = newLeft + "px";
 
@@ -2372,7 +2298,7 @@
         holes = holes.filter(h => {
           if (!h || !h.isConnected) return false;
 
-          const left = parseFloat(h.style.left);
+          const left = parseFloat(h.style.left) || 0;
           const newLeft = left - moveX;
           h.style.left = newLeft + "px";
 
@@ -2399,7 +2325,7 @@
           if (!c || c.dataset.dead === "1") return;
           if (c.dataset.pulled === "1") return;
 
-          const left = parseFloat(c.style.left);
+          const left = parseFloat(c.style.left) || 0;
           const newLeft = left - moveX;
           c.style.left = newLeft + "px";
 
@@ -2456,7 +2382,7 @@
           const pLeft = pRect.left;
           const pRight = pRect.right;
 
-          const platformBottom = parseFloat(p.style.bottom);
+          const platformBottom = parseFloat(p.style.bottom) || 0;
           const platformTop = platformBottom + p.offsetHeight;
 
           const horizontallyOver = (playerRightScreen > pLeft + 5) && (playerLeftScreen < pRight - 5);
@@ -2468,7 +2394,7 @@
         let holeUnder = false;
         holes.forEach(h => {
           if (!h || !h.isConnected) return;
-          const hLeft = parseFloat(h.style.left);
+          const hLeft = parseFloat(h.style.left) || 0;
           const hRight = hLeft + h.offsetWidth;
           if (hRight > playerStyleLeft + 5 && hLeft < playerStyleRight - 5) holeUnder = true;
         });
@@ -2607,6 +2533,10 @@
         isRunning = false;
         isPaused = false;
 
+        cancelCountdown();   // ✅
+        closeAllModals();    // ✅
+        resetPowerupsAndVFX(); // ✅ กันค้างข้าม revive/รีสตาร์ท
+
         if (frameId) cancelAnimationFrame(frameId);
         frameId = null;
         lastTime = null;
@@ -2621,16 +2551,13 @@
         }
         bestScoreEl.textContent = "สถิติสูงสุด: " + bestScore;
 
-        cheatTimerEl.textContent = "";
         messageEl.textContent =
           "Game Over! คะแนน: " + score +
           " • เหรียญรอบนี้: " + runCoins +
           " • เหรียญสะสม: " + walletCoins +
           ' • กด Space เพื่อเริ่มใหม่';
 
-        if (boostBeam) boostBeam.style.opacity = 0;
         setStatus("OVER");
-
         showGameOverModal();
       }
 
@@ -2654,6 +2581,9 @@
 
         hideGameOverModal();
         clearArrays();
+
+        // ✅ FIX: รีไวฟแล้วพาวเวอร์อัปไม่ค้าง
+        resetPowerupsAndVFX();
 
         energy = clamp(CFG_REVIVE_ENERGY, 1, CFG_MAX_ENERGY);
         updateEnergyUI();
@@ -2851,6 +2781,7 @@
       // Sound modal + quick toggle
       // =========================
       function openSound(){
+        cancelCountdown(); // ✅
         unlockAudioOnce();
         playSFX(Sounds.click);
         if (isRunning && !gameOver && !isPaused) pauseGame(true);
@@ -2917,6 +2848,124 @@
         playSFX(Sounds.click);
         setTimeout(()=> playSFX(Sounds.jump), 90);
         setTimeout(()=> playSFX(Sounds.coin), 180);
+      });
+
+      // =========================
+      // Shop
+      // =========================
+      function renderShop(){
+        shopWalletCoins.textContent = String(walletCoins);
+        shopGrid.innerHTML = "";
+
+        const addSection = (title, note) => {
+          const h = document.createElement("div");
+          h.className = "shop-section-title";
+          h.textContent = title;
+          shopGrid.appendChild(h);
+
+          const n = document.createElement("div");
+          n.className = "shop-section-note";
+          n.textContent = note;
+          shopGrid.appendChild(n);
+        };
+
+        const addItem = (item, kind, unlocked, selected, swatchStyle) => {
+          const el = document.createElement("div");
+          el.className = "shop-item";
+          const priceText = item.price === 0 ? "ฟรี" : (item.price + " เหรียญ");
+          el.innerHTML = `
+            <h3><span class="swatch" style="${swatchStyle}"></span>${item.name}</h3>
+            <p>${item.desc}</p>
+            <div class="shop-row">
+              <div class="price">${priceText}</div>
+              <div style="display:flex; gap:10px; align-items:center;">
+                <button class="shop-action" data-kind="${kind}" data-act="buy" data-id="${item.id}" ${unlocked || item.price===0 ? "disabled" : ""}>ซื้อ</button>
+                <button class="shop-action" data-kind="${kind}" data-act="select" data-id="${item.id}" ${(!unlocked && item.price>0) ? "disabled" : ""}>
+                  ${selected ? "กำลังใช้" : "เลือก"}
+                </button>
+              </div>
+            </div>
+          `;
+          shopGrid.appendChild(el);
+        };
+
+        addSection("Background Themes", "ธีมสีฉากหลังสนาม (อนาคตใส่รูปภาพได้)");
+        Backdrops.forEach(b=>{
+          const unlocked = !!unlockedBackdrops[b.id];
+          const selected = (selectedBackdrop === b.id);
+          addItem(b, "backdrop", unlocked, selected, swatchBackdrop(b));
+        });
+
+        addSection("Obstacle Themes", "ธีมสีของอุปสรรค (ใช้ตัวแปร CSS เปลี่ยนได้ทันที)");
+        ObstacleThemes.forEach(t=>{
+          const unlocked = !!unlockedObsThemes[t.id];
+          const selected = (selectedObsTheme === t.id);
+          addItem(t, "obstacle", unlocked, selected, swatchObstacle(t));
+        });
+      }
+
+      function openShop(){
+        cancelCountdown(); // ✅
+        unlockAudioOnce();
+        playSFX(Sounds.click);
+        if (isRunning && !gameOver && !isPaused) pauseGame(true);
+        renderShop();
+        shopModal.classList.add("show");
+        const body = shopModal.querySelector(".shop-body");
+        if (body) body.scrollTop = 0;
+      }
+      function closeShop(){
+        unlockAudioOnce();
+        playSFX(Sounds.click);
+        shopModal.classList.remove("show");
+      }
+
+      shopBtn.addEventListener("click", openShop);
+      shopCloseBtn.addEventListener("click", closeShop);
+      shopModal.addEventListener("click", (e)=>{
+        if (e.target === shopModal) closeShop();
+      });
+
+      shopGrid.addEventListener("click", (e)=>{
+        const btn = e.target.closest("button");
+        if (!btn) return;
+
+        unlockAudioOnce();
+
+        const id = btn.getAttribute("data-id");
+        const act = btn.getAttribute("data-act");
+        const kind = btn.getAttribute("data-kind");
+
+        const list = (kind === "obstacle") ? ObstacleThemes : Backdrops;
+        const item = list.find(x=>x.id===id);
+        if (!item) return;
+
+        const unlockedObj = (kind === "obstacle") ? unlockedObsThemes : unlockedBackdrops;
+        const saveUnlockKey = (kind === "obstacle") ? LS_OBS_UNLOCK : LS_BACKDROPS_UNLOCK;
+
+        if (act === "buy"){
+          if (unlockedObj[id] || item.price===0) return;
+          if (walletCoins < item.price) return;
+
+          walletCoins -= item.price;
+          saveWallet();
+          updateCoinsUI();
+
+          unlockedObj[id] = true;
+          saveUnlockedObj(saveUnlockKey, unlockedObj);
+          playSFX(Sounds.click);
+          renderShop();
+        }
+
+        if (act === "select"){
+          if (!unlockedObj[id] && item.price>0) return;
+
+          if (kind === "obstacle") applyObstacleTheme(id);
+          else applyBackdrop(id);
+
+          playSFX(Sounds.click);
+          renderShop();
+        }
       });
 
       // =========================
