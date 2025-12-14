@@ -10,11 +10,11 @@
       --bg1: #1d2337;
       --bg2: #020617;
 
-      /* Poison obstacles (no glow) */
-      --obs-a: #111827;  /* slate */
-      --obs-b: #0b1020;  /* deep */
-      --obs-c: #2e1065;  /* deep purple */
-      --obs-d: #0b1020;  /* deep */
+      /* Poison obstacles (themeable) */
+      --obs-a: #111827;
+      --obs-b: #0b1020;
+      --obs-c: #2e1065;
+      --obs-d: #0b1020;
       --obs-border: rgba(148,163,184,0.16);
       --obs-shadow: rgba(0,0,0,0.35);
 
@@ -184,13 +184,19 @@
       mix-blend-mode: screen;
     }
 
+    /* ✅ Obstacles can be emoji */
     .obstacle {
       position: absolute;
       bottom: 40px;
-      border-radius: 8px;
+      border-radius: 10px;
       z-index: 3;
 
-      /* poison look - no glow (now themeable) */
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      line-height: 1;
+      user-select:none;
+
       background: linear-gradient(135deg, var(--obs-a), var(--obs-b), var(--obs-c), var(--obs-d));
       border: 1px solid var(--obs-border);
       box-shadow:
@@ -198,14 +204,24 @@
         inset 0 1px 0 rgba(255,255,255,0.05);
     }
 
-    /* keep type classes but unified color */
-    .obstacle.ground.tree { border-radius: 6px 6px 0 0; }
-    .obstacle.ground.bush { border-radius: 14px; }
-    .obstacle.ground.rock { border-radius: 40% 60% 30% 70%; }
-    .obstacle.ground.sign::before { content: ""; } /* remove "!" */
-    .obstacle.air.fireball { border-radius: 50%; }
-    .obstacle.air.drone { border-radius: 40%; }
-    .obstacle.air.bird { border-radius: 10px; }
+    /* ceiling stalactites (duck to avoid) */
+    .obstacle.ceiling{
+      border-radius: 14px;
+      overflow: visible;
+    }
+    .obstacle.ceiling::before{
+      content:"";
+      position:absolute;
+      left:50%;
+      transform: translateX(-50%);
+      top:-220px;
+      width: 6px;
+      height: 220px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(148,163,184,0.04), rgba(148,163,184,0.16), rgba(148,163,184,0.05));
+      box-shadow: 0 10px 26px rgba(0,0,0,0.18);
+      pointer-events:none;
+    }
 
     /* platform wood */
     .platform {
@@ -280,16 +296,19 @@
       user-select: none;
       pointer-events: none;
       will-change: transform, opacity;
+      border: 1px solid rgba(255,255,255,0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.10);
     }
 
+    /* ✅ lighten item glow a lot */
     .collectible.coin {
-      background: radial-gradient(circle at 30% 30%, #fef9c3, #facc15, #b45309);
-      box-shadow: 0 0 12px rgba(250, 204, 21, 0.9);
+      background: radial-gradient(circle at 30% 30%, #fff7d6, #fde047, #f59e0b);
+      box-shadow: 0 0 18px rgba(250, 204, 21, 0.38), inset 0 1px 0 rgba(255,255,255,0.14);
     }
 
     .collectible.energy {
-      background: radial-gradient(circle at 30% 20%, #fecaca, #ef4444, #b91c1c);
-      box-shadow: 0 0 12px rgba(248, 113, 113, 0.95);
+      background: radial-gradient(circle at 30% 20%, #ffe4e6, #fb7185, #ef4444);
+      box-shadow: 0 0 18px rgba(248, 113, 113, 0.38), inset 0 1px 0 rgba(255,255,255,0.14);
       font-size: 18px;
       transform: scale(1);
     }
@@ -298,16 +317,16 @@
     .collectible.energy.large  { transform: scale(1.25); }
 
     .collectible.magnet {
-      background: radial-gradient(circle at 30% 20%, #e0f2fe, #38bdf8, #0369a1);
-      box-shadow: 0 0 12px rgba(56, 189, 248, 0.95);
+      background: radial-gradient(circle at 30% 20%, #e0f2fe, #7dd3fc, #0284c7);
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.38), inset 0 1px 0 rgba(255,255,255,0.14);
     }
     .collectible.boost {
-      background: linear-gradient(90deg, #22c55e, #a3e635);
-      box-shadow: 0 0 14px rgba(34, 197, 94, 0.95);
+      background: linear-gradient(90deg, #bbf7d0, #22c55e);
+      box-shadow: 0 0 18px rgba(34, 197, 94, 0.38), inset 0 1px 0 rgba(255,255,255,0.14);
     }
     .collectible.giant {
-      background: radial-gradient(circle at 30% 20%, #e0e7ff, #6366f1, #312e81);
-      box-shadow: 0 0 14px rgba(129, 140, 248, 0.95);
+      background: radial-gradient(circle at 30% 20%, #e0e7ff, #a5b4fc, #4f46e5);
+      box-shadow: 0 0 18px rgba(129, 140, 248, 0.38), inset 0 1px 0 rgba(255,255,255,0.14);
     }
 
     /* UI under game */
@@ -449,7 +468,6 @@
       min-height: 18px;
     }
 
-    /* Item guide */
     #itemGuide {
       margin-top: 10px;
       font-size: 12px;
@@ -464,7 +482,6 @@
     #itemGuide ul { margin: 6px 0 0; padding-left: 18px; }
     #itemGuide li { margin-bottom: 4px; }
 
-    /* Hit VFX */
     @keyframes hitShake {
       0%   { transform: translate(0, 0); }
       20%  { transform: translate(-4px, 2px); }
@@ -487,7 +504,7 @@
     }
     body.hit-blink #hitFlash { opacity: 1; }
 
-    /* Start overlay (inside game) */
+    /* Start overlay */
     #startOverlay{
       position:absolute;
       inset:0;
@@ -540,7 +557,7 @@
       line-height: 1.4;
     }
 
-    /* Pause overlay (inside game) */
+    /* Pause overlay */
     #pauseOverlay{
       position:absolute;
       inset:0;
@@ -664,20 +681,33 @@
       backdrop-filter: blur(4px);
     }
     #shopModal.show{ display:flex; }
+
+    /* ✅ FIX: shop scrollable */
     .shop-card{
       width: min(760px, 96vw);
+      max-height: 86vh;
       border-radius: 18px;
       border: 1px solid rgba(148,163,184,0.35);
       background: rgba(15,23,42,0.95);
       box-shadow: 0 28px 70px rgba(0,0,0,0.6);
       padding: 14px 14px 12px;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
     }
+    .shop-body{
+      overflow:auto;
+      padding-right: 4px;
+      margin-top: 6px;
+    }
+
     .shop-header{
       display:flex;
       justify-content:space-between;
       align-items:flex-start;
       gap: 10px;
-      margin-bottom: 10px;
+      margin-bottom: 4px;
+      flex: 0 0 auto;
     }
     .shop-title{
       font-weight: 950;
@@ -713,7 +743,8 @@
       display:grid;
       grid-template-columns: repeat(2, minmax(0,1fr));
       gap: 10px;
-      margin-top: 10px;
+      margin-top: 8px;
+      padding-bottom: 6px;
     }
     .shop-section-title{
       grid-column: 1 / -1;
@@ -806,11 +837,13 @@
     #soundModal.show{ display:flex; }
     .sound-card{
       width: min(640px, 96vw);
+      max-height: 86vh;
       border-radius: 18px;
       border: 1px solid rgba(148,163,184,0.35);
       background: rgba(15,23,42,0.95);
       box-shadow: 0 28px 70px rgba(0,0,0,0.6);
       padding: 14px 14px 12px;
+      overflow:auto;
     }
     .sound-header{
       display:flex;
@@ -903,7 +936,7 @@
       line-height: 1.4;
     }
 
-    /* Bottom hint (moved to bottom) */
+    /* Bottom hint */
     #hint {
       margin-top: 12px;
       font-size: 13px;
@@ -950,7 +983,6 @@
       <img src="phantom-runner.png" alt="PHANToM" />
     </div>
 
-    <!-- Start overlay (inside game) -->
     <div id="startOverlay">
       <div class="title">PHANToM RUNNER</div>
       <div id="countdownText"></div>
@@ -958,7 +990,6 @@
       <div id="startHintMini">เริ่มเกมจะนับถอยหลัง 3 วินาที • กด Space ก็เริ่มได้</div>
     </div>
 
-    <!-- Pause overlay -->
     <div id="pauseOverlay">
       <div class="pTitle">PAUSED</div>
       <button id="resumeBtnOverlay">Resume</button>
@@ -1008,7 +1039,6 @@
     </ul>
   </div>
 
-  <!-- Moved hint to bottom -->
   <div id="hint">
     Space / ↑ = กระโดด (2 จังหวะ) • ↓ = หมอบ • มีพื้นลอย/บันได • หลุมกับดัก (ตกได้ ไม่ตายทันที) •
     กด P = Pause/Resume • ระบบคืนชีพใช้ได้ 1 ครั้ง/รอบ (หลังคืนชีพ คะแนนลด 15% และเหรียญลด 50%)
@@ -1043,7 +1073,10 @@
         <button id="shopCloseBtn" class="shop-close">ปิด</button>
       </div>
 
-      <div class="shop-grid" id="shopGrid"></div>
+      <!-- ✅ scroll area -->
+      <div class="shop-body">
+        <div class="shop-grid" id="shopGrid"></div>
+      </div>
     </div>
   </div>
 
@@ -1145,34 +1178,31 @@
       const CFG_MISSION_DJ_TARGET = 10;
       const CFG_MISSION_OBS_TARGET = 30;
 
-      // Spawn timers
-      const CFG_COIN_BASE_INTERVAL = 520;
-      const CFG_COIN_MIN_INTERVAL  = 250;
+      // ✅ Items less frequent
+      const CFG_COIN_BASE_INTERVAL = 900;
+      const CFG_COIN_MIN_INTERVAL  = 450;
 
-      const CFG_HEART_BASE_INTERVAL = 1200;   // small/medium heart
-      const CFG_HEART_MIN_INTERVAL  = 650;
+      const CFG_HEART_BASE_INTERVAL = 1900;
+      const CFG_HEART_MIN_INTERVAL  = 1050;
 
-      // ✅ powerups appear 2x more frequent (interval half)
-      const CFG_POWERUP_BASE_INTERVAL = 600;
-      const CFG_POWERUP_MIN_INTERVAL  = 320;
+      const CFG_POWERUP_BASE_INTERVAL = 1400;
+      const CFG_POWERUP_MIN_INTERVAL  = 850;
 
-      const CFG_BIG_HEART_EVERY_MS = 40000;
+      const CFG_BIG_HEART_EVERY_MS = 45000;
 
       const CFG_CHEAT_WINDOW = 1000;
 
-      // ✅ Revive rules
       const CFG_REVIVE_COST = 50;
       const CFG_REVIVE_ENERGY = 55;
       const CFG_REVIVE_INVINCIBLE_MS = 1200;
-      const CFG_POST_REVIVE_SCORE_MULT = 0.85; // -15%
-      const CFG_POST_REVIVE_COIN_MULT  = 0.50; // -50%
+      const CFG_POST_REVIVE_SCORE_MULT = 0.85;
+      const CFG_POST_REVIVE_COIN_MULT  = 0.50;
       const CFG_COUNTDOWN_SECONDS = 3;
 
       // localStorage keys
       const LS_BEST = "phantom_runner_best";
       const LS_WALLET = "phantom_runner_wallet_coins";
 
-      // themes
       const LS_BACKDROPS_UNLOCK = "phantom_runner_backdrops_unlocked";
       const LS_BACKDROP_SELECTED = "phantom_runner_backdrop_selected";
       const LS_OBS_UNLOCK = "phantom_runner_obstacles_unlocked";
@@ -1257,7 +1287,6 @@
         click: new Audio("sfx_click.mp3"),
       };
 
-      // base mix (we'll multiply by sliders)
       const BASE_VOL = {
         bgm: 0.22,
         countdown: 0.35,
@@ -1290,7 +1319,6 @@
       function saveBool(key, v){ try{ localStorage.setItem(key, v ? "1" : "0"); }catch(_){ } }
       function saveNum(key, v){ try{ localStorage.setItem(key, String(v)); }catch(_){ } }
 
-      // persisted audio settings
       let audioEnabled = loadBool(LS_AUDIO_MASTER, true);
       let bgmEnabled = loadBool(LS_AUDIO_BGM_ON, true);
       let sfxEnabled = loadBool(LS_AUDIO_SFX_ON, true);
@@ -1300,7 +1328,6 @@
       function unlockAudioOnce(){
         if (audioUnlocked) return;
         audioUnlocked = true;
-        // Unlock by playing a silent sound once on user gesture
         try{
           const prev = Sounds.click.volume;
           Sounds.click.volume = 0;
@@ -1312,10 +1339,8 @@
       document.addEventListener("pointerdown", unlockAudioOnce, { once:true });
 
       function applyAudioVolumes(){
-        // BGM
         Sounds.bgm.volume = BASE_VOL.bgm * bgmVolume;
 
-        // SFX
         const s = sfxVolume;
         Sounds.countdown.volume = BASE_VOL.countdown * s;
         Sounds.jump.volume      = BASE_VOL.jump * s;
@@ -1356,7 +1381,6 @@
         applyAudioVolumes();
         updateAudioQuickBtn();
 
-        // sync UI
         audioMasterToggle.checked = !!audioEnabled;
         bgmToggle.checked = !!bgmEnabled;
         sfxToggle.checked = !!sfxEnabled;
@@ -1366,10 +1390,8 @@
         bgmPct.textContent = Math.round(bgmVolume * 100) + "%";
         sfxPct.textContent = Math.round(sfxVolume * 100) + "%";
 
-        // if master off, kill bgm immediately
         if (!audioEnabled || !bgmEnabled) bgmPause();
         else {
-          // resume only if running and not paused
           if (isRunning && !gameOver && !isPaused) bgmPlay();
         }
       }
@@ -1387,76 +1409,16 @@
       ];
 
       const ObstacleThemes = [
-        {
-          id:"poison",
-          name:"Poison Slate (Default)",
-          desc:"โทนพิษมืด ๆ",
-          price:0,
-          css:{
-            "--obs-a":"#111827",
-            "--obs-b":"#0b1020",
-            "--obs-c":"#2e1065",
-            "--obs-d":"#0b1020",
-            "--obs-border":"rgba(148,163,184,0.16)",
-            "--obs-shadow":"rgba(0,0,0,0.35)",
-          }
-        },
-        {
-          id:"ember",
-          name:"Ember Core",
-          desc:"แดง/ส้มเดือด ๆ",
-          price:140,
-          css:{
-            "--obs-a":"#2b0a0a",
-            "--obs-b":"#3b0a0a",
-            "--obs-c":"#7f1d1d",
-            "--obs-d":"#1f0a0a",
-            "--obs-border":"rgba(248,113,113,0.18)",
-            "--obs-shadow":"rgba(0,0,0,0.38)",
-          }
-        },
-        {
-          id:"cyber",
-          name:"Cyber Neon",
-          desc:"น้ำเงิน/ม่วงนีออน",
-          price:170,
-          css:{
-            "--obs-a":"#0a1020",
-            "--obs-b":"#0b2a3a",
-            "--obs-c":"#5b21b6",
-            "--obs-d":"#0b1020",
-            "--obs-border":"rgba(56,189,248,0.18)",
-            "--obs-shadow":"rgba(0,0,0,0.36)",
-          }
-        },
-        {
-          id:"forest",
-          name:"Deep Forest",
-          desc:"เขียวเข้ม/ดำ",
-          price:190,
-          css:{
-            "--obs-a":"#07110b",
-            "--obs-b":"#0a1a12",
-            "--obs-c":"#14532d",
-            "--obs-d":"#07110b",
-            "--obs-border":"rgba(34,197,94,0.16)",
-            "--obs-shadow":"rgba(0,0,0,0.36)",
-          }
-        },
-        {
-          id:"ice",
-          name:"Frost Byte",
-          desc:"ฟ้าเย็น/น้ำเงิน",
-          price:210,
-          css:{
-            "--obs-a":"#07141f",
-            "--obs-b":"#0b2a3a",
-            "--obs-c":"#1d4ed8",
-            "--obs-d":"#07141f",
-            "--obs-border":"rgba(147,197,253,0.18)",
-            "--obs-shadow":"rgba(0,0,0,0.34)",
-          }
-        },
+        { id:"poison", name:"Poison Slate (Default)", desc:"โทนพิษมืด ๆ", price:0,
+          css:{ "--obs-a":"#111827","--obs-b":"#0b1020","--obs-c":"#2e1065","--obs-d":"#0b1020","--obs-border":"rgba(148,163,184,0.16)","--obs-shadow":"rgba(0,0,0,0.35)" } },
+        { id:"ember", name:"Ember Core", desc:"แดง/ส้มเดือด ๆ", price:140,
+          css:{ "--obs-a":"#2b0a0a","--obs-b":"#3b0a0a","--obs-c":"#7f1d1d","--obs-d":"#1f0a0a","--obs-border":"rgba(248,113,113,0.18)","--obs-shadow":"rgba(0,0,0,0.38)" } },
+        { id:"cyber", name:"Cyber Neon", desc:"น้ำเงิน/ม่วงนีออน", price:170,
+          css:{ "--obs-a":"#0a1020","--obs-b":"#0b2a3a","--obs-c":"#5b21b6","--obs-d":"#0b1020","--obs-border":"rgba(56,189,248,0.18)","--obs-shadow":"rgba(0,0,0,0.36)" } },
+        { id:"forest", name:"Deep Forest", desc:"เขียวเข้ม/ดำ", price:190,
+          css:{ "--obs-a":"#07110b","--obs-b":"#0a1a12","--obs-c":"#14532d","--obs-d":"#07110b","--obs-border":"rgba(34,197,94,0.16)","--obs-shadow":"rgba(0,0,0,0.36)" } },
+        { id:"ice", name:"Frost Byte", desc:"ฟ้าเย็น/น้ำเงิน", price:210,
+          css:{ "--obs-a":"#07141f","--obs-b":"#0b2a3a","--obs-c":"#1d4ed8","--obs-d":"#07141f","--obs-border":"rgba(147,197,253,0.18)","--obs-shadow":"rgba(0,0,0,0.34)" } },
       ];
 
       function loadUnlockedObj(key, defaultId){
@@ -1493,7 +1455,6 @@
           document.documentElement.style.setProperty(k, cssObj[k]);
         }
       }
-
       function applyBackdrop(id){
         const b = Backdrops.find(x=>x.id===id) || Backdrops[0];
         applyThemeVars(b.css);
@@ -1506,7 +1467,6 @@
         selectedObsTheme = t.id;
         saveSelectedId(LS_OBS_SELECTED, selectedObsTheme);
       }
-
       applyBackdrop(selectedBackdrop);
       applyObstacleTheme(selectedObsTheme);
 
@@ -1577,6 +1537,9 @@
         if (isRunning && !gameOver && !isPaused) pauseGame(true);
         renderShop();
         shopModal.classList.add("show");
+        // ✅ ensure scroll starts at top
+        const body = shopModal.querySelector(".shop-body");
+        if (body) body.scrollTop = 0;
       }
       function closeShop(){
         unlockAudioOnce();
@@ -1636,12 +1599,11 @@
       // State
       // =========================
       const groundY = 40;
-      const maxJumps = CFG_MAX_JUMPS;
 
       let playerY = groundY;
       let prevPlayerY = groundY;
       let jumpVelocity = 0;
-      let jumpsLeft = maxJumps;
+      let jumpsLeft = CFG_MAX_JUMPS;
 
       let isDucking = false;
 
@@ -1701,7 +1663,6 @@
 
       let cheatEvents = [];
 
-      // ✅ revive limitation + post-revive penalty accumulation
       let revivedThisRun = false;
       let postReviveActive = false;
       let postScoreAcc = 0;
@@ -1710,7 +1671,7 @@
       let postCoinCredited = 0;
 
       // =========================
-      // UI Helpers
+      // Helpers
       // =========================
       function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
       function randomBetween(min, max) { return Math.random() * (max - min) + min; }
@@ -1781,9 +1742,6 @@
         holes = [];
       }
 
-      // =========================
-      // Post-Revive Penalty Accounting (ceil on accumulated)
-      // =========================
       function addScore(base){
         if (!postReviveActive){
           score += base;
@@ -1814,9 +1772,6 @@
         }
       }
 
-      // =========================
-      // Game Setup (no auto-run; uses countdown)
-      // =========================
       function prepareNewRun(){
         clearArrays();
         hideGameOverModal();
@@ -1832,7 +1787,7 @@
         playerY = groundY;
         prevPlayerY = groundY;
         jumpVelocity = 0;
-        jumpsLeft = maxJumps;
+        jumpsLeft = CFG_MAX_JUMPS;
 
         isDucking = false;
         player.classList.remove("duck", "invincible", "giant", "double-jump");
@@ -1861,7 +1816,6 @@
         timeSinceLastPlatform = 0;
         nextPlatformIn = 2000 + Math.random() * (4500 - 2000);
 
-        // revive & penalty reset
         revivedThisRun = false;
         postReviveActive = false;
         postScoreAcc = 0; postScoreCredited = 0;
@@ -1892,9 +1846,6 @@
         showStartOverlay();
       }
 
-      // =========================
-      // Countdown -> Start
-      // =========================
       function startCountdown(){
         if (countdownTimer) return;
         if (gameOver) return;
@@ -1907,7 +1858,6 @@
         startGameBtn.disabled = true;
         setStatus("COUNTDOWN");
 
-        // beep immediately for the first number
         playSFX(Sounds.countdown);
 
         countdownTimer = setInterval(() => {
@@ -1918,7 +1868,6 @@
             return;
           }
 
-          // GO!
           countdownText.textContent = "GO!";
           playSFX(Sounds.countdown);
 
@@ -1944,7 +1893,6 @@
           ? "ต่อจากนี้โหมดหลังคืนชีพ: คะแนน -15% / เหรียญ -50%"
           : "หลบอุปสรรคและหลุมกับดักให้ได้มากที่สุด!";
 
-        // spawn first obstacle
         spawnObstacle();
         lastTime = null;
 
@@ -1952,9 +1900,6 @@
         frameId = requestAnimationFrame(gameLoop);
       }
 
-      // =========================
-      // Pause / Resume
-      // =========================
       function pauseGame(silent){
         if (!isRunning || gameOver) return;
         if (isPaused) return;
@@ -2001,9 +1946,57 @@
         holes.push(h);
       }
 
-      function spawnObstacle() {
-        const isAir = Math.random() < 0.35;
+      function setObstacleEmoji(obs, emoji, heightPx){
+        obs.textContent = emoji;
+        const fs = Math.max(18, Math.min(38, Math.round(heightPx * 0.55)));
+        obs.style.fontSize = fs + "px";
+      }
 
+      // ✅ obstacle emojis + stalactites
+      const EMOJI_GROUND = {
+        tree:"🪵", bush:"🪴", rock:"🪨", spike:"🔺", crate:"📦", barrel:"🛢️", sign:"🚧", laser:"💀", low:"🧱"
+      };
+      const EMOJI_AIR = {
+        bird:"🐦", drone:"🛸", fireball:"🔥"
+      };
+      const EMOJI_STAL = {
+        stal1:"🔻", stal2:"🪨", stal3:"🧊"
+      };
+
+      function spawnObstacle() {
+        // 0.18 ceiling stalactite, 0.32 air, rest ground
+        const roll = Math.random();
+
+        // ✅ ceiling stalactites (duck to avoid)
+        if (roll < 0.18) {
+          const obs = document.createElement("div");
+          obs.classList.add("obstacle", "ceiling");
+
+          const types = ["stal1","stal2","stal3"];
+          const kind = types[Math.floor(Math.random() * types.length)];
+          obs.classList.add(kind);
+
+          const height = randomBetween(68, 104);
+          const width  = randomBetween(34, 52);
+
+          // important: bottom band that hits standing but not duck
+          const bottom = randomBetween(groundY + 22, groundY + 38); // ~62-78
+
+          obs.style.width = width + "px";
+          obs.style.height = height + "px";
+          obs.style.bottom = bottom + "px";
+          obs.style.left = gameContainer.offsetWidth + "px";
+
+          setObstacleEmoji(obs, EMOJI_STAL[kind], height);
+
+          gameContainer.appendChild(obs);
+          obstacles.push(obs);
+          return;
+        }
+
+        const isAir = roll < 0.50;
+
+        // hole chance on ground
         if (!isAir && Math.random() < CFG_HOLE_CHANCE) {
           spawnHole();
           return;
@@ -2022,10 +2015,12 @@
           obs.style.width = width + "px";
           obs.style.height = height + "px";
           obs.style.bottom = randomBetween(95, 125) + "px";
+          obs.style.left = gameContainer.offsetWidth + "px";
+
+          setObstacleEmoji(obs, EMOJI_AIR[kind], height);
         } else {
           obs.classList.add("ground");
 
-          // include low type (shorter 30-40%)
           const groundTypes = ["tree", "bush", "rock", "spike", "crate", "barrel", "sign", "laser", "low"];
           const kind = groundTypes[Math.floor(Math.random() * groundTypes.length)];
           obs.classList.add(kind);
@@ -2043,9 +2038,11 @@
           obs.style.width = width + "px";
           obs.style.height = height + "px";
           obs.style.bottom = groundY + "px";
+          obs.style.left = gameContainer.offsetWidth + "px";
+
+          setObstacleEmoji(obs, EMOJI_GROUND[kind], height);
         }
 
-        obs.style.left = gameContainer.offsetWidth + "px";
         gameContainer.appendChild(obs);
         obstacles.push(obs);
       }
@@ -2144,7 +2141,7 @@
       }
 
       // =========================
-      // Movement & VFX
+      // Movement & Collision
       // =========================
       function getEffectiveSpeed() {
         let s = speed;
@@ -2200,16 +2197,12 @@
         }, 190);
       }
 
-      // =========================
-      // Collectible Effects
-      // =========================
       function applyCollectibleEffect(c) {
         if (!c) return;
 
         if (c.classList.contains("coin")) {
           coinsCollected += 1;
 
-          // coin adds score too
           addCoins(1);
           addScore(2);
 
@@ -2258,9 +2251,6 @@
         updateMissionUI();
       }
 
-      // =========================
-      // Updates
-      // =========================
       function updateObstacles(delta) {
         const moveX = getEffectiveSpeed() * (delta / 16.67);
 
@@ -2299,7 +2289,7 @@
             } else {
               if (hitIFramesTimer > 0) return true;
 
-              const isAir = obs.classList.contains("air");
+              const isAir = obs.classList.contains("air") || obs.classList.contains("ceiling");
               const dmg = isAir ? CFG_DAMAGE_AIR : CFG_DAMAGE_GROUND;
 
               energy -= dmg;
@@ -2328,8 +2318,8 @@
 
         timeSinceLastObstacle += delta;
 
-        const minInterval = Math.max(550, 1000 - score * 5);
-        const maxInterval = Math.max(minInterval + 300, 1600 - score * 8);
+        const minInterval = Math.max(650, 1200 - score * 4);
+        const maxInterval = Math.max(minInterval + 350, 1900 - score * 6);
 
         if (timeSinceLastObstacle >= nextSpawnIn) {
           let canSpawn = true;
@@ -2339,7 +2329,7 @@
             const lastRect = lastObs.getBoundingClientRect();
             const containerRect = gameContainer.getBoundingClientRect();
             const distance = containerRect.right - lastRect.right;
-            if (distance < 180) canSpawn = false;
+            if (distance < 200) canSpawn = false;
           }
 
           if (canSpawn) {
@@ -2373,7 +2363,7 @@
         if (timeSinceLastPlatform >= nextPlatformIn) {
           if (platforms.length < 10) spawnPlatformGroup();
           timeSinceLastPlatform = 0;
-          nextPlatformIn = 2000 + Math.random() * (4500 - 2000);
+          nextPlatformIn = 2200 + Math.random() * (5200 - 2200);
         }
       }
 
@@ -2460,7 +2450,6 @@
         const playerStyleLeft = parseFloat(getComputedStyle(player).left);
         const playerStyleRight = playerStyleLeft + player.offsetWidth;
 
-        // platforms
         platforms.forEach(p => {
           if (!p || !p.isConnected) return;
           const pRect = p.getBoundingClientRect();
@@ -2476,7 +2465,6 @@
           }
         });
 
-        // hole under
         let holeUnder = false;
         holes.forEach(h => {
           if (!h || !h.isConnected) return;
@@ -2495,7 +2483,6 @@
 
         player.style.bottom = playerY + "px";
 
-        // boost beam
         if (boostBeam) {
           if (boostActive) {
             const baseLeft = parseFloat(getComputedStyle(player).left) || 80;
@@ -2513,31 +2500,27 @@
       }
 
       function updateSpawners(delta){
-        // coins
         timeSinceLastCoin += delta;
-        const coinInterval = Math.max(CFG_COIN_MIN_INTERVAL, CFG_COIN_BASE_INTERVAL - score * 2);
+        const coinInterval = Math.max(CFG_COIN_MIN_INTERVAL, CFG_COIN_BASE_INTERVAL - score * 1.5);
         if (timeSinceLastCoin >= coinInterval) {
           spawnCoin();
           timeSinceLastCoin = 0;
         }
 
-        // small/medium hearts
         timeSinceLastHeart += delta;
-        const heartInterval = Math.max(CFG_HEART_MIN_INTERVAL, CFG_HEART_BASE_INTERVAL - Math.floor(score/4)*10);
+        const heartInterval = Math.max(CFG_HEART_MIN_INTERVAL, CFG_HEART_BASE_INTERVAL - Math.floor(score/6)*12);
         if (timeSinceLastHeart >= heartInterval) {
           spawnSmallMediumHeart();
           timeSinceLastHeart = 0;
         }
 
-        // powerups
         timeSinceLastPowerup += delta;
-        const powerInterval = Math.max(CFG_POWERUP_MIN_INTERVAL, CFG_POWERUP_BASE_INTERVAL - Math.floor(score/5)*8);
+        const powerInterval = Math.max(CFG_POWERUP_MIN_INTERVAL, CFG_POWERUP_BASE_INTERVAL - Math.floor(score/7)*10);
         if (timeSinceLastPowerup >= powerInterval) {
           spawnPowerup();
           timeSinceLastPowerup = 0;
         }
 
-        // big heart forced every 40s
         timeSinceLastBigHeart += delta;
         if (timeSinceLastBigHeart >= CFG_BIG_HEART_EVERY_MS) {
           spawnLargeHeartForced();
@@ -2545,9 +2528,6 @@
         }
       }
 
-      // =========================
-      // Main Loop
-      // =========================
       function gameLoop(timestamp) {
         if (gameOver || isPaused) return;
 
@@ -2555,7 +2535,6 @@
         const delta = timestamp - lastTime;
         lastTime = timestamp;
 
-        // energy decay (not during invincible)
         if (!invincible) {
           energy -= CFG_ENERGY_DECAY_PER_SEC * (delta / 1000);
           if (energy <= 0) {
@@ -2577,7 +2556,6 @@
         updateCollectibles(delta);
         updateSpawners(delta);
 
-        // timers
         if (invincible) {
           invincibleTimer -= delta;
           if (invincibleTimer <= 0) {
@@ -2623,9 +2601,6 @@
         frameId = requestAnimationFrame(gameLoop);
       }
 
-      // =========================
-      // End / Revive
-      // =========================
       function endGame() {
         if (gameOver) return;
         gameOver = true;
@@ -2674,14 +2649,12 @@
         revivedThisRun = true;
         postReviveActive = true;
 
-        // reset penalty accumulators to apply only AFTER revive
         postScoreAcc = 0; postScoreCredited = 0;
         postCoinAcc  = 0; postCoinCredited  = 0;
 
         hideGameOverModal();
         clearArrays();
 
-        // restore
         energy = clamp(CFG_REVIVE_ENERGY, 1, CFG_MAX_ENERGY);
         updateEnergyUI();
 
@@ -2698,7 +2671,6 @@
         jumpsLeft = CFG_MAX_JUMPS;
         player.style.bottom = playerY + "px";
 
-        // restart loop (no countdown)
         gameOver = false;
         isRunning = true;
         isPaused = false;
@@ -2720,9 +2692,6 @@
         spawnObstacle();
       }
 
-      // =========================
-      // Controls
-      // =========================
       function handleJump() {
         if (!isRunning && !gameOver && !countdownTimer) {
           startCountdown();
@@ -2766,7 +2735,6 @@
         }
       }
 
-      // cheat DDD UUU
       function registerCheat(code) {
         const now = performance.now();
         if (code !== "ArrowDown" && code !== "ArrowUp" && code !== "Space") return;
@@ -2795,7 +2763,6 @@
         messageEl.textContent = "โหมดโกงเปิดแล้ว! ชนอะไรก็ไม่ตาย 10 วิ";
       }
 
-      // fullscreen
       function toggleFullscreen(){
         const elem = document.documentElement;
         if (!document.fullscreenElement){
@@ -2826,7 +2793,6 @@
         }
       });
 
-      // pause button
       pauseBtn.addEventListener("click", ()=>{
         if (!isRunning || gameOver) return;
         if (isPaused) resumeGame();
@@ -2834,17 +2800,13 @@
       });
       resumeBtnOverlay.addEventListener("click", resumeGame);
 
-      // start overlay button
       startGameBtn.addEventListener("click", startCountdown);
 
-      // restart buttons
       restartBtn.addEventListener("click", prepareNewRun);
       restartOutsideBtn.addEventListener("click", prepareNewRun);
 
-      // revive
       reviveBtn.addEventListener("click", reviveNow);
 
-      // keyboard
       document.addEventListener("keydown", (e) => {
         if (e.code === "KeyP") {
           e.preventDefault();
@@ -2870,7 +2832,6 @@
         if (e.code === "ArrowDown") setDuck(false);
       });
 
-      // touch buttons
       btnJump.addEventListener("pointerdown", (e) => {
         e.preventDefault();
         handleJump();
@@ -2894,7 +2855,7 @@
         playSFX(Sounds.click);
         if (isRunning && !gameOver && !isPaused) pauseGame(true);
         soundModal.classList.add("show");
-        applyAudioSettings(); // refresh UI
+        applyAudioSettings();
       }
       function closeSound(){
         unlockAudioOnce();
@@ -2913,7 +2874,6 @@
         audioEnabled = !audioEnabled;
         saveBool(LS_AUDIO_MASTER, audioEnabled);
         applyAudioSettings();
-        // click feedback (only if now enabled)
         playSFX(Sounds.click);
       });
 
@@ -2962,11 +2922,7 @@
       // =========================
       // Init
       // =========================
-      function updateBestUI(){
-        bestScoreEl.textContent = "สถิติสูงสุด: " + bestScore;
-      }
-
-      updateBestUI();
+      bestScoreEl.textContent = "สถิติสูงสุด: " + bestScore;
       updateCoinsUI();
       updateEnergyUI();
       updateMissionUI();
