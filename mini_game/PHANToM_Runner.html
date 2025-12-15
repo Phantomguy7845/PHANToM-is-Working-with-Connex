@@ -1067,7 +1067,6 @@
           <span id="statusPill">READY</span>
         </div>
 
-        <!-- ✅ Energy moved inside game (left top, under status) -->
         <div class="ig-energy">
           <div class="ig-energy-top">
             <span>Energy</span>
@@ -1077,7 +1076,6 @@
         </div>
       </div>
 
-      <!-- ✅ Coins centered (same level as pause), next to energy group -->
       <div class="ig-center">
         <div class="ig-pill ig-coins" id="igCoinsPill" title="เหรียญรอบนี้ / เหรียญสะสม">
           <span>🤑</span>
@@ -1089,7 +1087,6 @@
         </div>
       </div>
 
-      <!-- ✅ Right: buttons on top, scores below -->
       <div class="ig-right">
         <div class="ig-right-top">
           <button id="audioQuickBtn" class="ig-btn" title="เปิด/ปิดเสียง">🔊</button>
@@ -1142,7 +1139,7 @@
     <ul>
       <li>🤑 <b>เหรียญ (Coin)</b> : +คะแนน / เก็บเข้ากระเป๋า</li>
       <li>❤️ <b>หัวใจ (Energy)</b> : เพิ่ม Energy (เล็ก +10 / กลาง +20 / ใหญ่ +45 และเพิ่มความเร็ว)</li>
-      <li>🍬 <b>เจลลี่ (Jelly)</b> : ไม่มีสกิลพิเศษ แต่ให้คะแนนมากกว่าเหรียญ 2 เท่า และดรอปเป็นเส้นทาง (ดูดด้วย Magnet ได้)</li>
+      <li>🍬 <b>เจลลี่ (Jelly)</b> : ไม่มีสกิลพิเศษ แต่ให้คะแนนมากกว่าเหรียญ 2 เท่า และดรอปเป็นเส้นทางไต่ขึ้น-ลง (ดูดด้วย Magnet ได้)</li>
       <li>🧲 <b>Magnet</b> : ดูดเหรียญ/หัวใจ/เจลลี่ รอบ ๆ ชั่วคราว</li>
       <li>⚡ <b>Boost</b> : วิ่งเร็วขึ้น + อมตะชั่วคราว (ดรอปห่าง 22.5–37.5 วิ)</li>
       <li>🌀 <b>Giant</b> : ขยายร่าง ชนอุปสรรคพื้นให้พังได้ (ดรอปห่าง 22.5–37.5 วิ)</li>
@@ -1156,7 +1153,6 @@
 
   <div id="hitFlash"></div>
 
-  <!-- GAME OVER MODAL -->
   <div id="gameOverModal" aria-modal="true" role="dialog">
     <div class="modal-card">
       <div class="modal-title">Game Over</div>
@@ -1171,7 +1167,6 @@
     </div>
   </div>
 
-  <!-- SHOP MODAL -->
   <div id="shopModal" aria-modal="true" role="dialog">
     <div class="shop-card">
       <div class="shop-header">
@@ -1189,7 +1184,6 @@
     </div>
   </div>
 
-  <!-- SOUND MODAL -->
   <div id="soundModal" aria-modal="true" role="dialog">
     <div class="sound-card">
       <div class="sound-header">
@@ -1248,17 +1242,14 @@
 
   <script>
     (function () {
-      // =========================
-      // CONFIG
-      // =========================
-      const CFG_GRAVITY = 0.9;
-      const CFG_JUMP_STRENGTH = 13.5;
+      const CFG_GRAVITY = 0.98;
+      const CFG_JUMP_STRENGTH = 14.5;
       const CFG_MAX_JUMPS = 2;
 
       const CFG_MAX_ENERGY = 100;
       const CFG_ENERGY_DECAY_PER_SEC = 4;
-      const CFG_DAMAGE_GROUND = 15;
-      const CFG_DAMAGE_AIR = 21;
+      const CFG_DAMAGE_GROUND = 20;
+      const CFG_DAMAGE_AIR = 30;
 
       const CFG_START_SPEED = 6;
       const CFG_MAX_SPEED = 18;
@@ -1273,43 +1264,36 @@
       const CFG_TRAP_Y = -60;
 
       const CFG_CHEAT_INVINCIBLE_DURATION = 10000;
-      const CFG_MAGNET_DURATION = 10000;
+      const CFG_MAGNET_DURATION = 5000;
 
-      // ✅ Boost/Giant duration reduced 15%
-      const CFG_BOOST_DURATION = 4250; // was 5000
-      const CFG_GIANT_DURATION = 5100; // was 6000
+      const CFG_BOOST_DURATION = 5150;
+      const CFG_GIANT_DURATION = 3800;
 
       const CFG_MAGNET_RADIUS = 400;
 
-      // ✅ Heart energy values updated
-      const CFG_HEART_SMALL_GAIN = 10;
-      const CFG_HEART_MEDIUM_GAIN = 20;
-      const CFG_HEART_LARGE_GAIN = 45;
+      const CFG_HEART_SMALL_GAIN = 5;
+      const CFG_HEART_MEDIUM_GAIN = 15;
+      const CFG_HEART_LARGE_GAIN = 35;
 
-      // ✅ Speed increases when collecting BIG HEART
       const CFG_SPEED_UP_ON_BIG_HEART = 0.9;
 
       const CFG_MISSION_COIN_TARGET = 20;
       const CFG_MISSION_DJ_TARGET = 10;
       const CFG_MISSION_OBS_TARGET = 30;
 
-      // Coins
       const CFG_COIN_BASE_INTERVAL = 900;
       const CFG_COIN_MIN_INTERVAL  = 450;
 
-      // Hearts
       const CFG_HEART_BASE_INTERVAL = 1900;
       const CFG_HEART_MIN_INTERVAL  = 1050;
 
-      // Magnet (powerup base)
-      const CFG_MAGNET_BASE_INTERVAL = 1600;
-      const CFG_MAGNET_MIN_INTERVAL  = 950;
+      const CFG_MAGNET_BASE_INTERVAL = 3000;
+      const CFG_MAGNET_MIN_INTERVAL  = 2500;
 
-      // ✅ Jelly trails (drops a lot)
+      // ✅ Jelly trail (drops a lot)
       const CFG_JELLY_TRAIL_BASE_INTERVAL = 1650;
       const CFG_JELLY_TRAIL_MIN_INTERVAL  = 900;
 
-      // ✅ Big heart every 40s (match guide)
       const CFG_BIG_HEART_EVERY_MS = 40000;
 
       const CFG_CHEAT_WINDOW = 1000;
@@ -1317,15 +1301,13 @@
       const CFG_REVIVE_COST = 50;
       const CFG_REVIVE_ENERGY = 55;
       const CFG_REVIVE_INVINCIBLE_MS = 1200;
-      const CFG_POST_REVIVE_SCORE_MULT = 0.85; // -15%
-      const CFG_POST_REVIVE_COIN_MULT  = 0.50; // -50%
+      const CFG_POST_REVIVE_SCORE_MULT = 0.85;
+      const CFG_POST_REVIVE_COIN_MULT  = 0.50;
       const CFG_COUNTDOWN_SECONDS = 3;
 
-      // ✅ Boost/Giant drop less by 1.5x (22.5–37.5 sec)
-      const CFG_BG_MIN_MS = 22500;
+      const CFG_BG_MIN_MS = 25500;
       const CFG_BG_MAX_MS = 37500;
 
-      // localStorage keys
       const LS_BEST = "phantom_runner_best";
       const LS_WALLET = "phantom_runner_wallet_coins";
 
@@ -1334,16 +1316,12 @@
       const LS_OBS_UNLOCK = "phantom_runner_obstacles_unlocked";
       const LS_OBS_SELECTED = "phantom_runner_obstacles_selected";
 
-      // audio settings
       const LS_AUDIO_MASTER = "phantom_runner_audio_master";
       const LS_AUDIO_BGM_ON = "phantom_runner_audio_bgm_on";
       const LS_AUDIO_SFX_ON = "phantom_runner_audio_sfx_on";
       const LS_AUDIO_BGM_VOL = "phantom_runner_audio_bgm_vol";
       const LS_AUDIO_SFX_VOL = "phantom_runner_audio_sfx_vol";
 
-      // =========================
-      // DOM
-      // =========================
       const gameContainer = document.getElementById("gameContainer");
       const player = document.getElementById("player");
       const scoreEl = document.getElementById("score");
@@ -1386,7 +1364,6 @@
       const shopGrid = document.getElementById("shopGrid");
       const shopWalletCoins = document.getElementById("shopWalletCoins");
 
-      // sound UI
       const audioQuickBtn = document.getElementById("audioQuickBtn");
       const soundBtn = document.getElementById("soundBtn");
       const soundModal = document.getElementById("soundModal");
@@ -1400,16 +1377,10 @@
       const sfxPct = document.getElementById("sfxPct");
       const audioTestBtn = document.getElementById("audioTestBtn");
 
-      // =========================
-      // Helpers
-      // =========================
       function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
       function randomBetween(min, max) { return Math.random() * (max - min) + min; }
       function randInt(min, maxIncl){ return Math.floor(randomBetween(min, maxIncl + 1)); }
 
-      // =========================
-      // SOUND
-      // =========================
       const Sounds = {
         bgm: new Audio("bgm_main.mp3"),
         countdown: new Audio("sfx_countdown.mp3"),
@@ -1531,9 +1502,6 @@
         }
       }
 
-      // =========================
-      // Shop (themes)
-      // =========================
       const Backdrops = [
         { id:"toxic",  name:"Toxic Lab (Default)", desc:"ฉากหลังเข้ม ๆ โทนพิษ", price:0,   css:{ "--bg1":"#1d2337", "--bg2":"#020617" } },
         { id:"nebula", name:"Purple Nebula",       desc:"ม่วงลึก ๆ แบบจักรวาล", price:120, css:{ "--bg1":"#20102e", "--bg2":"#050312" } },
@@ -1615,9 +1583,6 @@
         return `background: linear-gradient(135deg, ${a}, ${b}, ${c}, ${d});`;
       }
 
-      // =========================
-      // State
-      // =========================
       const groundY = 40;
 
       let playerY = groundY;
@@ -1655,7 +1620,7 @@
 
       let countdownTimer = null;
       let countdownLeft = 0;
-      let countdownMode = "start"; // "start" | "resume"
+      let countdownMode = "start";
 
       let timeSinceLastObstacle = 0;
       let nextSpawnIn = 900;
@@ -1672,7 +1637,6 @@
       let timeSinceLastPlatform = 0;
       let nextPlatformIn = 2000 + Math.random() * (4500 - 2000);
 
-      // ✅ Boost/Giant cooldown
       let timeSinceLastBG = 0;
       let nextBGIn = randomBetween(CFG_BG_MIN_MS, CFG_BG_MAX_MS);
 
@@ -1700,13 +1664,9 @@
       let postCoinAcc = 0;
       let postCoinCredited = 0;
 
-      // ✅ Obstacle wave/rest
       let obstacleWaveLeft = 0;
       let obstacleRestLeft = 0;
 
-      // =========================
-      // UI helpers
-      // =========================
       function saveWallet(){ try{ localStorage.setItem(LS_WALLET, String(walletCoins)); }catch(_){ } }
 
       function updateCoinsUI(){
@@ -1807,7 +1767,6 @@
         }
       }
 
-      // ✅ After revive: score -15%, coins -50% (ceil rounding)
       function addScore(base){
         if (!postReviveActive){
           score += base;
@@ -1878,11 +1837,9 @@
         timeSinceLastPlatform = 0;
         nextPlatformIn = 2000 + Math.random() * (4500 - 2000);
 
-        // BG cooldown
         timeSinceLastBG = 0;
         nextBGIn = randomBetween(CFG_BG_MIN_MS, CFG_BG_MAX_MS);
 
-        // obstacle wave/rest
         obstacleWaveLeft = 0;
         obstacleRestLeft = 900;
 
@@ -1923,7 +1880,6 @@
 
         countdownMode = isResume ? "resume" : "start";
 
-        // show overlay for countdown
         startOverlay.classList.remove("hidden");
         startGameBtn.disabled = true;
         setStatus("COUNTDOWN");
@@ -2003,12 +1959,9 @@
         lastTime = null;
       }
 
-      // ✅ Resume now triggers 3s countdown
       function resumeGame(){
         if (!isRunning || gameOver) return;
         if (!isPaused) return;
-
-        // keep paused during countdown
         startCountdown(true);
       }
 
@@ -2030,9 +1983,6 @@
         if (document.hidden && isRunning && !gameOver && !isPaused) pauseGame(true);
       });
 
-      // =========================
-      // Spawners
-      // =========================
       function spawnHole() {
         const h = document.createElement("div");
         h.classList.add("hole");
@@ -2057,7 +2007,6 @@
       function spawnObstacle() {
         const roll = Math.random();
 
-        // ceiling stalactite
         if (roll < 0.18) {
           const obs = document.createElement("div");
           obs.classList.add("obstacle", "ceiling");
@@ -2069,8 +2018,6 @@
           const height = randomBetween(68, 104);
           const width  = randomBetween(34, 52);
 
-          // ✅ FIX: raise bottom so duck can dodge reliably
-          // groundY=40, duck top around ~78px -> keep bottom >= ~92px
           const bottom = randomBetween(groundY + 52, groundY + 66);
 
           obs.style.width = width + "px";
@@ -2206,14 +2153,12 @@
         c.classList.add("energy", "large");
         c.dataset.energy = String(CFG_HEART_LARGE_GAIN);
         c.textContent = "❤️";
-        // prefer middle/high lane (avoid too low)
         const lane = (Math.random() < 0.55) ? 1 : 2;
         setCollectibleLane(c, lane);
         gameContainer.appendChild(c);
         collectibles.push(c);
       }
 
-      // Magnet only (as "powerup base")
       function spawnMagnet(){
         const c = makeCollectibleBase();
         c.classList.add("magnet");
@@ -2223,7 +2168,6 @@
         collectibles.push(c);
       }
 
-      // ✅ Boost/Giant spawned by cooldown (22.5–37.5s)
       function spawnBoostOrGiant(){
         const c = makeCollectibleBase();
         if (Math.random() < 0.5){
@@ -2238,32 +2182,62 @@
         collectibles.push(c);
       }
 
-      // ✅ Jelly trail: drops a path to follow
+      // ✅✅ Jelly trail: "ไต่ขึ้น-ลง" แบบขั้นบันได + ช่วงราบ
       function spawnJellyTrail(){
-        if (collectibles.length > 90) return;
+        if (collectibles.length > 100) return;
 
-        const lane = Math.floor(Math.random() * 3);
         const bottoms = [groundY + 60, groundY + 110, groundY + 150];
-        const bottom = bottoms[lane];
 
-        const count = randInt(7, 13); // 7–13 pieces
-        const spacing = randomBetween(54, 72); // path spacing
+        // จำนวนชิ้น + ระยะห่าง
+        const count = randInt(10, 18);
+        const spacing = randomBetween(52, 70);
         const startLeft = gameContainer.offsetWidth + 10;
 
+        // เริ่มเลนและทิศทาง
+        let lane = randInt(0, 2);
+        let dir = Math.random() < 0.5 ? 1 : -1;
+
+        // ความยาวช่วงต่อเลน (ทำให้มีช่วงราบก่อนจะไต่)
+        let segLen = randInt(2, 4);
+        let segLeft = segLen;
+
         for (let i = 0; i < count; i++){
+          // เปลี่ยนเลนแบบค่อยเป็นค่อยไป (ทีละ 1) หลังครบ seg
+          if (i > 0) {
+            segLeft -= 1;
+            if (segLeft <= 0) {
+              // โอกาส “ขยับเลน” เพื่อไต่ขึ้น/ลง (สูง) หรือ “คงเลน” เพื่อให้มีช่วงพัก (ราบ)
+              const willStep = Math.random() < 0.78; // 78% ขยับ, 22% อยู่เลนเดิม
+              if (willStep) lane += dir;
+
+              // ชนขอบแล้วเด้งกลับ
+              if (lane <= 0) { lane = 0; dir = 1; }
+              if (lane >= 2) { lane = 2; dir = -1; }
+
+              // บางครั้งสุ่มกลับทิศทาง เพื่อให้เป็นขึ้น-ลงสลับกัน
+              if (Math.random() < 0.28) dir *= -1;
+
+              segLen = randInt(2, 4);
+              segLeft = segLen;
+            }
+          }
+
           const c = makeCollectibleBase();
           c.classList.add("jelly");
           c.textContent = "🍬";
+
+          // ใส่ jitter เล็ก ๆ ให้ดูเป็นเส้นทางลื่น ๆ ไม่แข็งทื่อ
+          const jitterY = randomBetween(-6, 6);
+          const bottom = bottoms[lane] + jitterY;
+
           c.style.bottom = bottom + "px";
           c.style.left = (startLeft + i * spacing) + "px";
+
           gameContainer.appendChild(c);
           collectibles.push(c);
         }
       }
 
-      // =========================
-      // Movement & Collision
-      // =========================
       function getEffectiveSpeed() {
         let s = speed;
         if (boostActive) s *= CFG_BOOST_MULTIPLIER;
@@ -2334,18 +2308,15 @@
           updateCoinsUI();
         }
         else if (c.classList.contains("jelly")) {
-          // ✅ Jelly: score 2x coin score (coin=2 -> jelly=4), no coins
           addScore(4);
           unlockAudioOnce();
           playSFX(Sounds.coin);
-
           scoreEl.textContent = "คะแนน: " + score;
         }
         else if (c.classList.contains("energy")) {
           const gain = parseInt(c.dataset.energy || "20", 10);
           energy = Math.min(CFG_MAX_ENERGY, energy + gain);
 
-          // ✅ Big heart increases speed
           if (c.classList.contains("large")) {
             const before = speed;
             speed = Math.min(CFG_MAX_SPEED, speed + CFG_SPEED_UP_ON_BIG_HEART);
@@ -2392,7 +2363,6 @@
         updateMissionUI();
       }
 
-      // ✅ Obstacles: wave + rest + rest 2–3s before big heart
       function updateObstacles(delta) {
         const moveX = getEffectiveSpeed() * (delta / 16.67);
 
@@ -2454,7 +2424,6 @@
           return true;
         });
 
-        // rest before big heart spawn (2–3s)
         const remainingToBigHeart = CFG_BIG_HEART_EVERY_MS - timeSinceLastBigHeart;
         if (remainingToBigHeart <= 3000) {
           obstacleWaveLeft = 0;
@@ -2469,7 +2438,6 @@
 
         timeSinceLastObstacle += delta;
 
-        // reduce overall frequency a bit
         const minInterval = Math.max(850, 1400 - score * 2.0);
         const maxInterval = Math.max(minInterval + 650, 2400 - score * 2.6);
 
@@ -2485,7 +2453,6 @@
           }
 
           if (canSpawn) {
-            // wave system
             if (obstacleWaveLeft <= 0) {
               const r = Math.random();
               const waveSize = (r < 0.62) ? 1 : (r < 0.88 ? 2 : 3);
@@ -2576,7 +2543,6 @@
             return;
           }
 
-          // ✅ Magnet pulls coin + energy + jelly
           if (
             magnetActive &&
             (c.classList.contains("coin") || c.classList.contains("energy") || c.classList.contains("jelly"))
@@ -2668,7 +2634,6 @@
       }
 
       function updateSpawners(delta){
-        // COIN
         timeSinceLastCoin += delta;
         const coinInterval = Math.max(CFG_COIN_MIN_INTERVAL, CFG_COIN_BASE_INTERVAL - score * 1.5);
         if (timeSinceLastCoin >= coinInterval) {
@@ -2676,7 +2641,6 @@
           timeSinceLastCoin = 0;
         }
 
-        // JELLY trails (a lot)
         timeSinceLastJelly += delta;
         const jellyInterval = Math.max(CFG_JELLY_TRAIL_MIN_INTERVAL, CFG_JELLY_TRAIL_BASE_INTERVAL - score * 1.0);
         if (timeSinceLastJelly >= jellyInterval) {
@@ -2684,7 +2648,6 @@
           timeSinceLastJelly = 0;
         }
 
-        // HEART (small/medium)
         timeSinceLastHeart += delta;
         const heartInterval = Math.max(CFG_HEART_MIN_INTERVAL, CFG_HEART_BASE_INTERVAL - Math.floor(score/6)*12);
         if (timeSinceLastHeart >= heartInterval) {
@@ -2692,14 +2655,12 @@
           timeSinceLastHeart = 0;
         }
 
-        // BIG HEART forced
         timeSinceLastBigHeart += delta;
         if (timeSinceLastBigHeart >= CFG_BIG_HEART_EVERY_MS) {
           spawnLargeHeartForced();
           timeSinceLastBigHeart = 0;
         }
 
-        // MAGNET
         timeSinceLastMagnet += delta;
         const magnetInterval = Math.max(CFG_MAGNET_MIN_INTERVAL, CFG_MAGNET_BASE_INTERVAL - Math.floor(score/7)*10);
         if (timeSinceLastMagnet >= magnetInterval) {
@@ -2707,7 +2668,6 @@
           timeSinceLastMagnet = 0;
         }
 
-        // BOOST/GIANT (cooldown)
         timeSinceLastBG += delta;
         if (timeSinceLastBG >= nextBGIn) {
           spawnBoostOrGiant();
@@ -2740,7 +2700,6 @@
         checkHoleTrap();
         if (gameOver) return;
 
-        // ✅ spawners before obstacles (so obstacle rest before big heart timing is accurate)
         updateSpawners(delta);
 
         updateObstacles(delta);
@@ -2863,10 +2822,8 @@
         jumpsLeft = CFG_MAX_JUMPS;
         player.style.bottom = playerY + "px";
 
-        // keep speed as-is (continue difficulty)
         speed = clamp(speed, CFG_START_SPEED, CFG_MAX_SPEED);
 
-        // reset spawners slightly
         timeSinceLastObstacle = 0;
         nextSpawnIn = 900 + Math.random() * 700;
 
@@ -2875,11 +2832,6 @@
         timeSinceLastMagnet = 0;
         timeSinceLastJelly = 0;
 
-        // big heart timer continues normally but we give a small buffer by setting to 0
-        // (you can change if you want big heart soon after revive)
-        // timeSinceLastBigHeart = 0;
-
-        // BG cooldown continues but restart a bit
         timeSinceLastBG = 0;
         nextBGIn = randomBetween(CFG_BG_MIN_MS, CFG_BG_MAX_MS);
 
@@ -3057,9 +3009,6 @@
       btnDuck.addEventListener("pointercancel",(e)=> { e.preventDefault(); setDuck(false); });
       btnDuck.addEventListener("pointerleave", () => { if (isDucking) setDuck(false); });
 
-      // =========================
-      // Sound modal + quick toggle
-      // =========================
       function openSound(){
         cancelCountdown();
         unlockAudioOnce();
@@ -3130,9 +3079,6 @@
         setTimeout(()=> playSFX(Sounds.coin), 180);
       });
 
-      // =========================
-      // Shop
-      // =========================
       function renderShop(){
         shopWalletCoins.textContent = String(walletCoins);
         shopGrid.innerHTML = "";
@@ -3248,9 +3194,6 @@
         }
       });
 
-      // =========================
-      // Init
-      // =========================
       bestScoreEl.textContent = "สถิติสูงสุด: " + bestScore;
       scoreEl.textContent = "คะแนน: " + score;
 
