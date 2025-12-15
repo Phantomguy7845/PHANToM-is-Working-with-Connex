@@ -61,7 +61,7 @@
     }
 
     /* =========================
-       IN-GAME TOP BAR (NEW LAYOUT)
+       IN-GAME TOP BAR
        ========================= */
     #inGameTopBar{
       position:absolute;
@@ -735,7 +735,12 @@
     .modal-btn:hover { filter: brightness(1.05); transform: translateY(-1px); }
     .modal-btn:active { transform: translateY(1px); }
 
-    #reviveBtn {
+    #reviveFreeBtn{
+      background: linear-gradient(90deg, rgba(250,204,21,0.95), rgba(34,197,94,0.95));
+      color: #1b1302;
+      border-color: rgba(250,204,21,0.55);
+    }
+    #revivePaidBtn {
       background: linear-gradient(90deg, rgba(56,189,248,0.95), rgba(34,197,94,0.95));
       color: #02121a;
       border-color: rgba(56,189,248,0.55);
@@ -883,6 +888,11 @@
       font-size: 12px;
       color:#facc15;
       font-weight: 800;
+    }
+    .owned{
+      font-size: 12px;
+      color:#e5e7eb;
+      opacity: 0.9;
     }
     .shop-action{
       padding: 8px 12px;
@@ -1138,17 +1148,19 @@
     <strong>คำอธิบายไอเท็ม:</strong>
     <ul>
       <li>🤑 <b>เหรียญ (Coin)</b> : +คะแนน / เก็บเข้ากระเป๋า</li>
-      <li>❤️ <b>หัวใจ (Energy)</b> : เพิ่ม Energy (เล็ก +10 / กลาง +20 / ใหญ่ +45 และเพิ่มความเร็ว)</li>
+      <li>❤️ <b>หัวใจ (Energy)</b> : เพิ่ม Energy (เล็ก +3 / กลาง +8 / ใหญ่ +36 และเพิ่มความเร็ว)</li>
       <li>🍬 <b>เจลลี่ (Jelly)</b> : ไม่มีสกิลพิเศษ แต่ให้คะแนนมากกว่าเหรียญ 2 เท่า และดรอปเป็นเส้นทางไต่ขึ้น-ลง (ดูดด้วย Magnet ได้)</li>
       <li>🧲 <b>Magnet</b> : ดูดเหรียญ/หัวใจ/เจลลี่ รอบ ๆ ชั่วคราว</li>
-      <li>⚡ <b>Boost</b> : วิ่งเร็วขึ้น + อมตะชั่วคราว (ดรอปห่าง 22.5–37.5 วิ)</li>
-      <li>🌀 <b>Giant</b> : ขยายร่าง ชนอุปสรรคพื้นให้พังได้ (ดรอปห่าง 22.5–37.5 วิ)</li>
+      <li>⚡ <b>Boost</b> : วิ่งเร็วขึ้น + อมตะชั่วคราว (ดรอปห่าง 25.5–37.5 วิ)</li>
+      <li>🌀 <b>Giant</b> : ขยายร่าง ชนอุปสรรคพื้นให้พังได้ (ดรอปห่าง 25.5–37.5 วิ)</li>
+      <li>🛒 <b>Run Items (ร้านค้า)</b> : ไอเท็มใช้ “1 เกม/1 ชิ้น” ซื้อสะสมได้ และถ้ามีจะถูกบังคับใช้ตอนเริ่มเกมอัตโนมัติจนกว่าจะหมด</li>
     </ul>
   </div>
 
   <div id="hint">
     Space / ↑ = กระโดด (2 จังหวะ) • ↓ = หมอบ • มีพื้นลอย/บันได • หลุมกับดัก (ตกได้ ไม่ตายทันที) •
-    กด P = Pause/Resume (Resume จะนับถอยหลัง 3 วิ) • ระบบคืนชีพใช้ได้ 1 ครั้ง/รอบ (หลังคืนชีพ คะแนน -15% และเหรียญ -50% ปัดขึ้น)
+    กด P = Pause/Resume (Resume จะนับถอยหลัง 3 วิ) • ระบบคืนชีพ “ด้วยเหรียญ” ใช้ได้ 1 ครั้ง/รอบ (หลังคืนชีพ คะแนน -15% และเหรียญ -50% ปัดขึ้น)
+    • (ถ้าได้ Passive คืนชีพฟรี จะมีปุ่มคืนชีพฟรีเพิ่ม และไม่ทับซ้อนกับแบบเหรียญ)
   </div>
 
   <div id="hitFlash"></div>
@@ -1159,7 +1171,8 @@
       <div id="modalStats" class="modal-stats"></div>
 
       <div class="modal-actions">
-        <button id="reviveBtn" class="modal-btn" style="display:none;">คืนชีพด้วย 50 เหรียญ</button>
+        <button id="reviveFreeBtn" class="modal-btn" style="display:none;">คืนชีพฟรี (1 ครั้ง)</button>
+        <button id="revivePaidBtn" class="modal-btn" style="display:none;">คืนชีพด้วย 50 เหรียญ</button>
         <button id="restartBtn" class="modal-btn">เริ่มเกมใหม่</button>
       </div>
 
@@ -1172,7 +1185,7 @@
       <div class="shop-header">
         <div>
           <div class="shop-title">SHOP</div>
-          <div class="shop-sub">ซื้อ/เลือก “ธีมฉากหลัง” และ “ธีมอุปสรรค” ด้วยเหรียญสะสม (localStorage)</div>
+          <div class="shop-sub">ซื้อ/เลือก “ธีมฉากหลัง” “ธีมอุปสรรค” และ “ไอเท็มใช้ครั้งเดียว/เกม” ด้วยเหรียญสะสม (localStorage)</div>
           <div class="shop-balance">เหรียญสะสม: <b id="shopWalletCoins">0</b></div>
         </div>
         <button id="shopCloseBtn" class="shop-close">ปิด</button>
@@ -1246,7 +1259,8 @@
       const CFG_JUMP_STRENGTH = 14.5;
       const CFG_MAX_JUMPS = 2;
 
-      const CFG_MAX_ENERGY = 100;
+      const CFG_MAX_ENERGY = 100;            // base
+      const CFG_START_ENERGY_UP_MAX = 150;   // ✅ start item: max energy 150 (per run)
       const CFG_ENERGY_DECAY_PER_SEC = 4;
       const CFG_DAMAGE_GROUND = 17;
       const CFG_DAMAGE_AIR = 28;
@@ -1266,14 +1280,16 @@
       const CFG_CHEAT_INVINCIBLE_DURATION = 10000;
       const CFG_MAGNET_DURATION = 3500;
 
-      const CFG_BOOST_DURATION = 5150;
-      const CFG_GIANT_DURATION = 3800;
+      const CFG_BOOST_DURATION = 5150;  // keep
+      const CFG_GIANT_DURATION = 3800;  // keep
+
+      const CFG_START_BOOST_MS = 5000;  // ✅ start item: 5 seconds
 
       const CFG_MAGNET_RADIUS = 350;
 
-      const CFG_HEART_SMALL_GAIN = 3;
-      const CFG_HEART_MEDIUM_GAIN = 8;
-      const CFG_HEART_LARGE_GAIN = 36;
+      const CFG_HEART_SMALL_GAIN = 3;   // keep
+      const CFG_HEART_MEDIUM_GAIN = 8;  // keep
+      const CFG_HEART_LARGE_GAIN = 36;  // keep
 
       const CFG_SPEED_UP_ON_BIG_HEART = 1.2;
 
@@ -1305,7 +1321,7 @@
       const CFG_POST_REVIVE_COIN_MULT  = 0.50;
       const CFG_COUNTDOWN_SECONDS = 3;
 
-      const CFG_BG_MIN_MS = 25500;
+      const CFG_BG_MIN_MS = 25500; // keep
       const CFG_BG_MAX_MS = 37500;
 
       const LS_BEST = "phantom_runner_best";
@@ -1321,6 +1337,9 @@
       const LS_AUDIO_SFX_ON = "phantom_runner_audio_sfx_on";
       const LS_AUDIO_BGM_VOL = "phantom_runner_audio_bgm_vol";
       const LS_AUDIO_SFX_VOL = "phantom_runner_audio_sfx_vol";
+
+      // ✅ NEW: Run Items inventory
+      const LS_RUN_ITEMS = "phantom_runner_run_items";
 
       const gameContainer = document.getElementById("gameContainer");
       const player = document.getElementById("player");
@@ -1355,7 +1374,8 @@
 
       const gameOverModal = document.getElementById("gameOverModal");
       const modalStats = document.getElementById("modalStats");
-      const reviveBtn = document.getElementById("reviveBtn");
+      const reviveFreeBtn = document.getElementById("reviveFreeBtn");
+      const revivePaidBtn = document.getElementById("revivePaidBtn");
       const restartBtn = document.getElementById("restartBtn");
 
       const shopBtn = document.getElementById("shopBtn");
@@ -1524,6 +1544,16 @@
           css:{ "--obs-a":"#07141f","--obs-b":"#0b2a3a","--obs-c":"#1d4ed8","--obs-d":"#07141f","--obs-border":"rgba(147,197,253,0.18)","--obs-shadow":"rgba(0,0,0,0.34)" } },
       ];
 
+      // ✅ NEW: run items in shop (buy + inventory, auto-consume 1 per run)
+      const RunItems = [
+        { id:"startEnergy150", name:"🔋 Start Energy 150", desc:"เริ่มเกมด้วย Max/Start Energy = 150 (ใช้ 1 เกม/ชิ้น • บังคับใช้ถ้ามี)", price:60,
+          swatch:`background: linear-gradient(135deg,#22c55e,#facc15,#fb923c);` },
+        { id:"startBoost5", name:"⚡ Start Boost 5s", desc:"เริ่มเกมแล้ว Boost + อมตะ 5 วินาที (ใช้ 1 เกม/ชิ้น • บังคับใช้ถ้ามี)", price:90,
+          swatch:`background: linear-gradient(135deg,#34d399,#22c55e,#38bdf8);` },
+        { id:"passiveBox", name:"🎁 Passive Box", desc:"สุ่ม Passive 1 อย่าง: เหรียญ x2 / ใช้พลังงาน -15% / คืนชีพฟรีไม่โดนหัก / กันตกหลุม (ใช้ 1 เกม/ชิ้น • บังคับใช้ถ้ามี)", price:140,
+          swatch:`background: linear-gradient(135deg,#a855f7,#38bdf8,#facc15);` },
+      ];
+
       function loadUnlockedObj(key, defaultId){
         try{
           const raw = localStorage.getItem(key);
@@ -1544,6 +1574,26 @@
       function saveSelectedId(key, id){
         try{ localStorage.setItem(key, id); }catch(_){}
       }
+
+      function loadRunItems(){
+        try{
+          const raw = localStorage.getItem(LS_RUN_ITEMS);
+          const obj = raw ? JSON.parse(raw) : {};
+          const safe = (obj && typeof obj === "object") ? obj : {};
+          return {
+            startEnergy150: Math.max(0, parseInt(safe.startEnergy150||0,10) || 0),
+            startBoost5:   Math.max(0, parseInt(safe.startBoost5||0,10) || 0),
+            passiveBox:    Math.max(0, parseInt(safe.passiveBox||0,10) || 0),
+          };
+        }catch(_){
+          return { startEnergy150:0, startBoost5:0, passiveBox:0 };
+        }
+      }
+      function saveRunItems(inv){
+        try{ localStorage.setItem(LS_RUN_ITEMS, JSON.stringify(inv)); }catch(_){}
+      }
+
+      let runItemsInv = loadRunItems();
 
       let unlockedBackdrops = loadUnlockedObj(LS_BACKDROPS_UNLOCK, "toxic");
       let selectedBackdrop = loadSelectedId(LS_BACKDROP_SELECTED, "toxic");
@@ -1592,7 +1642,9 @@
 
       let isDucking = false;
 
-      let energy = CFG_MAX_ENERGY;
+      // ✅ runtime maxEnergy per run
+      let maxEnergy = CFG_MAX_ENERGY;
+      let energy = maxEnergy;
 
       let score = 0;
       let bestScore = Number(localStorage.getItem(LS_BEST) || 0);
@@ -1657,7 +1709,12 @@
 
       let cheatEvents = [];
 
-      let revivedThisRun = false;
+      // ✅ split revive: paid + free (from passive)
+      let paidReviveUsed = false;
+      let freeReviveAvailable = false;
+      let freeReviveUsed = false;
+
+      // post revive penalty (paid revive only)
       let postReviveActive = false;
       let postScoreAcc = 0;
       let postScoreCredited = 0;
@@ -1666,6 +1723,15 @@
 
       let obstacleWaveLeft = 0;
       let obstacleRestLeft = 0;
+
+      // ✅ per-run passive
+      let passiveId = "none";
+      let passiveName = "";
+      let coinMult = 1;
+      let energyCostMult = 1; // 0.85 means -15%
+      let holeGuard = false;
+
+      let startItemsAppliedThisRun = false;
 
       function saveWallet(){ try{ localStorage.setItem(LS_WALLET, String(walletCoins)); }catch(_){ } }
 
@@ -1676,9 +1742,9 @@
       }
 
       function updateEnergyUI() {
-        const ratio = clamp(energy / CFG_MAX_ENERGY, 0, 1);
+        const ratio = clamp(energy / maxEnergy, 0, 1);
         energyBar.style.width = (ratio * 100) + "%";
-        energyText.textContent = Math.round(energy) + " / " + CFG_MAX_ENERGY;
+        energyText.textContent = Math.round(energy) + " / " + maxEnergy;
       }
 
       function updateMissionUI() {
@@ -1706,18 +1772,27 @@
       function hideGameOverModal(){ gameOverModal.classList.remove("show"); }
 
       function showGameOverModal(){
-        const canRevive = (!revivedThisRun && walletCoins >= CFG_REVIVE_COST);
-        reviveBtn.style.display = canRevive ? "block" : "none";
-        reviveBtn.textContent = canRevive
-          ? ("คืนชีพด้วย " + CFG_REVIVE_COST + " เหรียญ (คงเหลือ: " + walletCoins + ")")
-          : "";
+        const canFree = freeReviveAvailable && !freeReviveUsed;
+        const canPaid = (!paidReviveUsed && walletCoins >= CFG_REVIVE_COST);
+
+        reviveFreeBtn.style.display = canFree ? "block" : "none";
+        revivePaidBtn.style.display = canPaid ? "block" : "none";
+
+        if (canFree){
+          reviveFreeBtn.textContent = "คืนชีพฟรี (1 ครั้ง) • ไม่โดนหักคะแนน/เหรียญ";
+        }
+        if (canPaid){
+          revivePaidBtn.textContent =
+            "คืนชีพด้วย " + CFG_REVIVE_COST + " เหรียญ (คงเหลือ: " + walletCoins + ")";
+        }
 
         modalStats.innerHTML =
           "คะแนน: <b>" + score + "</b><br/>" +
           "เหรียญรอบนี้: <b>" + runCoins + "</b><br/>" +
           "เหรียญสะสมทั้งหมด: <b>" + walletCoins + "</b><br/>" +
-          "Energy เหลือ: <b>" + Math.round(energy) + "</b><br/>" +
-          (postReviveActive ? "<br/><b>โหมดหลังคืนชีพ:</b> คะแนน -15% / เหรียญ -50% (ปัดขึ้น)" : "");
+          "Energy เหลือ: <b>" + Math.round(energy) + "</b> / " + maxEnergy + "<br/>" +
+          (passiveId !== "none" ? ("<br/><b>Passive:</b> " + passiveName) : "") +
+          (postReviveActive ? "<br/><br/><b>โหมดหลังคืนชีพ(เหรียญ):</b> คะแนน -15% / เหรียญ -50% (ปัดขึ้น)" : "");
 
         gameOverModal.classList.add("show");
       }
@@ -1780,6 +1855,9 @@
       }
 
       function addCoins(base){
+        // ✅ passive coin x2
+        base = Math.round(base * coinMult);
+
         if (!postReviveActive){
           runCoins += base;
           walletCoins += base;
@@ -1795,6 +1873,70 @@
           walletCoins += gain;
           saveWallet();
         }
+      }
+
+      function resetPassives(){
+        passiveId = "none";
+        passiveName = "";
+        coinMult = 1;
+        energyCostMult = 1;
+        holeGuard = false;
+
+        freeReviveAvailable = false;
+        freeReviveUsed = false;
+      }
+
+      function applyStartItemsForThisRun(){
+        if (startItemsAppliedThisRun) return [];
+        startItemsAppliedThisRun = true;
+
+        const notes = [];
+
+        // 1) Start Energy 150
+        if (runItemsInv.startEnergy150 > 0){
+          runItemsInv.startEnergy150 -= 1;
+          maxEnergy = CFG_START_ENERGY_UP_MAX;
+          energy = maxEnergy;
+          notes.push("🔋 Start Energy 150 (เหลือ " + runItemsInv.startEnergy150 + ")");
+        }
+
+        // 2) Start Boost 5s
+        if (runItemsInv.startBoost5 > 0){
+          runItemsInv.startBoost5 -= 1;
+
+          boostActive = true;
+          boostTimer = Math.max(boostTimer, CFG_START_BOOST_MS);
+
+          invincible = true;
+          invincibleTimer = Math.max(invincibleTimer, CFG_START_BOOST_MS);
+          player.classList.add("invincible");
+
+          notes.push("⚡ Start Boost 5s (เหลือ " + runItemsInv.startBoost5 + ")");
+        }
+
+        // 3) Passive Box (random 1 effect)
+        if (runItemsInv.passiveBox > 0){
+          runItemsInv.passiveBox -= 1;
+
+          const passives = [
+            { id:"coin2x", name:"เหรียญ x2", apply:()=>{ coinMult = 2; } },
+            { id:"energy15", name:"ใช้พลังงาน -15%", apply:()=>{ energyCostMult = 0.85; } },
+            { id:"freeRevive", name:"คืนชีพฟรี 1 ครั้ง (ไม่โดนหัก)", apply:()=>{ freeReviveAvailable = true; } },
+            { id:"holeGuard", name:"กันตกหลุมทุกกรณี", apply:()=>{ holeGuard = true; } },
+          ];
+
+          const pick = passives[Math.floor(Math.random() * passives.length)];
+          resetPassives(); // ให้ 1 กล่อง = 1 passive ต่อเกม (ไม่ซ้อนหลายอันในเกมเดียว)
+          passiveId = pick.id;
+          passiveName = pick.name;
+          pick.apply();
+
+          notes.push("🎁 Passive: " + passiveName + " (เหลือ " + runItemsInv.passiveBox + ")");
+        }
+
+        saveRunItems(runItemsInv);
+        updateEnergyUI();
+        return notes;
       }
 
       function prepareNewRun(){
@@ -1822,7 +1964,12 @@
 
         resetPowerupsAndVFX();
 
-        energy = CFG_MAX_ENERGY;
+        // ✅ base maxEnergy reset per run
+        maxEnergy = CFG_MAX_ENERGY;
+        energy = maxEnergy;
+
+        resetPassives();
+        startItemsAppliedThisRun = false;
 
         timeSinceLastObstacle = 0;
         nextSpawnIn = 900 + Math.random() * 700;
@@ -1843,7 +1990,7 @@
         obstacleWaveLeft = 0;
         obstacleRestLeft = 900;
 
-        revivedThisRun = false;
+        paidReviveUsed = false;
         postReviveActive = false;
         postScoreAcc = 0; postScoreCredited = 0;
         postCoinAcc = 0;  postCoinCredited = 0;
@@ -1931,9 +2078,16 @@
         isPaused = false;
         setStatus("RUN");
 
-        messageEl.textContent = postReviveActive
-          ? "ต่อจากนี้โหมดหลังคืนชีพ: คะแนน -15% / เหรียญ -50% (ปัดขึ้น)"
+        // ✅ consume start items here (1 per run)
+        const notes = applyStartItemsForThisRun();
+
+        const baseMsg = postReviveActive
+          ? "ต่อจากนี้โหมดหลังคืนชีพ(เหรียญ): คะแนน -15% / เหรียญ -50% (ปัดขึ้น)"
           : "หลบอุปสรรคและหลุมกับดักให้ได้มากที่สุด!";
+
+        messageEl.textContent = notes.length
+          ? (baseMsg + " • " + notes.join(" • "))
+          : baseMsg;
 
         spawnObstacle();
         lastTime = null;
@@ -2182,39 +2336,32 @@
         collectibles.push(c);
       }
 
-      // ✅✅ Jelly trail: "ไต่ขึ้น-ลง" แบบขั้นบันได + ช่วงราบ
+      // ✅✅ Jelly trail
       function spawnJellyTrail(){
         if (collectibles.length > 100) return;
 
         const bottoms = [groundY + 60, groundY + 110, groundY + 150];
 
-        // จำนวนชิ้น + ระยะห่าง
         const count = randInt(10, 18);
         const spacing = randomBetween(52, 70);
         const startLeft = gameContainer.offsetWidth + 10;
 
-        // เริ่มเลนและทิศทาง
         let lane = randInt(0, 2);
         let dir = Math.random() < 0.5 ? 1 : -1;
 
-        // ความยาวช่วงต่อเลน (ทำให้มีช่วงราบก่อนจะไต่)
         let segLen = randInt(2, 4);
         let segLeft = segLen;
 
         for (let i = 0; i < count; i++){
-          // เปลี่ยนเลนแบบค่อยเป็นค่อยไป (ทีละ 1) หลังครบ seg
           if (i > 0) {
             segLeft -= 1;
             if (segLeft <= 0) {
-              // โอกาส “ขยับเลน” เพื่อไต่ขึ้น/ลง (สูง) หรือ “คงเลน” เพื่อให้มีช่วงพัก (ราบ)
-              const willStep = Math.random() < 0.78; // 78% ขยับ, 22% อยู่เลนเดิม
+              const willStep = Math.random() < 0.78;
               if (willStep) lane += dir;
 
-              // ชนขอบแล้วเด้งกลับ
               if (lane <= 0) { lane = 0; dir = 1; }
               if (lane >= 2) { lane = 2; dir = -1; }
 
-              // บางครั้งสุ่มกลับทิศทาง เพื่อให้เป็นขึ้น-ลงสลับกัน
               if (Math.random() < 0.28) dir *= -1;
 
               segLen = randInt(2, 4);
@@ -2226,7 +2373,6 @@
           c.classList.add("jelly");
           c.textContent = "🍬";
 
-          // ใส่ jitter เล็ก ๆ ให้ดูเป็นเส้นทางลื่น ๆ ไม่แข็งทื่อ
           const jitterY = randomBetween(-6, 6);
           const bottom = bottoms[lane] + jitterY;
 
@@ -2315,7 +2461,7 @@
         }
         else if (c.classList.contains("energy")) {
           const gain = parseInt(c.dataset.energy || "20", 10);
-          energy = Math.min(CFG_MAX_ENERGY, energy + gain);
+          energy = Math.min(maxEnergy, energy + gain);
 
           if (c.classList.contains("large")) {
             const before = speed;
@@ -2398,7 +2544,8 @@
               if (hitIFramesTimer > 0) return true;
 
               const isAir = obs.classList.contains("air") || obs.classList.contains("ceiling");
-              const dmg = isAir ? CFG_DAMAGE_AIR : CFG_DAMAGE_GROUND;
+              const dmgBase = isAir ? CFG_DAMAGE_AIR : CFG_DAMAGE_GROUND;
+              const dmg = dmgBase * energyCostMult; // ✅ passive -15%
 
               energy -= dmg;
               unlockAudioOnce();
@@ -2607,6 +2754,9 @@
           if (hRight > playerStyleLeft + 5 && hLeft < playerStyleRight - 5) holeUnder = true;
         });
 
+        // ✅ passive: กันตกหลุมทุกกรณี
+        if (holeGuard) holeUnder = false;
+
         if (playerY <= supportY) {
           if (!(supportY === groundY && holeUnder)) {
             playerY = supportY;
@@ -2630,6 +2780,7 @@
       }
 
       function checkHoleTrap() {
+        if (holeGuard) return; // ✅ passive กันตกหลุม
         if (playerY < CFG_TRAP_Y) endGame();
       }
 
@@ -2684,7 +2835,8 @@
         lastTime = timestamp;
 
         if (!invincible) {
-          energy -= CFG_ENERGY_DECAY_PER_SEC * (delta / 1000);
+          // ✅ passive ลดการใช้พลังงาน 15%
+          energy -= (CFG_ENERGY_DECAY_PER_SEC * energyCostMult) * (delta / 1000);
           if (energy <= 0) {
             energy = 0;
             updateEnergyUI();
@@ -2712,7 +2864,7 @@
             player.classList.remove("invincible");
             cheatTimerEl.textContent = "";
             if (!boostActive) messageEl.textContent = postReviveActive
-              ? "โหมดหลังคืนชีพยังอยู่: คะแนน -15% / เหรียญ -50% (ปัดขึ้น)"
+              ? "โหมดหลังคืนชีพ(เหรียญ)ยังอยู่: คะแนน -15% / เหรียญ -50% (ปัดขึ้น)"
               : "โหมดอมตะหมดแล้ว! ระวังให้ดี 😈";
           } else if (invincibleTimer <= 3000) {
             cheatTimerEl.textContent = "นับถอยหลังโหมดอมตะ: " + Math.ceil(invincibleTimer / 1000) + " วิ";
@@ -2784,29 +2936,12 @@
         showGameOverModal();
       }
 
-      function reviveNow(){
-        if (!gameOver) return;
-        if (revivedThisRun) return;
-        if (walletCoins < CFG_REVIVE_COST) return;
-
-        unlockAudioOnce();
-        playSFX(Sounds.revive);
-
-        walletCoins -= CFG_REVIVE_COST;
-        saveWallet();
-        updateCoinsUI();
-
-        revivedThisRun = true;
-        postReviveActive = true;
-
-        postScoreAcc = 0; postScoreCredited = 0;
-        postCoinAcc  = 0; postCoinCredited  = 0;
-
+      function reviveCommon(){
         hideGameOverModal();
         clearArrays();
         resetPowerupsAndVFX();
 
-        energy = clamp(CFG_REVIVE_ENERGY, 1, CFG_MAX_ENERGY);
+        energy = clamp(CFG_REVIVE_ENERGY, 1, maxEnergy);
         updateEnergyUI();
 
         invincible = true;
@@ -2843,13 +2978,47 @@
         isPaused = false;
         setStatus("RUN");
 
-        messageEl.textContent = "คืนชีพแล้ว! ต่อจากนี้คะแนน -15% / เหรียญ -50% (ปัดขึ้น)";
-
         bgmPlay();
         lastTime = null;
         frameId = requestAnimationFrame(gameLoop);
 
         spawnObstacle();
+      }
+
+      function revivePaid(){
+        if (!gameOver) return;
+        if (paidReviveUsed) return;
+        if (walletCoins < CFG_REVIVE_COST) return;
+
+        unlockAudioOnce();
+        playSFX(Sounds.revive);
+
+        walletCoins -= CFG_REVIVE_COST;
+        saveWallet();
+        updateCoinsUI();
+
+        paidReviveUsed = true;
+        postReviveActive = true;
+
+        postScoreAcc = 0; postScoreCredited = 0;
+        postCoinAcc  = 0; postCoinCredited  = 0;
+
+        messageEl.textContent = "คืนชีพด้วยเหรียญแล้ว! ต่อจากนี้คะแนน -15% / เหรียญ -50% (ปัดขึ้น)";
+        reviveCommon();
+      }
+
+      function reviveFree(){
+        if (!gameOver) return;
+        if (!freeReviveAvailable || freeReviveUsed) return;
+
+        unlockAudioOnce();
+        playSFX(Sounds.revive);
+
+        freeReviveUsed = true;
+
+        // ✅ free revive: NO penalty, and doesn't consume paid revive
+        messageEl.textContent = "คืนชีพฟรีแล้ว! (ไม่โดนหักคะแนน/เหรียญ)";
+        reviveCommon();
       }
 
       function handleJump() {
@@ -2966,7 +3135,8 @@
       restartBtn.addEventListener("click", prepareNewRun);
       restartOutsideBtn.addEventListener("click", prepareNewRun);
 
-      reviveBtn.addEventListener("click", reviveNow);
+      revivePaidBtn.addEventListener("click", revivePaid);
+      reviveFreeBtn.addEventListener("click", reviveFree);
 
       document.addEventListener("keydown", (e) => {
         if (e.code === "KeyP") {
@@ -3095,7 +3265,7 @@
           shopGrid.appendChild(n);
         };
 
-        const addItem = (item, kind, unlocked, selected, swatchStyle) => {
+        const addThemeItem = (item, kind, unlocked, selected, swatchStyle) => {
           const el = document.createElement("div");
           el.className = "shop-item";
           const priceText = item.price === 0 ? "ฟรี" : (item.price + " เหรียญ");
@@ -3115,19 +3285,44 @@
           shopGrid.appendChild(el);
         };
 
+        const addRunItemCard = (item) => {
+          const el = document.createElement("div");
+          el.className = "shop-item";
+          const priceText = item.price === 0 ? "ฟรี" : (item.price + " เหรียญ");
+          const owned = runItemsInv[item.id] || 0;
+
+          el.innerHTML = `
+            <h3><span class="swatch" style="${item.swatch}"></span>${item.name}</h3>
+            <p>${item.desc}</p>
+            <div class="shop-row">
+              <div>
+                <div class="price">${priceText}</div>
+                <div class="owned">ครอบครอง: <b>${owned}</b></div>
+              </div>
+              <div style="display:flex; gap:10px; align-items:center;">
+                <button class="shop-action" data-kind="run" data-act="buy" data-id="${item.id}" ${walletCoins < item.price ? "disabled" : ""}>ซื้อ</button>
+              </div>
+            </div>
+          `;
+          shopGrid.appendChild(el);
+        };
+
         addSection("Background Themes", "ธีมสีฉากหลังสนาม (อนาคตใส่รูปภาพได้)");
         Backdrops.forEach(b=>{
           const unlocked = !!unlockedBackdrops[b.id];
           const selected = (selectedBackdrop === b.id);
-          addItem(b, "backdrop", unlocked, selected, swatchBackdrop(b));
+          addThemeItem(b, "backdrop", unlocked, selected, swatchBackdrop(b));
         });
 
         addSection("Obstacle Themes", "ธีมสีของอุปสรรค (ใช้ตัวแปร CSS เปลี่ยนได้ทันที)");
         ObstacleThemes.forEach(t=>{
           const unlocked = !!unlockedObsThemes[t.id];
           const selected = (selectedObsTheme === t.id);
-          addItem(t, "obstacle", unlocked, selected, swatchObstacle(t));
+          addThemeItem(t, "obstacle", unlocked, selected, swatchObstacle(t));
         });
+
+        addSection("Run Items", "ไอเท็มใช้ 1 เกม/ชิ้น • ซื้อสะสมได้ • ถ้ามีจะถูกบังคับใช้ตอนเริ่มเกมอัตโนมัติจนกว่าจะหมด");
+        RunItems.forEach(addRunItemCard);
       }
 
       function openShop(){
@@ -3161,6 +3356,23 @@
         const id = btn.getAttribute("data-id");
         const act = btn.getAttribute("data-act");
         const kind = btn.getAttribute("data-kind");
+
+        if (kind === "run" && act === "buy"){
+          const item = RunItems.find(x=>x.id===id);
+          if (!item) return;
+          if (walletCoins < item.price) return;
+
+          walletCoins -= item.price;
+          saveWallet();
+          updateCoinsUI();
+
+          runItemsInv[id] = (runItemsInv[id] || 0) + 1;
+          saveRunItems(runItemsInv);
+
+          playSFX(Sounds.click);
+          renderShop();
+          return;
+        }
 
         const list = (kind === "obstacle") ? ObstacleThemes : Backdrops;
         const item = list.find(x=>x.id===id);
