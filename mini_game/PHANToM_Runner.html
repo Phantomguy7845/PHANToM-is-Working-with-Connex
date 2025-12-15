@@ -259,7 +259,7 @@
       filter: drop-shadow(0 0 16px rgba(56,189,248,0.8));
     }
 
-    #player.duck { transform: translateY(-8px) scaleY(0.5); }
+    #player.duck { transform: translateY(-8px) scaleY(0.48); }
     #player.duck img { filter: drop-shadow(0 0 14px rgba(56,189,248,0.9)); }
 
     #player.invincible img {
@@ -421,12 +421,12 @@
       font-size: 18px;
       transform: scale(1);
     }
-    .collectible.energy.small  { transform: scale(0.5); }
-    .collectible.energy.medium { transform: scale(1.0); }
+    .collectible.energy.small  { transform: scale(0.75); }
+    .collectible.energy.medium { transform: scale(1.25); }
 
     /* ✅ Big heart: GOLD + 2x size */
     .collectible.energy.large  {
-      transform: scale(2.0);
+      transform: scale(2.2);
       background: radial-gradient(circle at 30% 20%, #fff7d6, #fde047, #f59e0b);
       box-shadow:
         0 0 26px rgba(250,204,21,0.65),
@@ -1247,12 +1247,12 @@
       const CFG_MAX_JUMPS = 2;
 
       const CFG_MAX_ENERGY = 100;
-      const CFG_ENERGY_DECAY_PER_SEC = 6;
-      const CFG_DAMAGE_GROUND = 15;
-      const CFG_DAMAGE_AIR = 20;
+      const CFG_ENERGY_DECAY_PER_SEC = 5;
+      const CFG_DAMAGE_GROUND = 17;
+      const CFG_DAMAGE_AIR = 28;
 
       const CFG_START_SPEED = 6;
-      const CFG_MAX_SPEED = 18;
+      const CFG_MAX_SPEED = 20;
 
       const CFG_BOOST_MULTIPLIER = 1.6;
 
@@ -1264,18 +1264,18 @@
       const CFG_TRAP_Y = -60;
 
       const CFG_CHEAT_INVINCIBLE_DURATION = 10000;
-      const CFG_MAGNET_DURATION = 5000;
+      const CFG_MAGNET_DURATION = 3500;
 
       const CFG_BOOST_DURATION = 5150;
       const CFG_GIANT_DURATION = 3800;
 
-      const CFG_MAGNET_RADIUS = 400;
+      const CFG_MAGNET_RADIUS = 350;
 
-      const CFG_HEART_SMALL_GAIN = 3.5;
-      const CFG_HEART_MEDIUM_GAIN = 8;
-      const CFG_HEART_LARGE_GAIN = 35;
+      const CFG_HEART_SMALL_GAIN = 4;
+      const CFG_HEART_MEDIUM_GAIN = 12;
+      const CFG_HEART_LARGE_GAIN = 40;
 
-      const CFG_SPEED_UP_ON_BIG_HEART = 0.9;
+      const CFG_SPEED_UP_ON_BIG_HEART = 1.2;
 
       const CFG_MISSION_COIN_TARGET = 20;
       const CFG_MISSION_DJ_TARGET = 10;
