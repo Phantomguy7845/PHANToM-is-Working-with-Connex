@@ -278,6 +278,15 @@
     #player.double-jump img { animation: djumpSpin 0.2s linear; }
     @keyframes djumpSpin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
 
+    /* ✅ Hurt i-frame blink (slow) */
+    #player.hurt-blink{
+      animation: hurtBlink 0.60s linear infinite;
+    }
+    @keyframes hurtBlink{
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.25; }
+    }
+
     /* Boost beam */
     #boostBeam {
       position: absolute;
@@ -1266,7 +1275,10 @@
 
       const CFG_HIT_SLOW_FACTOR = 0.75;
       const CFG_HIT_SLOW_DURATION = 650;
-      const CFG_HIT_IFRAMES = 350;
+
+      // ✅ กันชนซ้ำ 2.5 วิ เมื่อโดนชน (เฉพาะตอน "โดนชน")
+      const CFG_HIT_IFRAMES = 350; // คงไว้ใช้กับกรณีอื่น เช่น revive
+      const CFG_HIT_IFRAMES_ON_HIT = 2500;
 
       const CFG_HOLE_CHANCE = 0.18;
       const CFG_TRAP_Y = -60;
@@ -1297,7 +1309,7 @@
       const CFG_HEART_BASE_INTERVAL = 2500;
       const CFG_HEART_MIN_INTERVAL  = 1450;
 
-      /* ✅ Magnet spawn interval (ตอบคำถามคุณอยู่ท้ายข้อความ) */
+      /* ✅ Magnet spawn interval */
       const CFG_MAGNET_BASE_INTERVAL = 4500;
       const CFG_MAGNET_MIN_INTERVAL  = 2900;
 
@@ -1321,10 +1333,10 @@
       const CFG_BG_MAX_MS = 37500;
 
       /* ===== Shop: Power Items + Passive ===== */
-      const CFG_SHOP_START_ENERGY_MAX = 150;     // ใช้กับไอเท็มเริ่มเกม
-      const CFG_SHOP_START_BOOST_MS   = 5000;    // Boost ตอนเริ่มเกม 5 วิ
-      const CFG_PASSIVE_BOX_BASE_PRICE = 150;    // ตั้งเป็นค่าเริ่มต้นก่อน
-      const CFG_PASSIVE_DUPLICATE_DISCOUNT = 0.85; // ถ้าสุ่มซ้ำ -> ครั้งถัดไปลด 15%
+      const CFG_SHOP_START_ENERGY_MAX = 150;
+      const CFG_SHOP_START_BOOST_MS   = 5000;
+      const CFG_PASSIVE_BOX_BASE_PRICE = 150;
+      const CFG_PASSIVE_DUPLICATE_DISCOUNT = 0.85;
 
       const LS_BEST = "phantom_runner_best";
       const LS_WALLET = "phantom_runner_wallet_coins";
@@ -1676,7 +1688,6 @@
 
       let isDucking = false;
 
-      // ✅ maxEnergy ต่อรอบ (ร้านค้าเพิ่มเป็น 150 ได้)
       let maxEnergyRun = CFG_MAX_ENERGY;
       let energy = CFG_MAX_ENERGY;
 
@@ -1740,7 +1751,6 @@
 
       let cheatEvents = [];
 
-      // paid revive state
       let revivedThisRun = false;
       let postReviveActive = false;
       let postScoreAcc = 0;
@@ -1748,15 +1758,13 @@
       let postCoinAcc = 0;
       let postCoinCredited = 0;
 
-      // passive/run modifiers
       let runPassiveId = "none";
       let runCoinMult = 1;
-      let runEnergyMult = 1;       // 0.85 if energySaver
+      let runEnergyMult = 1;
       let runFreeReviveAvailable = false;
       let freeReviveUsedThisRun = false;
       let runHoleShield = false;
 
-      // planned consumables for the next run start
       let plannedUseEnergy150 = false;
       let plannedUseStartBoost = false;
 
@@ -1867,7 +1875,7 @@
         hitSlowTimer = 0;
         hitIFramesTimer = 0;
 
-        player.classList.remove("invincible","giant");
+        player.classList.remove("invincible","giant","hurt-blink");
         cheatTimerEl.textContent = "";
 
         if (boostBeam) {
@@ -1909,7 +1917,6 @@
       }
 
       function setupRunModifiersForNextStart(){
-        // passive is forced per game
         runPassiveId = currentPassiveId;
 
         runCoinMult = (runPassiveId === "coin2x") ? 2 : 1;
@@ -1920,7 +1927,6 @@
 
         runHoleShield = (runPassiveId === "holeShield");
 
-        // consumables planned (consume on beginRun)
         plannedUseEnergy150 = (powerInv.energy150 > 0);
         plannedUseStartBoost = (powerInv.startBoost > 0);
       }
@@ -1948,7 +1954,6 @@
         updateEnergyUI();
         updateCoinsUI();
 
-        // apply start boost AFTER energy is set
         if (plannedUseStartBoost){
           activateBoost(CFG_SHOP_START_BOOST_MS, true);
         }
@@ -1974,7 +1979,7 @@
         jumpsLeft = CFG_MAX_JUMPS;
 
         isDucking = false;
-        player.classList.remove("duck", "invincible", "giant", "double-jump");
+        player.classList.remove("duck", "invincible", "giant", "double-jump", "hurt-blink");
         player.style.bottom = playerY + "px";
 
         resetPowerupsAndVFX();
@@ -2006,7 +2011,6 @@
         postScoreAcc = 0; postScoreCredited = 0;
         postCoinAcc = 0;  postCoinCredited = 0;
 
-        // reset run modifiers (will set again when startCountdown begins)
         runPassiveId = "none";
         runCoinMult = 1;
         runEnergyMult = 1;
@@ -2049,7 +2053,6 @@
 
         countdownMode = isResume ? "resume" : "start";
 
-        // ✅ when starting a new run, lock passive + planned consumables
         if (!isResume){
           setupRunModifiersForNextStart();
         }
@@ -2107,7 +2110,6 @@
         isPaused = false;
         setStatus("RUN");
 
-        // apply consumables now (consume inventory per game)
         applyConsumablesOnBeginRun();
 
         let msg = postReviveActive
@@ -2201,7 +2203,6 @@
       function spawnObstacle() {
         const roll = Math.random();
 
-        // ✅ ceiling stalactites: ปรับให้ “หมอบแล้วหลบได้แน่ๆ” โดยยึดจาก TOP แล้วปล่อยลงมา
         if (roll < 0.18) {
           const obs = document.createElement("div");
           obs.classList.add("obstacle", "ceiling");
@@ -2212,8 +2213,6 @@
 
           const width  = randomBetween(34, 52);
 
-          // ความยาวปลายห้อยลงมา (ยิ่งมากยิ่งต่ำ)
-          // กำหนดให้ “ปลายล่าง” ประมาณ 92–104px จากด้านบนของ container
           const top = 0;
           const height = randomBetween(92, 104);
 
@@ -2331,16 +2330,25 @@
         collectibles.push(c);
       }
 
-      function spawnSmallMediumHeart() {
+      // ✅ หัวใจ “small” เป็นตัวหลัก (medium จะย้ายไป rare pool)
+      function spawnSmallHeart() {
         const c = makeCollectibleBase();
-        c.classList.add("energy");
-        const sizes = ["small","medium"];
-        const gains = [CFG_HEART_SMALL_GAIN, CFG_HEART_MEDIUM_GAIN];
-        const idx = Math.floor(Math.random() * sizes.length);
-        c.classList.add(sizes[idx]);
-        c.dataset.energy = String(gains[idx]);
+        c.classList.add("energy", "small");
+        c.dataset.energy = String(CFG_HEART_SMALL_GAIN);
         c.textContent = "❤️";
         setCollectibleLane(c);
+        gameContainer.appendChild(c);
+        collectibles.push(c);
+      }
+
+      // ✅ หัวใจ medium = rare เท่ากับ boost/giant (ดู updateSpawners)
+      function spawnMediumHeartRare() {
+        const c = makeCollectibleBase();
+        c.classList.add("energy", "medium");
+        c.dataset.energy = String(CFG_HEART_MEDIUM_GAIN);
+        c.textContent = "❤️";
+        const lane = (Math.random() < 0.55) ? 1 : 2;
+        setCollectibleLane(c, lane);
         gameContainer.appendChild(c);
         collectibles.push(c);
       }
@@ -2379,7 +2387,6 @@
         collectibles.push(c);
       }
 
-      // ✅✅ Jelly trail: "ไต่ขึ้น-ลง" แบบขั้นบันได + ช่วงราบ
       function spawnJellyTrail(){
         if (collectibles.length > 100) return;
 
@@ -2489,6 +2496,7 @@
         invincibleTimer = Math.max(invincibleTimer, durationMs);
 
         player.classList.add("invincible");
+        player.classList.remove("hurt-blink"); // กันซ้อนเอฟเฟกต์
         unlockAudioOnce();
         playSFX(Sounds.powerup);
 
@@ -2592,6 +2600,7 @@
               obs.remove();
               return false;
             } else {
+              // ✅ กันชนซ้ำ 2.5 วิ
               if (hitIFramesTimer > 0) return true;
 
               const isAir = obs.classList.contains("air") || obs.classList.contains("ceiling");
@@ -2601,6 +2610,10 @@
               energy -= dmg;
               unlockAudioOnce();
               playSFX(Sounds.hit);
+
+              // ✅ เริ่มกระพริบช้าๆ + เปิด i-frames 2.5s
+              hitIFramesTimer = CFG_HIT_IFRAMES_ON_HIT;
+              player.classList.add("hurt-blink");
 
               if (energy <= 0) {
                 energy = 0;
@@ -2612,7 +2625,6 @@
               updateEnergyUI();
               triggerHitVFX();
               hitSlowTimer = CFG_HIT_SLOW_DURATION;
-              hitIFramesTimer = CFG_HIT_IFRAMES;
 
               obs.style.opacity = "0.4";
               setTimeout(() => { if (obs && obs.style) obs.style.opacity = "1"; }, 120);
@@ -2806,7 +2818,6 @@
         });
 
         if (playerY <= supportY) {
-          // ✅ Passive holeShield: treat hole as solid ground
           if (!(supportY === groundY && holeUnder && !runHoleShield)) {
             playerY = supportY;
             jumpVelocity = 0;
@@ -2848,10 +2859,11 @@
           timeSinceLastJelly = 0;
         }
 
+        // ✅ Heart normal spawner: โยนเฉพาะ small (medium ถูกย้ายไป rare เท่ากับ boost/giant)
         timeSinceLastHeart += delta;
         const heartInterval = Math.max(CFG_HEART_MIN_INTERVAL, CFG_HEART_BASE_INTERVAL - Math.floor(score/6)*12);
         if (timeSinceLastHeart >= heartInterval) {
-          spawnSmallMediumHeart();
+          spawnSmallHeart();
           timeSinceLastHeart = 0;
         }
 
@@ -2868,9 +2880,17 @@
           timeSinceLastMagnet = 0;
         }
 
+        // ✅ Rare pool (Boost/Giant) + ✅ Medium Heart rarity เท่ากับ Boost/Giant
         timeSinceLastBG += delta;
         if (timeSinceLastBG >= nextBGIn) {
+          // spawn boost/giant as before
           spawnBoostOrGiant();
+
+          // ✅ medium heart rarity = boost OR giant (50% chance per rare event)
+          if (Math.random() < 0.5) {
+            spawnMediumHeartRare();
+          }
+
           timeSinceLastBG = 0;
           nextBGIn = randomBetween(CFG_BG_MIN_MS, CFG_BG_MAX_MS);
         }
@@ -2911,9 +2931,6 @@
             invincible = false;
             player.classList.remove("invincible");
             cheatTimerEl.textContent = "";
-            if (!boostActive) messageEl.textContent = postReviveActive
-              ? "โหมดหลังคืนชีพ (เหรียญ) ยังอยู่: คะแนน -15% / เหรียญ -50% (ปัดขึ้น)"
-              : "โหมดอมตะหมดแล้ว! ระวังให้ดี 😈";
           } else if (invincibleTimer <= 3000) {
             cheatTimerEl.textContent = "นับถอยหลังโหมดอมตะ: " + Math.ceil(invincibleTimer / 1000) + " วิ";
           }
@@ -2942,9 +2959,13 @@
           if (hitSlowTimer < 0) hitSlowTimer = 0;
         }
 
+        // ✅ ลด i-frames + ปิด blink เมื่อครบ 2.5 วิ
         if (hitIFramesTimer > 0) {
           hitIFramesTimer -= delta;
-          if (hitIFramesTimer < 0) hitIFramesTimer = 0;
+          if (hitIFramesTimer <= 0) {
+            hitIFramesTimer = 0;
+            player.classList.remove("hurt-blink");
+          }
         }
 
         frameId = requestAnimationFrame(gameLoop);
@@ -3002,11 +3023,9 @@
           postScoreAcc = 0; postScoreCredited = 0;
           postCoinAcc  = 0; postCoinCredited  = 0;
         } else {
-          // free revive
           if (!runFreeReviveAvailable || freeReviveUsedThisRun) return;
           freeReviveUsedThisRun = true;
 
-          // do NOT force-enable postReviveActive
           if (applyPenalty){
             postReviveActive = true;
             postScoreAcc = 0; postScoreCredited = 0;
@@ -3027,9 +3046,10 @@
         invincible = true;
         invincibleTimer = Math.max(invincibleTimer, CFG_REVIVE_INVINCIBLE_MS);
         player.classList.add("invincible");
+        player.classList.remove("hurt-blink");
 
         hitSlowTimer = 0;
-        hitIFramesTimer = CFG_HIT_IFRAMES;
+        hitIFramesTimer = CFG_HIT_IFRAMES; // คงไว้ (ไม่จำเป็นต้อง 2.5s ใน revive)
 
         playerY = groundY;
         prevPlayerY = groundY;
@@ -3141,6 +3161,7 @@
         invincible = true;
         invincibleTimer = Math.max(invincibleTimer, CFG_CHEAT_INVINCIBLE_DURATION);
         player.classList.add("invincible");
+        player.classList.remove("hurt-blink");
         cheatTimerEl.textContent = "โหมดโกง: PHANToM อมตะ 10 วิ 🎃";
         messageEl.textContent = "โหมดโกงเปิดแล้ว! ชนอะไรก็ไม่ตาย 10 วิ";
       }
@@ -3305,7 +3326,6 @@
       function renderShop(){
         shopWalletCoins.textContent = String(walletCoins);
 
-        const passiveObj = getPassiveObj(currentPassiveId);
         const pricePassive = getPassiveBoxPrice(passiveDiscountSteps);
         const discountPct = passiveDiscountSteps > 0
           ? Math.round((1 - Math.pow(CFG_PASSIVE_DUPLICATE_DISCOUNT, passiveDiscountSteps)) * 100)
