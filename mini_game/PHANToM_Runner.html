@@ -416,12 +416,12 @@
     }
 
     .collectible.energy {
-      background: radial-gradient(circle at 30% 20%, #ffe4e6, #fb7185, #ef4444);
+      background: radial-gradient(circle at 30% 20%, #99FFCC, #00FFFF, #FFFFCC);
       box-shadow: 0 0 18px rgba(248, 113, 113, 0.38), inset 0 1px 0 rgba(255,255,255,0.14);
       font-size: 18px;
       transform: scale(1);
     }
-    .collectible.energy.small  { transform: scale(0.85); }
+    .collectible.energy.small  { transform: scale(0.5); }
     .collectible.energy.medium { transform: scale(1.0); }
 
     /* ✅ Big heart: GOLD + 2x size */
@@ -1247,17 +1247,17 @@
       const CFG_MAX_JUMPS = 2;
 
       const CFG_MAX_ENERGY = 100;
-      const CFG_ENERGY_DECAY_PER_SEC = 4;
-      const CFG_DAMAGE_GROUND = 20;
-      const CFG_DAMAGE_AIR = 30;
+      const CFG_ENERGY_DECAY_PER_SEC = 6;
+      const CFG_DAMAGE_GROUND = 15;
+      const CFG_DAMAGE_AIR = 20;
 
       const CFG_START_SPEED = 6;
       const CFG_MAX_SPEED = 18;
 
       const CFG_BOOST_MULTIPLIER = 1.6;
 
-      const CFG_HIT_SLOW_FACTOR = 0.8;
-      const CFG_HIT_SLOW_DURATION = 500;
+      const CFG_HIT_SLOW_FACTOR = 0.75;
+      const CFG_HIT_SLOW_DURATION = 650;
       const CFG_HIT_IFRAMES = 350;
 
       const CFG_HOLE_CHANCE = 0.18;
@@ -1271,7 +1271,7 @@
 
       const CFG_MAGNET_RADIUS = 400;
 
-      const CFG_HEART_SMALL_GAIN = 2.5;
+      const CFG_HEART_SMALL_GAIN = 3.5;
       const CFG_HEART_MEDIUM_GAIN = 8;
       const CFG_HEART_LARGE_GAIN = 35;
 
@@ -1287,8 +1287,8 @@
       const CFG_HEART_BASE_INTERVAL = 1900;
       const CFG_HEART_MIN_INTERVAL  = 1050;
 
-      const CFG_MAGNET_BASE_INTERVAL = 3000;
-      const CFG_MAGNET_MIN_INTERVAL  = 2500;
+      const CFG_MAGNET_BASE_INTERVAL =4500;
+      const CFG_MAGNET_MIN_INTERVAL  = 2900;
 
       // ✅ Jelly trail (drops a lot)
       const CFG_JELLY_TRAIL_BASE_INTERVAL = 1650;
