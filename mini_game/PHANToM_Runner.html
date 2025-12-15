@@ -674,6 +674,82 @@
     #resumeBtnOverlay:hover{ border-color: rgba(99,102,241,0.65); }
     #resumeBtnOverlay:active{ transform: translateY(1px); }
 
+    /* ✅ Passive Popup (NEW) */
+    #passivePopup{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 14px;
+      z-index: 70;
+      background: rgba(2,6,23,0.72);
+      backdrop-filter: blur(4px);
+    }
+    #passivePopup.hidden{ display:none; }
+
+    .passive-card{
+      width: min(520px, 96vw);
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: rgba(15,23,42,0.94);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+      padding: 16px 16px 14px;
+      transform: translateY(0);
+      animation: popIn 0.12s ease-out;
+    }
+    @keyframes popIn{
+      from{ transform: translateY(6px) scale(0.98); opacity: 0.0; }
+      to{ transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .passive-title{
+      font-weight: 950;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color:#facc15;
+      text-shadow: 0 0 18px rgba(250,204,21,0.22);
+      margin-bottom: 6px;
+      font-size: 15px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .passive-desc{
+      font-size: 13px;
+      color:#e5e7eb;
+      line-height: 1.5;
+      margin-top: 6px;
+    }
+    .passive-note{
+      font-size: 12px;
+      color:#9ca3af;
+      margin-top: 10px;
+      line-height: 1.4;
+    }
+    .passive-actions{
+      margin-top: 12px;
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+    #passiveOkBtn{
+      padding: 10px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,0.35);
+      cursor:pointer;
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      background: linear-gradient(90deg, rgba(250,204,21,0.95), rgba(34,197,94,0.95));
+      color:#1b1302;
+      box-shadow: 0 12px 28px rgba(250,204,21,0.10);
+      user-select:none;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #passiveOkBtn:hover{ filter: brightness(1.05); transform: translateY(-1px); }
+    #passiveOkBtn:active{ transform: translateY(1px); }
+
     /* Game Over modal */
     #gameOverModal {
       position: fixed;
@@ -1126,6 +1202,18 @@
       <button id="resumeBtnOverlay">Resume</button>
       <div style="font-size:12px;color:#9ca3af;">กด P เพื่อ Resume (จะนับถอยหลัง 3 วิ)</div>
     </div>
+
+    <!-- ✅ Passive Popup (NEW) -->
+    <div id="passivePopup" class="hidden" aria-modal="true" role="dialog">
+      <div class="passive-card">
+        <div class="passive-title" id="passivePopupTitle">🎁 Passive Unlocked</div>
+        <div class="passive-desc" id="passivePopupDesc"></div>
+        <div class="passive-note" id="passivePopupNote">เกมจะหยุดชั่วคราวระหว่างดูผลสุ่ม</div>
+        <div class="passive-actions">
+          <button id="passiveOkBtn">OK</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div id="touchControls">
@@ -1324,6 +1412,9 @@
       const CFG_BG_MIN_MS = 25500; // keep
       const CFG_BG_MAX_MS = 37500;
 
+      // ✅ Passive Popup auto-close (NEW)
+      const CFG_PASSIVE_POPUP_AUTO_CLOSE_MS = 2600;
+
       const LS_BEST = "phantom_runner_best";
       const LS_WALLET = "phantom_runner_wallet_coins";
 
@@ -1396,6 +1487,14 @@
       const bgmPct = document.getElementById("bgmPct");
       const sfxPct = document.getElementById("sfxPct");
       const audioTestBtn = document.getElementById("audioTestBtn");
+
+      // ✅ Passive Popup elements (NEW)
+      const passivePopup = document.getElementById("passivePopup");
+      const passivePopupTitle = document.getElementById("passivePopupTitle");
+      const passivePopupDesc = document.getElementById("passivePopupDesc");
+      const passivePopupNote = document.getElementById("passivePopupNote");
+      const passiveOkBtn = document.getElementById("passiveOkBtn");
+      let passivePopupAutoTimer = null;
 
       function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
       function randomBetween(min, max) { return Math.random() * (max - min) + min; }
@@ -1809,6 +1908,7 @@
         startHintMini.textContent = "เริ่มเกมจะนับถอยหลัง 3 วินาที • กด Space ก็เริ่มได้";
         setStatus("READY");
       }
+
       function closeAllModals(){
         shopModal.classList.remove("show");
         soundModal.classList.remove("show");
@@ -1886,6 +1986,63 @@
         freeReviveUsed = false;
       }
 
+      // ✅ Passive Popup helpers (NEW)
+      function passiveInfo(id){
+        if (id === "coin2x") return { icon:"🤑", title:"เหรียญ x2", desc:"ทุกเหรียญที่ได้จากการเก็บในเกม จะคูณ 2 เข้ากระเป๋าทันที" };
+        if (id === "energy15") return { icon:"🔋", title:"ใช้พลังงาน -15%", desc:"การลดพลังงานต่อวินาที และความเสียหายจากชน จะลดลง 15%" };
+        if (id === "freeRevive") return { icon:"✨", title:"คืนชีพฟรี 1 ครั้ง", desc:"มีปุ่มคืนชีพฟรีเพิ่ม (ไม่โดนหักคะแนน/เหรียญ) และไม่ทับซ้อนกับคืนชีพด้วยเหรียญ" };
+        if (id === "holeGuard") return { icon:"🛡️", title:"กันตกหลุมทุกกรณี", desc:"หลุมกับดักจะไม่ทำให้ตกตาย (ถือว่าไม่มีหลุมใต้เท้า)" };
+        return { icon:"🎁", title:"Passive", desc:"ได้รับ Passive พิเศษ!" };
+      }
+
+      function showPassivePopup(id, name){
+        if (!passivePopup) return;
+
+        // clear old timer
+        if (passivePopupAutoTimer){
+          clearTimeout(passivePopupAutoTimer);
+          passivePopupAutoTimer = null;
+        }
+
+        const info = passiveInfo(id);
+        passivePopupTitle.textContent = "🎁 สุ่ม Passive ได้แล้ว!";
+        passivePopupDesc.innerHTML =
+          "<b style='color:#facc15;'>" + info.icon + " " + (name || info.title) + "</b><br/>" +
+          "<span style='color:#e5e7eb;'>" + info.desc + "</span>";
+
+        passivePopupNote.textContent = "แตะ OK เพื่อไปต่อ (ระบบหยุดเวลาเกมชั่วคราว)";
+        passivePopup.classList.remove("hidden");
+
+        // auto-close
+        passivePopupAutoTimer = setTimeout(() => {
+          hidePassivePopup();
+        }, CFG_PASSIVE_POPUP_AUTO_CLOSE_MS);
+      }
+
+      function hidePassivePopup(){
+        if (!passivePopup) return;
+        passivePopup.classList.add("hidden");
+        if (passivePopupAutoTimer){
+          clearTimeout(passivePopupAutoTimer);
+          passivePopupAutoTimer = null;
+        }
+      }
+
+      passiveOkBtn.addEventListener("click", ()=>{
+        unlockAudioOnce();
+        playSFX(Sounds.click);
+        hidePassivePopup();
+      });
+
+      passivePopup.addEventListener("click", (e)=>{
+        // click outside card = close
+        if (e.target === passivePopup){
+          unlockAudioOnce();
+          playSFX(Sounds.click);
+          hidePassivePopup();
+        }
+      });
+
       function applyStartItemsForThisRun(){
         if (startItemsAppliedThisRun) return [];
         startItemsAppliedThisRun = true;
@@ -1914,7 +2071,7 @@
           notes.push("⚡ Start Boost 5s (เหลือ " + runItemsInv.startBoost5 + ")");
         }
 
-        // 3) Passive Box (random 1 effect)
+        // 3) Passive Box (random 1 effect) + ✅ popup show result
         if (runItemsInv.passiveBox > 0){
           runItemsInv.passiveBox -= 1;
 
@@ -1932,6 +2089,9 @@
           pick.apply();
 
           notes.push("🎁 Passive: " + passiveName + " (เหลือ " + runItemsInv.passiveBox + ")");
+
+          // ✅ Show popup result
+          showPassivePopup(passiveId, passiveName);
         }
 
         saveRunItems(runItemsInv);
@@ -1942,6 +2102,7 @@
       function prepareNewRun(){
         cancelCountdown();
         closeAllModals();
+        hidePassivePopup();
         clearArrays();
         hideGameOverModal();
         hidePauseOverlay();
@@ -2830,6 +2991,13 @@
       function gameLoop(timestamp) {
         if (gameOver || isPaused || countdownTimer) return;
 
+        // ✅ Freeze game while passive popup is open (NEW)
+        if (passivePopup && !passivePopup.classList.contains("hidden")) {
+          lastTime = timestamp;
+          frameId = requestAnimationFrame(gameLoop);
+          return;
+        }
+
         if (!lastTime) lastTime = timestamp;
         const delta = timestamp - lastTime;
         lastTime = timestamp;
@@ -2910,6 +3078,7 @@
 
         cancelCountdown();
         closeAllModals();
+        hidePassivePopup();
         resetPowerupsAndVFX();
 
         if (frameId) cancelAnimationFrame(frameId);
@@ -2939,6 +3108,7 @@
       function reviveCommon(){
         hideGameOverModal();
         clearArrays();
+        hidePassivePopup();
         resetPowerupsAndVFX();
 
         energy = clamp(CFG_REVIVE_ENERGY, 1, maxEnergy);
@@ -3139,6 +3309,17 @@
       reviveFreeBtn.addEventListener("click", reviveFree);
 
       document.addEventListener("keydown", (e) => {
+        // ✅ if passive popup open, allow Space to close it
+        if (passivePopup && !passivePopup.classList.contains("hidden")){
+          if (e.code === "Space" || e.code === "Enter" || e.code === "Escape"){
+            e.preventDefault();
+            unlockAudioOnce();
+            playSFX(Sounds.click);
+            hidePassivePopup();
+          }
+          return;
+        }
+
         if (e.code === "KeyP") {
           e.preventDefault();
           if (isRunning && !gameOver){
