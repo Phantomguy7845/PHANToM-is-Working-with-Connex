@@ -674,7 +674,7 @@
     #resumeBtnOverlay:hover{ border-color: rgba(99,102,241,0.65); }
     #resumeBtnOverlay:active{ transform: translateY(1px); }
 
-    /* ✅ Passive Popup (NEW) */
+    /* ✅ Passive Popup */
     #passivePopup{
       position:absolute;
       inset:0;
@@ -1203,7 +1203,6 @@
       <div style="font-size:12px;color:#9ca3af;">กด P เพื่อ Resume (จะนับถอยหลัง 3 วิ)</div>
     </div>
 
-    <!-- ✅ Passive Popup (NEW) -->
     <div id="passivePopup" class="hidden" aria-modal="true" role="dialog">
       <div class="passive-card">
         <div class="passive-title" id="passivePopupTitle">🎁 Passive Unlocked</div>
@@ -1348,7 +1347,7 @@
       const CFG_MAX_JUMPS = 2;
 
       const CFG_MAX_ENERGY = 1000;            // base
-      const CFG_START_ENERGY_UP_MAX = 1500;   // ✅ start item: max energy 150 (per run)
+      const CFG_START_ENERGY_UP_MAX = 1500;   // start item: max energy 150 (per run)
       const CFG_ENERGY_DECAY_PER_SEC = 40;
       const CFG_DAMAGE_GROUND = 170;
       const CFG_DAMAGE_AIR = 280;
@@ -1371,7 +1370,7 @@
       const CFG_BOOST_DURATION = 5150;  // keep
       const CFG_GIANT_DURATION = 3800;  // keep
 
-      const CFG_START_BOOST_MS = 5000;  // ✅ start item: 5 seconds
+      const CFG_START_BOOST_MS = 5000;  // start item: 5 seconds
 
       const CFG_MAGNET_RADIUS = 350;
 
@@ -1394,7 +1393,6 @@
       const CFG_MAGNET_BASE_INTERVAL =4500;
       const CFG_MAGNET_MIN_INTERVAL  = 2900;
 
-      // ✅ Jelly trail (drops a lot)
       const CFG_JELLY_TRAIL_BASE_INTERVAL = 1550;
       const CFG_JELLY_TRAIL_MIN_INTERVAL  = 700;
 
@@ -1412,8 +1410,12 @@
       const CFG_BG_MIN_MS = 25500; // keep
       const CFG_BG_MAX_MS = 37500;
 
-      // ✅ Passive Popup auto-close (NEW)
       const CFG_PASSIVE_POPUP_AUTO_CLOSE_MS = 2600;
+
+      // ✅ NEW: Jelly anti-overlap settings
+      const CFG_JELLY_X_GUARD_PX = 26;     // กัน “คอลัมน์เดียวกัน” (X ใกล้กันมาก ๆ)
+      const CFG_JELLY_X_SHIFT_PX = 20;     // เวลาชน จะเลื่อนไปขวาเพิ่ม
+      const CFG_JELLY_MAX_SHIFT_TRIES = 10;
 
       const LS_BEST = "phantom_runner_best";
       const LS_WALLET = "phantom_runner_wallet_coins";
@@ -1429,7 +1431,6 @@
       const LS_AUDIO_BGM_VOL = "phantom_runner_audio_bgm_vol";
       const LS_AUDIO_SFX_VOL = "phantom_runner_audio_sfx_vol";
 
-      // ✅ NEW: Run Items inventory
       const LS_RUN_ITEMS = "phantom_runner_run_items";
 
       const gameContainer = document.getElementById("gameContainer");
@@ -1488,7 +1489,6 @@
       const sfxPct = document.getElementById("sfxPct");
       const audioTestBtn = document.getElementById("audioTestBtn");
 
-      // ✅ Passive Popup elements (NEW)
       const passivePopup = document.getElementById("passivePopup");
       const passivePopupTitle = document.getElementById("passivePopupTitle");
       const passivePopupDesc = document.getElementById("passivePopupDesc");
@@ -1643,7 +1643,6 @@
           css:{ "--obs-a":"#07141f","--obs-b":"#0b2a3a","--obs-c":"#1d4ed8","--obs-d":"#07141f","--obs-border":"rgba(147,197,253,0.18)","--obs-shadow":"rgba(0,0,0,0.34)" } },
       ];
 
-      // ✅ NEW: run items in shop (buy + inventory, auto-consume 1 per run)
       const RunItems = [
         { id:"startEnergy150", name:"🔋 Start Energy 150", desc:"เริ่มเกมด้วย Max/Start Energy = 150 (ใช้ 1 เกม/ชิ้น • บังคับใช้ถ้ามี)", price:60,
           swatch:`background: linear-gradient(135deg,#22c55e,#facc15,#fb923c);` },
@@ -1741,7 +1740,6 @@
 
       let isDucking = false;
 
-      // ✅ runtime maxEnergy per run
       let maxEnergy = CFG_MAX_ENERGY;
       let energy = maxEnergy;
 
@@ -1808,12 +1806,10 @@
 
       let cheatEvents = [];
 
-      // ✅ split revive: paid + free (from passive)
       let paidReviveUsed = false;
       let freeReviveAvailable = false;
       let freeReviveUsed = false;
 
-      // post revive penalty (paid revive only)
       let postReviveActive = false;
       let postScoreAcc = 0;
       let postScoreCredited = 0;
@@ -1823,11 +1819,10 @@
       let obstacleWaveLeft = 0;
       let obstacleRestLeft = 0;
 
-      // ✅ per-run passive
       let passiveId = "none";
       let passiveName = "";
       let coinMult = 1;
-      let energyCostMult = 1; // 0.85 means -15%
+      let energyCostMult = 1;
       let holeGuard = false;
 
       let startItemsAppliedThisRun = false;
@@ -1955,7 +1950,6 @@
       }
 
       function addCoins(base){
-        // ✅ passive coin x2
         base = Math.round(base * coinMult);
 
         if (!postReviveActive){
@@ -1986,7 +1980,6 @@
         freeReviveUsed = false;
       }
 
-      // ✅ Passive Popup helpers (NEW)
       function passiveInfo(id){
         if (id === "coin2x") return { icon:"🤑", title:"เหรียญ x2", desc:"ทุกเหรียญที่ได้จากการเก็บในเกม จะคูณ 2 เข้ากระเป๋าทันที" };
         if (id === "energy15") return { icon:"🔋", title:"ใช้พลังงาน -15%", desc:"การลดพลังงานต่อวินาที และความเสียหายจากชน จะลดลง 15%" };
@@ -1998,7 +1991,6 @@
       function showPassivePopup(id, name){
         if (!passivePopup) return;
 
-        // clear old timer
         if (passivePopupAutoTimer){
           clearTimeout(passivePopupAutoTimer);
           passivePopupAutoTimer = null;
@@ -2013,7 +2005,6 @@
         passivePopupNote.textContent = "แตะ OK เพื่อไปต่อ (ระบบหยุดเวลาเกมชั่วคราว)";
         passivePopup.classList.remove("hidden");
 
-        // auto-close
         passivePopupAutoTimer = setTimeout(() => {
           hidePassivePopup();
         }, CFG_PASSIVE_POPUP_AUTO_CLOSE_MS);
@@ -2035,7 +2026,6 @@
       });
 
       passivePopup.addEventListener("click", (e)=>{
-        // click outside card = close
         if (e.target === passivePopup){
           unlockAudioOnce();
           playSFX(Sounds.click);
@@ -2049,7 +2039,6 @@
 
         const notes = [];
 
-        // 1) Start Energy 150
         if (runItemsInv.startEnergy150 > 0){
           runItemsInv.startEnergy150 -= 1;
           maxEnergy = CFG_START_ENERGY_UP_MAX;
@@ -2057,7 +2046,6 @@
           notes.push("🔋 Start Energy 150 (เหลือ " + runItemsInv.startEnergy150 + ")");
         }
 
-        // 2) Start Boost 5s
         if (runItemsInv.startBoost5 > 0){
           runItemsInv.startBoost5 -= 1;
 
@@ -2071,7 +2059,6 @@
           notes.push("⚡ Start Boost 5s (เหลือ " + runItemsInv.startBoost5 + ")");
         }
 
-        // 3) Passive Box (random 1 effect) + ✅ popup show result
         if (runItemsInv.passiveBox > 0){
           runItemsInv.passiveBox -= 1;
 
@@ -2083,14 +2070,12 @@
           ];
 
           const pick = passives[Math.floor(Math.random() * passives.length)];
-          resetPassives(); // ให้ 1 กล่อง = 1 passive ต่อเกม (ไม่ซ้อนหลายอันในเกมเดียว)
+          resetPassives();
           passiveId = pick.id;
           passiveName = pick.name;
           pick.apply();
 
           notes.push("🎁 Passive: " + passiveName + " (เหลือ " + runItemsInv.passiveBox + ")");
-
-          // ✅ Show popup result
           showPassivePopup(passiveId, passiveName);
         }
 
@@ -2125,7 +2110,6 @@
 
         resetPowerupsAndVFX();
 
-        // ✅ base maxEnergy reset per run
         maxEnergy = CFG_MAX_ENERGY;
         energy = maxEnergy;
 
@@ -2239,7 +2223,6 @@
         isPaused = false;
         setStatus("RUN");
 
-        // ✅ consume start items here (1 per run)
         const notes = applyStartItemsForThisRun();
 
         const baseMsg = postReviveActive
@@ -2497,54 +2480,6 @@
         collectibles.push(c);
       }
 
-      // ✅✅ Jelly trail
-      function spawnJellyTrail(){
-        if (collectibles.length > 100) return;
-
-        const bottoms = [groundY + 60, groundY + 110, groundY + 150];
-
-        const count = randInt(10, 18);
-        const spacing = randomBetween(52, 70);
-        const startLeft = gameContainer.offsetWidth + 10;
-
-        let lane = randInt(0, 2);
-        let dir = Math.random() < 0.5 ? 1 : -1;
-
-        let segLen = randInt(2, 4);
-        let segLeft = segLen;
-
-        for (let i = 0; i < count; i++){
-          if (i > 0) {
-            segLeft -= 1;
-            if (segLeft <= 0) {
-              const willStep = Math.random() < 0.78;
-              if (willStep) lane += dir;
-
-              if (lane <= 0) { lane = 0; dir = 1; }
-              if (lane >= 2) { lane = 2; dir = -1; }
-
-              if (Math.random() < 0.28) dir *= -1;
-
-              segLen = randInt(2, 4);
-              segLeft = segLen;
-            }
-          }
-
-          const c = makeCollectibleBase();
-          c.classList.add("jelly");
-          c.textContent = "🍬";
-
-          const jitterY = randomBetween(-6, 6);
-          const bottom = bottoms[lane] + jitterY;
-
-          c.style.bottom = bottom + "px";
-          c.style.left = (startLeft + i * spacing) + "px";
-
-          gameContainer.appendChild(c);
-          collectibles.push(c);
-        }
-      }
-
       function getEffectiveSpeed() {
         let s = speed;
         if (boostActive) s *= CFG_BOOST_MULTIPLIER;
@@ -2670,6 +2605,35 @@
         updateMissionUI();
       }
 
+      // ✅ Jelly helpers: กันซ้อนเป็น “เสาตั้ง” และช่วยหลบอุปสรรค
+      function hasJellyNearX(x, tolerancePx){
+        for (const c of collectibles){
+          if (!c || !c.isConnected) continue;
+          if (!c.classList.contains("jelly")) continue;
+          if (c.dataset.dead === "1") continue;
+          const cx = parseFloat(c.style.left) || 0;
+          if (Math.abs(cx - x) < tolerancePx) return true;
+        }
+        return false;
+      }
+
+      function jellyWouldOverlapObstacle(x, bottom){
+        // กะขนาด jelly คร่าวๆ (ฐาน 28x28 แม้จะ scale 0.75)
+        const jw = 28, jh = 28;
+        for (const obs of obstacles){
+          if (!obs || !obs.isConnected) continue;
+          const ox = parseFloat(obs.style.left) || 0;
+          const ow = obs.offsetWidth || parseFloat(obs.style.width) || 0;
+          const ob = parseFloat(obs.style.bottom) || 0;
+          const oh = obs.offsetHeight || parseFloat(obs.style.height) || 0;
+
+          const xOverlap = (x + jw > ox) && (x < ox + ow);
+          const yOverlap = (bottom + jh > ob) && (bottom < ob + oh);
+          if (xOverlap && yOverlap) return true;
+        }
+        return false;
+      }
+
       function updateObstacles(delta) {
         const moveX = getEffectiveSpeed() * (delta / 16.67);
 
@@ -2706,7 +2670,7 @@
 
               const isAir = obs.classList.contains("air") || obs.classList.contains("ceiling");
               const dmgBase = isAir ? CFG_DAMAGE_AIR : CFG_DAMAGE_GROUND;
-              const dmg = dmgBase * energyCostMult; // ✅ passive -15%
+              const dmg = dmgBase * energyCostMult;
 
               energy -= dmg;
               unlockAudioOnce();
@@ -2915,7 +2879,6 @@
           if (hRight > playerStyleLeft + 5 && hLeft < playerStyleRight - 5) holeUnder = true;
         });
 
-        // ✅ passive: กันตกหลุมทุกกรณี
         if (holeGuard) holeUnder = false;
 
         if (playerY <= supportY) {
@@ -2941,8 +2904,88 @@
       }
 
       function checkHoleTrap() {
-        if (holeGuard) return; // ✅ passive กันตกหลุม
+        if (holeGuard) return;
         if (playerY < CFG_TRAP_Y) endGame();
+      }
+
+      // ✅✅ Jelly trail (UPDATED)
+      // - เริ่ม “ลอยเหนือพื้น” เป็นค่าเริ่มต้น
+      // - ไม่ให้เกิด “ซ้อนแนวตั้ง” (X ใกล้กันมาก ๆ จะเลื่อนไปขวาหรือข้าม)
+      // - พยายาม “ไต่หลบอุปสรรค” โดยยกเลนขึ้น (ถ้าชน)
+      function spawnJellyTrail(){
+        if (collectibles.length > 110) return;
+
+        // ระดับเริ่มต้น: ต้อง “เหนือระดับเดิน” แน่ ๆ
+        const JELLY_MIN_BOTTOM = groundY + 80;     // ต่ำสุดยังไงก็ต้องสูงกว่าระดับเดิน
+        const JELLY_BASE_BOTTOM = groundY + 120;   // ค่าเริ่มต้น (ลอยสูงเหนือพื้น)
+        const JELLY_STEP = 40;                     // ระดับโค้งขึ้น/ลง
+
+        const bottomsRaw = [JELLY_BASE_BOTTOM - JELLY_STEP, JELLY_BASE_BOTTOM, JELLY_BASE_BOTTOM + JELLY_STEP];
+        const bottoms = bottomsRaw.map(b => Math.max(b, JELLY_MIN_BOTTOM)); // กันไม่ให้ตกลงต่ำเกิน
+
+        const count = randInt(10, 18);
+        const spacing = randomBetween(52, 70);
+        const startLeft = gameContainer.offsetWidth + 10;
+
+        // เริ่มต่ำสุด (แต่ยังลอยเหนือพื้น) = “ค่าเริ่มต้น”
+        let lane = 0;
+        let dir = 1; // เริ่มไต่ขึ้นก่อน (ทำให้ดูเป็นเส้นทาง)
+        let segLen = randInt(2, 4);
+        let segLeft = segLen;
+
+        for (let i = 0; i < count; i++){
+          if (i > 0) {
+            segLeft -= 1;
+            if (segLeft <= 0) {
+              const willStep = Math.random() < 0.78;
+              if (willStep) lane += dir;
+
+              if (lane <= 0) { lane = 0; dir = 1; }
+              if (lane >= 2) { lane = 2; dir = -1; }
+
+              if (Math.random() < 0.28) dir *= -1;
+
+              segLen = randInt(2, 4);
+              segLeft = segLen;
+            }
+          }
+
+          let x = (startLeft + i * spacing);
+
+          // ✅ กัน “ซ้อนแนวตั้ง”: ถ้า X ใกล้กับ jelly เดิมมาก ๆ → เลื่อนไปขวา
+          let tries = 0;
+          while (hasJellyNearX(x, CFG_JELLY_X_GUARD_PX) && tries < CFG_JELLY_MAX_SHIFT_TRIES){
+            x += CFG_JELLY_X_SHIFT_PX;
+            tries++;
+          }
+          if (tries >= CFG_JELLY_MAX_SHIFT_TRIES && hasJellyNearX(x, CFG_JELLY_X_GUARD_PX)){
+            continue; // ยังชนอยู่มาก → ข้ามตัวนี้ไปเลย
+          }
+
+          // bottom ตาม lane + jitter เล็กน้อย (ยังคงลอยเหนือพื้น)
+          let bottom = bottoms[lane] + randomBetween(-5, 5);
+          bottom = Math.max(bottom, JELLY_MIN_BOTTOM);
+
+          // ✅ หลบอุปสรรค: ถ้าจุดนี้ชนอุปสรรค → ยกเลนขึ้น 1-2 ขั้น (ถ้ายังชนค่อยข้าม)
+          let avoidTries = 0;
+          while (jellyWouldOverlapObstacle(x, bottom) && avoidTries < 3){
+            lane = clamp(lane + 1, 0, 2);
+            bottom = Math.max(bottoms[lane] + randomBetween(-4, 4), JELLY_MIN_BOTTOM);
+            avoidTries++;
+          }
+          if (jellyWouldOverlapObstacle(x, bottom)){
+            continue; // ยังชนอยู่ → ข้าม
+          }
+
+          const c = makeCollectibleBase();
+          c.classList.add("jelly");
+          c.textContent = "🍬";
+          c.style.left = x + "px";
+          c.style.bottom = bottom + "px";
+
+          gameContainer.appendChild(c);
+          collectibles.push(c);
+        }
       }
 
       function updateSpawners(delta){
@@ -2991,7 +3034,7 @@
       function gameLoop(timestamp) {
         if (gameOver || isPaused || countdownTimer) return;
 
-        // ✅ Freeze game while passive popup is open (NEW)
+        // freeze while passive popup open
         if (passivePopup && !passivePopup.classList.contains("hidden")) {
           lastTime = timestamp;
           frameId = requestAnimationFrame(gameLoop);
@@ -3003,7 +3046,6 @@
         lastTime = timestamp;
 
         if (!invincible) {
-          // ✅ passive ลดการใช้พลังงาน 15%
           energy -= (CFG_ENERGY_DECAY_PER_SEC * energyCostMult) * (delta / 1000);
           if (energy <= 0) {
             energy = 0;
@@ -3185,8 +3227,6 @@
         playSFX(Sounds.revive);
 
         freeReviveUsed = true;
-
-        // ✅ free revive: NO penalty, and doesn't consume paid revive
         messageEl.textContent = "คืนชีพฟรีแล้ว! (ไม่โดนหักคะแนน/เหรียญ)";
         reviveCommon();
       }
@@ -3309,7 +3349,6 @@
       reviveFreeBtn.addEventListener("click", reviveFree);
 
       document.addEventListener("keydown", (e) => {
-        // ✅ if passive popup open, allow Space to close it
         if (passivePopup && !passivePopup.classList.contains("hidden")){
           if (e.code === "Space" || e.code === "Enter" || e.code === "Escape"){
             e.preventDefault();
