@@ -412,7 +412,7 @@
       bottom: 0;
       left: 0;
       width: 200%;
-      height: 100px;
+      height: 40px;
       background: repeating-linear-gradient(
         -45deg,
         var(--wood-1) 0,
@@ -1952,7 +1952,7 @@
       }
 
       /* ===== Game core state ===== */
-      const groundY = 100;
+      const groundY = 40;
 
       let playerY = groundY;
       let prevPlayerY = groundY;
@@ -2538,7 +2538,7 @@
 
       function spawnPlatformGroup() {
         const num = Math.random() < 0.5 ? 2 : 3;
-        const baseBottom = groundY + randomBetween(105, 150);
+        const baseBottom = groundY + randomBetween(45, 130);
         const step = 24;
         const goingUp = Math.random() < 0.5;
         const baseLeft = gameContainer.offsetWidth + 80;
@@ -2569,7 +2569,7 @@
       function setCollectibleLane(c, forceLane) {
         const lane = (typeof forceLane === "number") ? forceLane : Math.floor(Math.random() * 3);
         let bottom;
-        if (lane === 0) bottom = groundY + 100;
+        if (lane === 0) bottom = groundY + 60;
         else if (lane === 1) bottom = groundY + 110;
         else bottom = groundY + 150;
         c.style.bottom = bottom + "px";
@@ -2646,7 +2646,7 @@
       function spawnJellyTrail(){
         if (collectibles.length > 110) return;
 
-        const bottoms = [groundY + 5, groundY + 60, groundY + 120];
+        const bottoms = [groundY + 60, groundY + 110, groundY + 150];
 
         const count = randInt(10, 18);
         const spacing = randomBetween(52, 70);
