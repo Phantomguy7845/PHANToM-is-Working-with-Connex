@@ -412,7 +412,7 @@
       bottom: 0;
       left: 0;
       width: 200%;
-      height: 40px;
+      height: 100px;
       background: repeating-linear-gradient(
         -45deg,
         var(--wood-1) 0,
@@ -2538,7 +2538,7 @@
 
       function spawnPlatformGroup() {
         const num = Math.random() < 0.5 ? 2 : 3;
-        const baseBottom = groundY + randomBetween(45, 130);
+        const baseBottom = groundY + randomBetween(105, 150);
         const step = 24;
         const goingUp = Math.random() < 0.5;
         const baseLeft = gameContainer.offsetWidth + 80;
@@ -2646,7 +2646,7 @@
       function spawnJellyTrail(){
         if (collectibles.length > 110) return;
 
-        const bottoms = [groundY + 60, groundY + 110, groundY + 150];
+        const bottoms = [groundY + 5, groundY + 60, groundY + 120];
 
         const count = randInt(10, 18);
         const spacing = randomBetween(52, 70);
