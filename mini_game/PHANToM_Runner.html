@@ -1952,7 +1952,7 @@
       }
 
       /* ===== Game core state ===== */
-      const groundY = 40;
+      const groundY = 100;
 
       let playerY = groundY;
       let prevPlayerY = groundY;
@@ -2569,7 +2569,7 @@
       function setCollectibleLane(c, forceLane) {
         const lane = (typeof forceLane === "number") ? forceLane : Math.floor(Math.random() * 3);
         let bottom;
-        if (lane === 0) bottom = groundY + 60;
+        if (lane === 0) bottom = groundY + 100;
         else if (lane === 1) bottom = groundY + 110;
         else bottom = groundY + 150;
         c.style.bottom = bottom + "px";
