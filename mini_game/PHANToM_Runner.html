@@ -29,38 +29,37 @@
       background: #020617;
       color: #e5e7eb;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      margin: 0;
       min-height: 100vh;
-      overscroll-behavior: none;
-      overflow: hidden;
-    }
-
-    /* เวทีหลักเต็มจอ แล้วค่อย scale เกมข้างใน */
-    #stageWrap{
-      position: relative;
-      width: 100vw;
-      height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      background: #020617;
-      touch-action: none;
+      padding-top: 22px;
+      padding-bottom: 18px;
+      overscroll-behavior: none;
     }
 
-    body.fullscreen-game{ }
+    body.fullscreen-game{ padding-top: 12px; }
 
-    /* ตัวเกมออกแบบไว้ที่ 800x360 (อัตราส่วน 20:9) */
+    h1 {
+      margin-bottom: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      user-select: none;
+    }
+
     #gameContainer {
       position: relative;
-      width: 800px;
-      height: 360px;
+      width: min(1333px, 100vw - 24px);
+      max-width: 100%;
+      aspect-ratio: 1333 / 600;
+      max-height: 600px;
+      min-height: 260px;
       border: 2px solid #4b5563;
       overflow: hidden;
       border-radius: 16px;
       background: radial-gradient(circle at top, var(--bg1) 0, var(--bg2) 55%, var(--bg2) 100%);
       box-shadow: 0 20px 40px rgba(15, 23, 42, 0.9);
       touch-action: none;
-      transform-origin: center center;
     }
 
     /* =========================
@@ -192,15 +191,45 @@
       display:flex;
       flex-direction:column;
       align-items:flex-end;
-      gap: 8px;
-      min-width: 240px;
+      gap: 6px;
+      min-width: 260px;
     }
     .ig-right-top{
       pointer-events:auto;
       display:flex;
       gap:8px;
       align-items:center;
+      justify-content:flex-end;
+      flex-wrap:wrap;
     }
+
+    /* mini actions moved into top-right */
+    #miniActions{
+      pointer-events:auto;
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      margin-top: 4px;
+    }
+
+    .mini-btn{
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid #4b5563;
+      background: radial-gradient(circle at 20% 0, rgba(31,41,55,0.9), rgba(2,6,23,0.6));
+      color:#e5e7eb;
+      font-size:11px;
+      cursor:pointer;
+      box-shadow:0 8px 18px rgba(15,23,42,0.9);
+      user-select:none;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      white-space:nowrap;
+    }
+    .mini-btn:hover{ border-color: rgba(99,102,241,0.65); }
+    .mini-btn:active{ transform: translateY(1px) scale(0.98); }
+
     .ig-scorebox{
       pointer-events:auto;
       border-radius: 14px;
@@ -281,13 +310,13 @@
     #player.double-jump img { animation: djumpSpin 0.2s linear; }
     @keyframes djumpSpin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
 
-    /* กระพริบตอนโดนชน (กันชนซ้ำ) */
-    #player.hurt-blink img{
-      animation: hurtBlink 0.4s ease-in-out infinite;
+    /* กระพริบเมื่อโดนชน (2.5 วินาที) */
+    #player.is-hurt img{
+      animation: playerHitBlink 0.35s steps(1, end) infinite;
     }
-    @keyframes hurtBlink{
-      0%,100% { opacity: 1; }
-      50%     { opacity: 0.25; }
+    @keyframes playerHitBlink{
+      0%,50%{ opacity:0.4; }
+      50%,100%{ opacity:1; }
     }
 
     /* Boost beam */
@@ -470,40 +499,37 @@
       font-size: 18px;
     }
 
-    /* ปุ่ม Jump / Slide ใสๆ แบบหยดน้ำอยู่ล่างจอ */
+    /* Touch controls OVERLAY on game */
     #touchControls {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 18px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      padding: 0 52px;
-      pointer-events: none;
-      z-index: 40;
+      position:absolute;
+      left:16px;
+      right:16px;
+      bottom:14px;
+      display:flex;
+      justify-content:space-between;
+      gap:16px;
+      pointer-events:none;
+      z-index: 25;
     }
 
     .ctrl-btn {
-      pointer-events: auto;
-      width: 220px;
-      max-width: 32vw;
-      height: 72px;
+      pointer-events:auto;
+      min-width: 120px;
+      padding: 10px 18px;
       border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.45);
-      background:
-        radial-gradient(circle at 30% 0, rgba(255,255,255,0.40), rgba(148,163,184,0.18), rgba(15,23,42,0.92));
-      color: #f9fafb;
-      font-size: 16px;
-      font-weight: 800;
+      border: 1px solid rgba(148,163,184,0.55);
+      background: radial-gradient(circle at 20% 0, rgba(31,41,55,0.9), rgba(15,23,42,0.45));
+      color: #e5e7eb;
+      font-size: 14px;
+      font-weight: 600;
       letter-spacing: 0.06em;
       cursor: pointer;
-      box-shadow: 0 14px 34px rgba(0,0,0,0.85);
+      box-shadow: 0 12px 26px rgba(15,23,42,0.9);
       text-transform: uppercase;
       user-select:none;
       touch-action: none;
       -webkit-tap-highlight-color: transparent;
-      backdrop-filter: blur(14px);
+      backdrop-filter: blur(6px);
     }
     .ctrl-btn span {
       font-size: 11px;
@@ -511,116 +537,39 @@
       opacity: 0.8;
       margin-top: 2px;
     }
-    .ctrl-btn:hover {
-      border-color: #38bdf8;
-      box-shadow: 0 0 18px rgba(56,189,248,0.7);
-    }
-    .ctrl-btn:active { transform: translateY(1px) scale(0.97); }
+    .ctrl-btn:hover { border-color: #38bdf8; box-shadow: 0 0 14px rgba(56,189,248,0.7); }
+    .ctrl-btn:active { transform: translateY(1px) scale(0.98); }
 
-    /* ปุ่มย่อย (fullscreen / sound / shop / restart) */
-    #miniActions{
-      position: fixed;
-      top: 14px;
-      right: 14px;
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-      z-index: 45;
-    }
-    .mini-btn{
-      padding:8px 14px;
-      border-radius:999px;
-      border:1px solid #4b5563;
-      background: radial-gradient(circle at 20% 0, #1f2937, #020617);
-      color:#e5e7eb;
-      font-size:13px;
-      cursor:pointer;
-      box-shadow:0 8px 18px rgba(15,23,42,0.9);
-      user-select:none;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .mini-btn:hover{ border-color: rgba(99,102,241,0.65); }
-    .mini-btn:active{ transform: translateY(1px) scale(0.98); }
-
-    /* ข้อความสถานะต่าง ๆ เป็น overlay */
     #cheatTimer {
-      position: fixed;
-      top: 18px;
-      left: 50%;
-      transform: translateX(-50%);
+      margin-top: 10px;
       font-size: 14px;
       min-height: 20px;
       color: #facc15;
       text-shadow: 0 0 8px rgba(250, 204, 21, 0.35);
       user-select:none;
-      z-index: 45;
-      pointer-events: none;
+      text-align:center;
+      max-width: 900px;
     }
 
     #mission {
-      position: fixed;
-      top: 52px;
-      left: 50%;
-      transform: translateX(-50%);
+      margin-top: 6px;
       font-size: 12px;
       color: #9ca3af;
-      max-width: 900px;
+      max-width: 800px;
       text-align: center;
       padding: 0 12px;
       user-select:none;
-      z-index: 45;
-      pointer-events: none;
     }
 
     #message {
-      position: fixed;
-      bottom: 148px;
-      left: 50%;
-      transform: translateX(-50%);
+      margin-top: 6px;
       font-size: 13px;
-      color: #e5e7eb;
-      text-align: center;
-      max-width: 800px;
-      padding: 4px 14px;
-      user-select:none;
-      min-height: 18px;
-      z-index: 44;
-      text-shadow:0 0 8px rgba(15,23,42,0.9);
-    }
-
-    #itemGuide {
-      position: fixed;
-      left: 50%;
-      bottom: 190px;
-      transform: translateX(-50%);
-      font-size: 11px;
-      color: #e5e7eb;
-      max-width: min(820px, 94vw);
-      padding: 8px 12px;
-      border-radius: 12px;
-      background: rgba(15,23,42,0.85);
-      border: 1px solid rgba(148,163,184,0.45);
-      z-index: 40;
-    }
-    #itemGuide strong { color: #facc15; }
-    #itemGuide ul { margin: 6px 0 0; padding-left: 18px; }
-    #itemGuide li { margin-bottom: 4px; }
-
-    #hint {
-      position: fixed;
-      bottom: 96px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 12px;
       color: #9ca3af;
       text-align: center;
-      max-width: 900px;
+      max-width: 800px;
       padding: 0 12px;
-      line-height: 1.5;
-      z-index: 40;
-      text-shadow:0 0 8px rgba(15,23,42,0.9);
+      user-select:none;
+      min-height: 18px;
     }
 
     @keyframes hitShake {
@@ -1090,17 +1039,121 @@
       line-height: 1.4;
     }
 
-    @media (max-width: 900px) {
-      #touchControls{
-        padding: 0 26px;
-      }
-      .ctrl-btn{
-        height: 64px;
-        font-size: 14px;
-      }
+    /* Info modal (คำอธิบายเกม) */
+    #infoModal{
+      position: fixed;
+      inset: 0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      z-index: 1400;
+      background: rgba(2,6,23,0.78);
+      backdrop-filter: blur(4px);
+    }
+    #infoModal.show{ display:flex; }
+    .info-card{
+      width: min(680px, 96vw);
+      max-height: 86vh;
+      border-radius: 18px;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: rgba(15,23,42,0.95);
+      box-shadow: 0 28px 70px rgba(0,0,0,0.6);
+      padding: 14px 14px 12px;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .info-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .info-title{
+      font-weight: 950;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color:#facc15;
+      text-shadow: 0 0 18px rgba(250,204,21,0.20);
+    }
+    .info-sub{
+      font-size: 12px;
+      color:#9ca3af;
+      margin-top: 4px;
+      line-height:1.4;
+    }
+    .info-close{
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.35);
+      background: rgba(2,6,23,0.55);
+      color:#e5e7eb;
+      cursor:pointer;
+      user-select:none;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .info-close:hover{ border-color: rgba(99,102,241,0.65); }
+    .info-close:active{ transform: translateY(1px); }
+    .info-body{
+      font-size: 13px;
+      color:#e5e7eb;
+      line-height:1.5;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .info-body h3{
+      font-size:13px;
+      margin-bottom:4px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color:#e5e7eb;
+    }
+    .info-body ul{
+      padding-left:18px;
+      margin:0;
+    }
+    .info-body li{
+      margin-bottom:4px;
+    }
+
+    /* Bottom hint (เหลือเฉพาะข้อความทั่วไป ถ้าจะใช้ต่อ) */
+    #hint {
+      margin-top: 12px;
+      font-size: 13px;
+      color: #9ca3af;
+      text-align: center;
+      max-width: 900px;
+      padding: 0 12px;
+      line-height: 1.5;
+      display:none; /* ย้ายเนื้อหาไป Info Modal แล้ว */
+    }
+
+    @media (max-width: 900px){
+      .ig-left{ min-width:200px; }
+      .ig-right{ min-width:220px; }
     }
 
     @media (max-width: 600px) {
+      #gameContainer { border-radius: 12px; }
+
+      #touchControls {
+        left:10px;
+        right:10px;
+        bottom:10px;
+        gap:8px;
+      }
+      .ctrl-btn {
+        min-width: 90px;
+        padding: 8px 10px;
+        font-size: 12px;
+      }
+      .ctrl-btn span{
+        font-size:10px;
+      }
+
       .shop-grid{ grid-template-columns: 1fr; }
       .range-wrap{ min-width: 200px; }
       .ig-left{ min-width: 200px; }
@@ -1111,104 +1164,88 @@
 </head>
 
 <body>
-  <div id="stageWrap">
-    <div id="gameContainer">
-      <div id="ground"></div>
-      <div id="boostBeam"></div>
+  <h1>PHANToM Runner</h1>
 
-      <div id="inGameTopBar">
-        <div class="ig-left">
-          <div class="ig-pill">
-            <span>⏸ P</span>
-            <span id="statusPill">READY</span>
-          </div>
+  <div id="gameContainer">
+    <div id="ground"></div>
+    <div id="boostBeam"></div>
 
-          <div class="ig-energy">
-            <div class="ig-energy-top">
-              <span>Energy</span>
-              <b id="energyText">100 / 100</b>
-            </div>
-            <div id="energyBarWrapper"><div id="energyBar"></div></div>
-          </div>
+    <div id="inGameTopBar">
+      <div class="ig-left">
+        <div class="ig-pill">
+          <span>⏸ P</span>
+          <span id="statusPill">READY</span>
         </div>
 
-        <div class="ig-center">
-          <div class="ig-pill ig-coins" id="igCoinsPill" title="เหรียญรอบนี้ / เหรียญสะสม">
-            <span>🤑</span>
-            <span class="muted">รอบนี้</span>
-            <b id="runCoins">0</b>
-            <span class="sep">•</span>
-            <span class="muted">สะสม</span>
-            <b id="walletCoins">0</b>
+        <div class="ig-energy">
+          <div class="ig-energy-top">
+            <span>Energy</span>
+            <b id="energyText">100 / 100</b>
           </div>
-        </div>
-
-        <div class="ig-right">
-          <div class="ig-right-top">
-            <button id="audioQuickBtn" class="ig-btn" title="เปิด/ปิดเสียง">🔊</button>
-            <button id="pauseBtn" class="ig-btn">Pause</button>
-          </div>
-
-          <div class="ig-pill ig-scorebox" title="คะแนนรอบนี้ / คะแนนสูงสุด">
-            <div id="score">คะแนน: 0</div>
-            <div id="bestScore">สถิติสูงสุด: 0</div>
-          </div>
+          <div id="energyBarWrapper"><div id="energyBar"></div></div>
         </div>
       </div>
 
-      <div id="player">
-        <img src="phantom-runner.png" alt="PHANToM" />
+      <div class="ig-center">
+        <div class="ig-pill ig-coins" id="igCoinsPill" title="เหรียญรอบนี้ / เหรียญสะสม">
+          <span>🤑</span>
+          <span class="muted">รอบนี้</span>
+          <b id="runCoins">0</b>
+          <span class="sep">•</span>
+          <span class="muted">สะสม</span>
+          <b id="walletCoins">0</b>
+        </div>
       </div>
 
-      <div id="startOverlay">
-        <div class="title" id="startTitle">PHANToM RUNNER</div>
-        <div id="countdownText"></div>
-        <button id="startGameBtn">เริ่มเกม</button>
-        <div id="startHintMini">เริ่มเกมจะนับถอยหลัง 3 วินาที • กด Space ก็เริ่มได้</div>
-      </div>
+      <div class="ig-right">
+        <div class="ig-right-top">
+          <button id="audioQuickBtn" class="ig-btn" title="เปิด/ปิดเสียงทั้งหมด">🔊</button>
+          <button id="pauseBtn" class="ig-btn">Pause</button>
+        </div>
 
-      <div id="pauseOverlay">
-        <div class="pTitle">PAUSED</div>
-        <button id="resumeBtnOverlay">Resume</button>
-        <div style="font-size:12px;color:#9ca3af;">กด P เพื่อ Resume (จะนับถอยหลัง 3 วิ)</div>
+        <div id="miniActions">
+          <button id="infoBtn" class="mini-btn">คู่มือ</button>
+          <button id="fullscreenBtn" class="mini-btn">โหมดเต็มจอ</button>
+          <button id="soundBtn" class="mini-btn">เสียง</button>
+          <button id="shopBtn" class="mini-btn">ร้านค้า</button>
+          <button id="restartOutsideBtn" class="mini-btn">เริ่มใหม่</button>
+        </div>
+
+        <div class="ig-pill ig-scorebox" title="คะแนนรอบนี้ / คะแนนสูงสุด">
+          <div id="score">คะแนน: 0</div>
+          <div id="bestScore">สถิติสูงสุด: 0</div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- ปุ่ม Jump / Slide ใต้จอ -->
-  <div id="touchControls">
-    <button id="btnJump" class="ctrl-btn">Jump <span>JUMP / SPACE</span></button>
-    <button id="btnDuck" class="ctrl-btn">Slide <span>DUCK / ↓</span></button>
-  </div>
+    <div id="player">
+      <img src="phantom-runner.png" alt="PHANToM" />
+    </div>
 
-  <!-- ปุ่มเล็กอื่น ๆ -->
-  <div id="miniActions">
-    <button id="fullscreenBtn" class="mini-btn">โหมดเต็มจอ</button>
-    <button id="soundBtn" class="mini-btn">เสียง</button>
-    <button id="shopBtn" class="mini-btn">ร้านค้า</button>
-    <button id="restartOutsideBtn" class="mini-btn">เริ่มใหม่</button>
+    <div id="touchControls">
+      <button id="btnJump" class="ctrl-btn">Jump <span>JUMP / SPACE</span></button>
+      <button id="btnDuck" class="ctrl-btn">Slide <span>DUCK / ↓</span></button>
+    </div>
+
+    <div id="startOverlay">
+      <div class="title" id="startTitle">PHANToM RUNNER</div>
+      <div id="countdownText"></div>
+      <button id="startGameBtn">เริ่มเกม</button>
+      <div id="startHintMini">เริ่มเกมจะนับถอยหลัง 3 วินาที • กด Space ก็เริ่มได้</div>
+    </div>
+
+    <div id="pauseOverlay">
+      <div class="pTitle">PAUSED</div>
+      <button id="resumeBtnOverlay">Resume</button>
+      <div style="font-size:12px;color:#9ca3af;">กด P เพื่อ Resume (จะนับถอยหลัง 3 วิ)</div>
+    </div>
   </div>
 
   <div id="cheatTimer"></div>
   <div id="mission"></div>
-  <div id="message">กด “เริ่มเกม” หรือ Space เพื่อเริ่ม</div>
+  <div id="message">กด “เริ่มเกม” บนหน้าจอเกม หรือกด Space เพื่อเริ่ม</div>
 
-  <div id="itemGuide">
-    <strong>คำอธิบายไอเท็ม:</strong>
-    <ul>
-      <li>🤑 <b>เหรียญ (Coin)</b> : +คะแนน / เก็บเข้ากระเป๋า</li>
-      <li>❤️ <b>หัวใจ (Energy)</b> : เพิ่ม Energy (เล็ก +10 / กลาง +20 / ใหญ่ +45 และเพิ่มความเร็ว)</li>
-      <li>🍬 <b>เจลลี่ (Jelly)</b> : ไม่มีสกิลพิเศษ แต่ให้คะแนนมากกว่าเหรียญ 2 เท่า และดรอปเป็นเส้นทางไต่ขึ้น-ลง (ดูดด้วย Magnet ได้)</li>
-      <li>🧲 <b>Magnet</b> : ดูดเหรียญ/หัวใจ/เจลลี่ รอบ ๆ ชั่วคราว</li>
-      <li>⚡ <b>Boost</b> : วิ่งเร็วขึ้น + อมตะชั่วคราว (ดรอปห่าง 22.5–37.5 วิ)</li>
-      <li>🌀 <b>Giant</b> : ขยายร่าง ชนอุปสรรคพื้นให้พังได้ (ดรอปห่าง 22.5–37.5 วิ)</li>
-    </ul>
-  </div>
-
-  <div id="hint">
-    Space / ↑ = กระโดด (2 จังหวะ) • ↓ = หมอบ • มีพื้นลอย/บันได • หลุมกับดัก (ตกได้ ไม่ตายทันที) •
-    กด P = Pause/Resume (Resume จะนับถอยหลัง 3 วิ) • ระบบคืนชีพใช้ได้ 1 ครั้ง/รอบ (หลังคืนชีพ คะแนน -15% และเหรียญ -50% ปัดขึ้น)
-  </div>
+  <div id="hint"></div>
 
   <div id="hitFlash"></div>
 
@@ -1299,11 +1336,55 @@
     </div>
   </div>
 
+  <!-- Info Modal ใหม่ -->
+  <div id="infoModal" aria-modal="true" role="dialog">
+    <div class="info-card">
+      <div class="info-header">
+        <div>
+          <div class="info-title">GAME INFO</div>
+          <div class="info-sub">คำอธิบายไอเท็ม • วิธีบังคับ • ระบบคืนชีพ และทิปการเล่น</div>
+        </div>
+        <button id="infoCloseBtn" class="info-close">ปิด</button>
+      </div>
+
+      <div class="info-body">
+        <section>
+          <h3>ไอเท็มในเกม</h3>
+          <ul>
+            <li>🤑 <b>เหรียญ (Coin)</b> : เพิ่มคะแนนเล็กน้อย และเก็บเข้ากระเป๋าเป็นเหรียญสะสม</li>
+            <li>❤️ <b>หัวใจ (Energy)</b> : เพิ่ม Energy (เล็ก / กลาง / ใหญ่ – ค่าที่ตั้งในโค้ดปัจจุบัน)</li>
+            <li>🍬 <b>เจลลี่ (Jelly)</b> : ไม่มีสกิลพิเศษ แต่ให้คะแนนมากกว่าเหรียญ 2 เท่า และดรอปเป็นเส้นทางไต่ขึ้น-ลง • <b>โดนดูดด้วย Magnet ได้</b></li>
+            <li>🧲 <b>Magnet</b> : ดูดเหรียญ / หัวใจ / เจลลี่ รอบ ๆ เป็นระยะเวลาสั้น ๆ</li>
+            <li>⚡ <b>Boost</b> : วิ่งเร็วขึ้น + อมตะชั่วคราว (ระยะเวลาตามค่าที่ตั้งไว้)</li>
+            <li>🌀 <b>Giant</b> : ตัวใหญ่ขึ้น และสามารถชนทำลายอุปสรรคพื้นได้ชั่วคราว</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>การบังคับ</h3>
+          <ul>
+            <li><b>Space / ↑ หรือปุ่ม Jump</b> : กระโดด (กดได้ 2 จังหวะเพื่อ Double Jump)</li>
+            <li><b>↓ หรือปุ่ม Slide</b> : หมอบ/สไลด์ เพื่อลอดหินย้อยและอุปสรรคเตี้ย ๆ</li>
+            <li><b>P</b> : Pause / Resume (ตอน Resume จะนับถอยหลัง 3 วินาที)</li>
+          </ul>
+        </section>
+
+        <section>
+          <h3>กติกาเพิ่มเติม</h3>
+          <ul>
+            <li>มีพื้นลอย / แพลตฟอร์มให้กระโดดขึ้นไปวิ่งต่อได้</li>
+            <li>มีหลุมกับดักด้านล่าง ถ้าตกลงลึกเกินไปจะ Game Over</li>
+            <li>หลังโดนชน ตัวละครจะกระพริบ และมี <b>ช่วงกันชนซ้ำ 2.5 วินาที</b> (ไม่โดนดาเมจซ้ำ)</li>
+            <li>ระบบคืนชีพใช้ได้ 1 ครั้ง/รอบ: เมื่อกดใช้จะเสียเหรียญตามที่ตั้งไว้ และหลังจากนั้น
+              คะแนนที่ได้ใหม่จะถูกลดลง 15% / เหรียญที่ได้ใหม่ลดลง 50% (ปัดเศษขึ้น)</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </div>
+
   <script>
     (function () {
-      const DESIGN_WIDTH  = 800;
-      const DESIGN_HEIGHT = 360;
-
       const CFG_GRAVITY = 0.98;
       const CFG_JUMP_STRENGTH = 14.5;
       const CFG_MAX_JUMPS = 2;
@@ -1320,8 +1401,7 @@
 
       const CFG_HIT_SLOW_FACTOR = 0.75;
       const CFG_HIT_SLOW_DURATION = 650;
-      const CFG_HIT_IFRAMES_ON_HIT = 2500;   // กันชนซ้ำ 2.5 วิ
-      const CFG_HIT_IFRAMES_ON_REVIVE = 350; // กันซ้อนสั้น ๆ ตอน revive
+      const CFG_HIT_IFRAMES = 2500;   // 2.5 วินาที กันชนซ้ำ
 
       const CFG_HOLE_CHANCE = 0.18;
       const CFG_TRAP_Y = -60;
@@ -1334,6 +1414,7 @@
 
       const CFG_MAGNET_RADIUS = 350;
 
+      /* ค่านี้คุณบอกว่าจะไปปรับเอง ผมไม่ยุ่ง */
       const CFG_HEART_SMALL_GAIN = 3;
       const CFG_HEART_MEDIUM_GAIN = 8;
       const CFG_HEART_LARGE_GAIN = 36;
@@ -1353,7 +1434,7 @@
       const CFG_MAGNET_BASE_INTERVAL =4500;
       const CFG_MAGNET_MIN_INTERVAL  = 2900;
 
-      // Jelly trail (drops a lot)
+      // ✅ Jelly trail (drops a lot)
       const CFG_JELLY_TRAIL_BASE_INTERVAL = 1550;
       const CFG_JELLY_TRAIL_MIN_INTERVAL  = 700;
 
@@ -1371,10 +1452,6 @@
       const CFG_BG_MIN_MS = 25500;
       const CFG_BG_MAX_MS = 37500;
 
-      // medium heart ออกยากเท่า boost/giant
-      const CFG_MEDIUM_HEART_MIN_MS = CFG_BG_MIN_MS;
-      const CFG_MEDIUM_HEART_MAX_MS = CFG_BG_MAX_MS;
-
       const LS_BEST = "phantom_runner_best";
       const LS_WALLET = "phantom_runner_wallet_coins";
 
@@ -1389,7 +1466,6 @@
       const LS_AUDIO_BGM_VOL = "phantom_runner_audio_bgm_vol";
       const LS_AUDIO_SFX_VOL = "phantom_runner_audio_sfx_vol";
 
-      const stageWrap = document.getElementById("stageWrap");
       const gameContainer = document.getElementById("gameContainer");
       const player = document.getElementById("player");
       const scoreEl = document.getElementById("score");
@@ -1445,15 +1521,9 @@
       const sfxPct = document.getElementById("sfxPct");
       const audioTestBtn = document.getElementById("audioTestBtn");
 
-      function resizeGameStage(){
-        if (!stageWrap || !gameContainer) return;
-        const w = stageWrap.clientWidth;
-        const h = stageWrap.clientHeight;
-        const scale = Math.min(w / DESIGN_WIDTH, h / DESIGN_HEIGHT);
-        gameContainer.style.transform = "scale(" + scale + ")";
-      }
-      window.addEventListener("resize", resizeGameStage);
-      window.addEventListener("orientationchange", resizeGameStage);
+      const infoBtn = document.getElementById("infoBtn");
+      const infoModal = document.getElementById("infoModal");
+      const infoCloseBtn = document.getElementById("infoCloseBtn");
 
       function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
       function randomBetween(min, max) { return Math.random() * (max - min) + min; }
@@ -1712,9 +1782,6 @@
 
       let timeSinceLastBigHeart = 0;
 
-      let timeSinceLastMediumHeart = 0;
-      let nextMediumHeartIn = randomBetween(CFG_MEDIUM_HEART_MIN_MS, CFG_MEDIUM_HEART_MAX_MS);
-
       let timeSinceLastPlatform = 0;
       let nextPlatformIn = 2000 + Math.random() * (4500 - 2000);
 
@@ -1818,6 +1885,7 @@
       function closeAllModals(){
         shopModal.classList.remove("show");
         soundModal.classList.remove("show");
+        infoModal.classList.remove("show");
       }
 
       function clearArrays() {
@@ -1831,13 +1899,6 @@
         holes = [];
       }
 
-      function stopHurtBlink(){
-        player.classList.remove("hurt-blink");
-      }
-      function startHurtBlink(){
-        player.classList.add("hurt-blink");
-      }
-
       function resetPowerupsAndVFX(){
         invincible = false; invincibleTimer = 0;
         magnetActive = false; magnetTimer = 0;
@@ -1846,9 +1907,7 @@
         hitSlowTimer = 0;
         hitIFramesTimer = 0;
 
-        player.classList.remove("invincible","giant");
-        stopHurtBlink();
-
+        player.classList.remove("invincible","giant","is-hurt");
         cheatTimerEl.textContent = "";
 
         if (boostBeam) {
@@ -1907,7 +1966,7 @@
         jumpsLeft = CFG_MAX_JUMPS;
 
         isDucking = false;
-        player.classList.remove("duck", "invincible", "giant", "double-jump");
+        player.classList.remove("duck", "invincible", "giant", "double-jump", "is-hurt");
         player.style.bottom = playerY + "px";
 
         resetPowerupsAndVFX();
@@ -1923,8 +1982,6 @@
         timeSinceLastJelly = 0;
 
         timeSinceLastBigHeart = 0;
-        timeSinceLastMediumHeart = 0;
-        nextMediumHeartIn = randomBetween(CFG_MEDIUM_HEART_MIN_MS, CFG_MEDIUM_HEART_MAX_MS);
 
         timeSinceLastPlatform = 0;
         nextPlatformIn = 2000 + Math.random() * (4500 - 2000);
@@ -1954,7 +2011,7 @@
         updateEnergyUI();
         updateMissionUI();
 
-        messageEl.textContent = "กด “เริ่มเกม” หรือ Space เพื่อเริ่ม";
+        messageEl.textContent = "กด “เริ่มเกม” บนหน้าจอเกม หรือกด Space เพื่อเริ่ม";
 
         bgmPause();
         showStartOverlay();
@@ -2226,22 +2283,14 @@
         collectibles.push(c);
       }
 
-      // small heart ปกติ
-      function spawnSmallHeart() {
+      function spawnSmallMediumHeart() {
         const c = makeCollectibleBase();
-        c.classList.add("energy","small");
-        c.dataset.energy = String(CFG_HEART_SMALL_GAIN);
-        c.textContent = "❤️";
-        setCollectibleLane(c);
-        gameContainer.appendChild(c);
-        collectibles.push(c);
-      }
-
-      // medium heart: rare เท่า boost/giant
-      function spawnMediumHeart() {
-        const c = makeCollectibleBase();
-        c.classList.add("energy","medium");
-        c.dataset.energy = String(CFG_HEART_MEDIUM_GAIN);
+        c.classList.add("energy");
+        const sizes = ["small","medium"];
+        const gains = [CFG_HEART_SMALL_GAIN, CFG_HEART_MEDIUM_GAIN];
+        const idx = Math.floor(Math.random() * sizes.length);
+        c.classList.add(sizes[idx]);
+        c.dataset.energy = String(gains[idx]);
         c.textContent = "❤️";
         setCollectibleLane(c);
         gameContainer.appendChild(c);
@@ -2282,7 +2331,7 @@
         collectibles.push(c);
       }
 
-      // Jelly trail: ไต่ขึ้น-ลง แบบมีช่วงราบ
+      // ✅✅ Jelly trail: "ไต่ขึ้น-ลง" แบบขั้นบันได + ช่วงราบ
       function spawnJellyTrail(){
         if (collectibles.length > 100) return;
 
@@ -2506,8 +2555,10 @@
               updateEnergyUI();
               triggerHitVFX();
               hitSlowTimer = CFG_HIT_SLOW_DURATION;
-              hitIFramesTimer = CFG_HIT_IFRAMES_ON_HIT;
-              startHurtBlink();
+              hitIFramesTimer = CFG_HIT_IFRAMES;
+
+              player.classList.add("is-hurt");
+              setTimeout(()=>{ player.classList.remove("is-hurt"); }, CFG_HIT_IFRAMES);
 
               obs.style.opacity = "0.4";
               setTimeout(() => { if (obs && obs.style) obs.style.opacity = "1"; }, 120);
@@ -2741,20 +2792,11 @@
           timeSinceLastJelly = 0;
         }
 
-        // small heart ปกติ
         timeSinceLastHeart += delta;
         const heartInterval = Math.max(CFG_HEART_MIN_INTERVAL, CFG_HEART_BASE_INTERVAL - Math.floor(score/6)*12);
         if (timeSinceLastHeart >= heartInterval) {
-          spawnSmallHeart();
+          spawnSmallMediumHeart();
           timeSinceLastHeart = 0;
-        }
-
-        // medium heart: rare เท่า boost/giant
-        timeSinceLastMediumHeart += delta;
-        if (timeSinceLastMediumHeart >= nextMediumHeartIn){
-          spawnMediumHeart();
-          timeSinceLastMediumHeart = 0;
-          nextMediumHeartIn = randomBetween(CFG_MEDIUM_HEART_MIN_MS, CFG_MEDIUM_HEART_MAX_MS);
         }
 
         timeSinceLastBigHeart += delta;
@@ -2846,10 +2888,7 @@
 
         if (hitIFramesTimer > 0) {
           hitIFramesTimer -= delta;
-          if (hitIFramesTimer <= 0) {
-            hitIFramesTimer = 0;
-            stopHurtBlink();
-          }
+          if (hitIFramesTimer < 0) hitIFramesTimer = 0;
         }
 
         frameId = requestAnimationFrame(gameLoop);
@@ -2919,7 +2958,7 @@
         player.classList.add("invincible");
 
         hitSlowTimer = 0;
-        hitIFramesTimer = CFG_HIT_IFRAMES_ON_REVIVE;
+        hitIFramesTimer = CFG_HIT_IFRAMES;
 
         playerY = groundY;
         prevPlayerY = groundY;
@@ -2936,10 +2975,6 @@
         timeSinceLastHeart = 0;
         timeSinceLastMagnet = 0;
         timeSinceLastJelly = 0;
-
-        timeSinceLastBigHeart = 0;
-        timeSinceLastMediumHeart = 0;
-        nextMediumHeartIn = randomBetween(CFG_MEDIUM_HEART_MIN_MS, CFG_MEDIUM_HEART_MAX_MS);
 
         timeSinceLastBG = 0;
         nextBGIn = randomBetween(CFG_BG_MIN_MS, CFG_BG_MAX_MS);
@@ -3054,7 +3089,7 @@
 
       document.addEventListener("fullscreenchange", () => {
         if (document.fullscreenElement){
-          fullscreenBtn.textContent = "ออกจากโหมดเต็มจอ";
+          fullscreenBtn.textContent = "ออกเต็มจอ";
           document.body.classList.add("fullscreen-game");
         } else {
           fullscreenBtn.textContent = "โหมดเต็มจอ";
@@ -3303,6 +3338,26 @@
         }
       });
 
+      /* Info Modal handlers */
+      function openInfo(){
+        cancelCountdown();
+        unlockAudioOnce();
+        playSFX(Sounds.click);
+        if (isRunning && !gameOver && !isPaused) pauseGame(true);
+        infoModal.classList.add("show");
+      }
+      function closeInfo(){
+        unlockAudioOnce();
+        playSFX(Sounds.click);
+        infoModal.classList.remove("show");
+      }
+
+      infoBtn.addEventListener("click", openInfo);
+      infoCloseBtn.addEventListener("click", closeInfo);
+      infoModal.addEventListener("click", (e)=>{
+        if (e.target === infoModal) closeInfo();
+      });
+
       bestScoreEl.textContent = "สถิติสูงสุด: " + bestScore;
       scoreEl.textContent = "คะแนน: " + score;
 
@@ -3311,7 +3366,6 @@
       updateMissionUI();
 
       applyAudioSettings();
-      resizeGameStage();
       prepareNewRun();
     })();
   </script>
