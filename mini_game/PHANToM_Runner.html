@@ -247,7 +247,7 @@
 
     #ground {
       position: absolute;
-      bottom: 0;
+      bottom: var(--ground-bottom, 0px);
       left: 0;
       width: 200%;
       height: 40px;
@@ -272,7 +272,7 @@
     /* ==== player ==== */
     #player {
       position: absolute;
-      bottom: 40px;
+      bottom: calc(var(--ground-bottom, 0px) + 40px);
       left: 80px;
       width: 60px;
       height: 60px;
@@ -325,7 +325,7 @@
       width: 140px;
       height: 35px;
       left: -9999px;
-      bottom: 40px;
+      bottom: calc(var(--ground-bottom, 0px) + 40px);
       background: linear-gradient(90deg, rgba(34,197,94,0), rgba(34,197,94,0.9), rgba(56,189,248,0));
       filter: blur(8px);
       opacity: 0;
@@ -338,7 +338,7 @@
     /* Obstacles (emoji) */
     .obstacle {
       position: absolute;
-      bottom: 40px;
+      bottom: calc(var(--ground-bottom, 0px) + 40px);
       border-radius: 10px;
       z-index: 3;
 
@@ -402,7 +402,7 @@
     /* hole */
     .hole {
       position: absolute;
-      bottom: 0;
+      bottom: var(--ground-bottom, 0px);
       height: 40px;
       background: linear-gradient(to top, #000000 0%, #020617 55%);
       border-radius: 6px 6px 0 0;
@@ -512,24 +512,56 @@
       z-index: 25;
     }
 
-    .ctrl-btn {
+    
+    /* Full-screen split touch zones (left = jump, right = duck) */
+    #touchZones{
+      position:absolute;
+      inset:0;
+      display:flex;
+      pointer-events:none;
+      z-index: 24; /* below top bar (30) and hint buttons (25) */
+    }
+    .touchZone{
+      flex:1;
+      pointer-events:auto;
+      touch-action:none;
+      -webkit-tap-highlight-color: transparent;
+      position:relative;
+    }
+    .touchZone::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      opacity:0;
+      transition: opacity 0.12s ease;
+      background:
+        radial-gradient(circle at 50% 88%, rgba(56,189,248,0.10), rgba(0,0,0,0) 55%),
+        linear-gradient(90deg, rgba(0,0,0,0.0), rgba(0,0,0,0.0));
+    }
+    .touchZone.left{
+      border-right: 1px solid rgba(148,163,184,0.10);
+    }
+    .touchZone.active::after{
+      opacity:1;
+    }
+.ctrl-btn {
       pointer-events:auto;
       min-width: 120px;
       padding: 10px 18px;
       border-radius: 999px;
-      border: 1px solid rgba(148,163,184,0.55);
-      background: radial-gradient(circle at 20% 0, rgba(31,41,55,0.9), rgba(15,23,42,0.45));
-      color: #e5e7eb;
+      border: 1px solid rgba(255,255,255,0.22);
+      background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+      color: #eaf2ff;
       font-size: 14px;
-      font-weight: 600;
-      letter-spacing: 0.06em;
+      font-weight: 700;
+      letter-spacing: 0.08em;
       cursor: pointer;
-      box-shadow: 0 12px 26px rgba(15,23,42,0.9);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.22);
       text-transform: uppercase;
       user-select:none;
       touch-action: none;
       -webkit-tap-highlight-color: transparent;
-      backdrop-filter: blur(6px);
+      backdrop-filter: blur(12px) saturate(140%);
     }
     .ctrl-btn span {
       font-size: 11px;
@@ -537,8 +569,15 @@
       opacity: 0.8;
       margin-top: 2px;
     }
-    .ctrl-btn:hover { border-color: #38bdf8; box-shadow: 0 0 14px rgba(56,189,248,0.7); }
-    .ctrl-btn:active { transform: translateY(1px) scale(0.98); }
+    .ctrl-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 22px 52px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.24);
+      border-color: rgba(255,255,255,0.28);
+    }
+    .ctrl-btn:active {
+      transform: translateY(0px);
+      box-shadow: 0 14px 34px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.20);
+    }
 
     #cheatTimer {
       margin-top: 10px;
@@ -1146,10 +1185,24 @@
         gap:8px;
       }
       .ctrl-btn {
-        min-width: 90px;
-        padding: 8px 10px;
-        font-size: 12px;
-      }
+      pointer-events:auto;
+      min-width: 120px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.22);
+      background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.06));
+      color: #eaf2ff;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.22);
+      text-transform: uppercase;
+      user-select:none;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+      backdrop-filter: blur(12px) saturate(140%);
+    }
       .ctrl-btn span{
         font-size:10px;
       }
@@ -1220,6 +1273,11 @@
 
     <div id="player">
       <img src="phantom-runner.png" alt="PHANToM" />
+    </div>
+
+    <div id="touchZones" aria-hidden="true">
+      <div id="zoneLeft" class="touchZone left"></div>
+      <div id="zoneRight" class="touchZone right"></div>
     </div>
 
     <div id="touchControls">
@@ -1731,7 +1789,23 @@
         return `background: linear-gradient(135deg, ${a}, ${b}, ${c}, ${d});`;
       }
 
-      const groundY = 40;
+      const GROUND_H = 40;
+
+/* Floor height is positioned higher so the character sits around mid-screen.
+   groundY = the TOP surface of the floor (measured from container bottom). */
+let groundY = 40;
+
+function applyGroundLayout(){
+  const h = gameContainer.clientHeight || 600;
+  // ~45% of the screen height from the bottom -> character feels "mid-screen"
+  const desired = Math.round(h * 0.25);
+  // Keep some headroom for jumps + UI
+  groundY = clamp(desired, 96, Math.max(96, h - 180));
+  const groundBottom = groundY - GROUND_H;
+  document.documentElement.style.setProperty("--ground-bottom", groundBottom + "px");
+}
+      applyGroundLayout();
+
 
       let playerY = groundY;
       let prevPlayerY = groundY;
@@ -2138,7 +2212,7 @@
         const width = randomBetween(80, 160);
         h.style.width = width + "px";
         h.style.left = gameContainer.offsetWidth + "px";
-        h.style.bottom = "0px";
+        h.style.bottom = (groundY - GROUND_H) + "px";
         gameContainer.appendChild(h);
         holes.push(h);
       }
@@ -2200,7 +2274,7 @@
           const width = randomBetween(34, 40);
           obs.style.width = width + "px";
           obs.style.height = height + "px";
-          obs.style.bottom = randomBetween(95, 125) + "px";
+          obs.style.bottom = randomBetween(groundY + 80, groundY + 130) + "px";
           obs.style.left = gameContainer.offsetWidth + "px";
 
           setObstacleEmoji(obs, EMOJI_AIR[kind], height);
@@ -2341,6 +2415,17 @@
         const spacing = randomBetween(52, 70);
         const startLeft = gameContainer.offsetWidth + 10;
 
+        const JELLY_X_GAP = 26; // prevent vertical stacking at the same X
+        function jellyXOccupied(x){
+          for (const it of collectibles){
+            if (!it || !it.classList) continue;
+            if (!it.classList.contains("jelly")) continue;
+            const lx = parseFloat(it.style.left) || 0;
+            if (Math.abs(lx - x) < JELLY_X_GAP) return true;
+          }
+          return false;
+        }
+
         let lane = randInt(0, 2);
         let dir = Math.random() < 0.5 ? 1 : -1;
 
@@ -2364,6 +2449,9 @@
             }
           }
 
+          const x = startLeft + i * spacing;
+          if (jellyXOccupied(x)) continue;
+
           const c = makeCollectibleBase();
           c.classList.add("jelly");
           c.textContent = "🍬";
@@ -2372,7 +2460,7 @@
           const bottom = bottoms[lane] + jitterY;
 
           c.style.bottom = bottom + "px";
-          c.style.left = (startLeft + i * spacing) + "px";
+          c.style.left = x + "px";
 
           gameContainer.appendChild(c);
           collectibles.push(c);
