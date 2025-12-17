@@ -122,6 +122,11 @@
       border-color:rgba(239,68,68,.45);
       background:linear-gradient(180deg, rgba(239,68,68,.16), rgba(2,6,23,.62));
     }
+    /* ✅ ปุ่มไปที่ Sheet (โทนเดียวกับระบบ) */
+    .info{
+      border-color:rgba(168,85,247,.45);
+      background:linear-gradient(180deg, rgba(168,85,247,.16), rgba(2,6,23,.62));
+    }
     .small{font-size:12px; color:var(--muted)}
     .status{
       margin-top:10px;
@@ -206,6 +211,7 @@ D-54321  (กรณีขาดบางอย่างก็ยังส่ง�
         <div class="btns">
           <button id="btnPreview" type="button">พรีวิว</button>
           <button id="btnClear" type="button" class="danger">ล้าง</button>
+          <button id="btnSheet" type="button" class="info">ไปที่ Sheet</button>
           <button id="btnSubmit" type="button" class="primary">ยืนยันส่งเข้า Sheet</button>
         </div>
       </div>
@@ -268,6 +274,8 @@ D-54321  (กรณีขาดบางอย่างก็ยังส่ง�
 
 <script>
   const ENDPOINT = "https://script.google.com/macros/s/AKfycbxrii5h6wPZi1K4EbxHZ2g5LOi7UnA7h4K5rrQCscOnPpg5cMonQCk2gZWPp_a2X4RV/exec";
+  const SHEET_URL = "https://docs.google.com/spreadsheets/d/1KzACyhEjRmYZKG5H3viu_ecrfLo-AMfmtfIiCBaRz3w/edit?usp=sharing";
+
   document.getElementById("endpointText").textContent = ENDPOINT;
 
   const $ = (id) => document.getElementById(id);
@@ -393,6 +401,11 @@ D-54321  (กรณีขาดบางอย่างก็ยังส่ง�
     $("kpiKept").textContent = "0";
     $("kpiSkipped").textContent = "0";
     setStatus("ok","ล้างแล้ว");
+  });
+
+  // ✅ ไปที่ Sheet (เปิดแท็บใหม่)
+  $("btnSheet").addEventListener("click", () => {
+    window.open(SHEET_URL, "_blank", "noopener");
   });
 
   $("btnSubmit").addEventListener("click", () => {
