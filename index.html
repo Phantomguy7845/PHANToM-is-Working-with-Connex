@@ -276,6 +276,7 @@ footer{margin:40px 0;font-size:.9rem;opacity:.7;text-align:center}
     <h3>PHANToM Report Counter</h3>
     <p>นับสาย, หมวดหมู่, รวมผลอัตโนมัติ และสร้างรายงานพร้อมคัดลอก</p>
     <a href="PHANToM_Report_CounterV.2/PHANToM_Report_Counter_v2.html" class="btn">เปิดใช้งาน</a>
+    <a href="#" class="btn" style="margin-top:10px" onclick="openCloseLostReport(); return false;">CloseLost Report</a>
   </div>
 
   <!-- ⭐ PHANToM Script Pad -->
@@ -322,6 +323,11 @@ footer{margin:40px 0;font-size:.9rem;opacity:.7;text-align:center}
 <footer>PHANToM Toolkit — by PHANToM</footer>
 
 <script>
+function openCloseLostReport(){
+  // เปิด 2 แท็บพร้อมกัน (ต้องเกิดจากการคลิกของผู้ใช้เพื่อกัน popup blocked)
+  window.open("https://phantomguy7845.github.io/PHANToM-is-Working-with-Connex/Close_lost_report/closelost_report.html", "_blank", "noopener");
+}
+
 window.addEventListener('load',()=>{
   const loader=document.getElementById('loading');
   const grid=document.getElementById('grid');
