@@ -75,7 +75,7 @@
       align-items:flex-start;
       gap: 10px;
       z-index: 30;
-      pointer-events:none;
+      pointer-events:auto;
     }
 
     .ig-pill{
@@ -518,7 +518,7 @@
       position:absolute;
       inset:0;
       display:flex;
-      pointer-events:none;
+      pointer-events:auto;
       z-index: 24; /* below top bar (30) and hint buttons (25) */
     }
     .touchZone{
@@ -538,9 +538,7 @@
         radial-gradient(circle at 50% 88%, rgba(56,189,248,0.10), rgba(0,0,0,0) 55%),
         linear-gradient(90deg, rgba(0,0,0,0.0), rgba(0,0,0,0.0));
     }
-    .touchZone.left{
-      border-right: 1px solid rgba(148,163,184,0.10);
-    }
+    .touchZone.left{ border-right: 1px solid rgba(148,163,184,0.00); }
     .touchZone.active::after{
       opacity:1;
     }
@@ -700,7 +698,10 @@
       z-index: 60;
       background: rgba(2,6,23,0.55);
       backdrop-filter: blur(2px);
+    
+      pointer-events:none;
     }
+    #pauseOverlay > *{ pointer-events:auto; }
     #pauseOverlay.show{ display:flex; }
     #pauseOverlay .pTitle{
       font-weight: 900;
@@ -1213,7 +1214,90 @@
       .ig-right{ min-width: 200px; }
       .ig-coins{ font-size: 11px; }
     }
-  </style>
+  
+    /* =========================
+       LOBBY PREVIEW (show game behind)
+       ========================= */
+    #startOverlay{
+      background: rgba(2,6,23,0.35);
+      backdrop-filter: blur(1.5px);
+    }
+    #startOverlay .lobby-card{
+      width: min(520px, 92vw);
+      border-radius: 18px;
+      padding: 14px 14px 12px;
+      border: 1px solid rgba(148,163,184,0.28);
+      background: rgba(2,6,23,0.50);
+      box-shadow: 0 18px 50px rgba(0,0,0,0.35);
+    }
+    #startOverlay .lobby-row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    #startOverlay .lobby-avatar{
+      width:64px;height:64px;
+      border-radius:18px;
+      display:flex;align-items:center;justify-content:center;
+      border:1px solid rgba(148,163,184,0.28);
+      background: rgba(15,23,42,0.55);
+      font-size:42px;
+      filter: drop-shadow(0 10px 16px rgba(0,0,0,0.35));
+    }
+    #startOverlay .lobby-meta{ flex:1; }
+    #startOverlay .lobby-sub{
+      margin-top:2px;
+      font-size:12px;
+      color:#9ca3af;
+      line-height:1.35;
+    }
+    #startOverlay .lobby-passive{
+      margin-top:8px;
+      font-size:12px;
+      color:#cbd5e1;
+      opacity:0.95;
+    }
+    #loadingOverlay{
+      position:absolute;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index: 70;
+      background: rgba(2,6,23,0.65);
+      backdrop-filter: blur(3px);
+    }
+    #loadingOverlay.show{ display:flex; }
+    .load-card{
+      width: min(560px, 92vw);
+      border-radius: 18px;
+      padding: 16px 16px 14px;
+      border: 1px solid rgba(148,163,184,0.28);
+      background: rgba(2,6,23,0.70);
+      box-shadow: 0 18px 50px rgba(0,0,0,0.45);
+      text-align:left;
+    }
+    .load-title{ font-weight:900; letter-spacing:0.08em; }
+    .load-desc{ margin-top:6px; font-size:12px; color:#9ca3af; line-height:1.4; }
+    .load-bar{
+      margin-top:12px;
+      height: 12px;
+      border-radius: 999px;
+      border:1px solid rgba(148,163,184,0.28);
+      background: rgba(15,23,42,0.55);
+      overflow:hidden;
+    }
+    .load-bar > div{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(34,197,94,0.95), rgba(45,212,191,0.95));
+      transition: width .18s ease;
+    }
+    .load-step{ margin-top:10px; font-size:12px; color:#e5e7eb; opacity:0.9; }
+    
+</style>
 </head>
 
 <body>
@@ -1286,10 +1370,32 @@
     </div>
 
     <div id="startOverlay">
-      <div class="title" id="startTitle">PHANToM RUNNER</div>
-      <div id="countdownText"></div>
-      <button id="startGameBtn">เริ่มเกม</button>
-      <div id="startHintMini">เริ่มเกมจะนับถอยหลัง 3 วินาที • กด Space ก็เริ่มได้</div>
+      <div class="lobby-card">
+        <div class="lobby-row">
+          <div class="lobby-avatar" id="lobbyAvatar">🧪</div>
+          <div class="lobby-meta">
+            <div class="title" id="startTitle">PHANToM RUNNER</div>
+            <div class="lobby-sub">ฉากหลังและตัวละครคือ “สนามจริง” (โหมดพักรอเริ่ม) • แตะซีกซ้าย=กระโดด • แตะซีกขวา=หมอบ</div>
+            <div class="lobby-passive">Passive (จากร้านค้า): <b id="lobbyPassiveText">ไม่มี</b></div>
+          </div>
+        </div>
+
+        <div id="countdownText"></div>
+        <button id="startGameBtn">เริ่มเกม</button>
+        <div id="startHintMini">เริ่มเกมจะนับถอยหลัง 3 วินาที • กด Space ก็เริ่มได้</div>
+      </div>
+    </div>
+
+    <div id="loadingOverlay" aria-hidden="true">
+      <div class="load-card">
+        <div class="load-title">กำลังออกแบบ 7 ด่าน...</div>
+        <div class="load-desc" id="loadingDesc">กำลังสร้างแพทเทิร์น เจลลี่ / ไอเท็ม / อุปสรรค สำหรับทุกด่าน</div>
+        <div class="load-bar"><div id="loadingBarFill"></div></div>
+        <div class="load-step" id="loadingStep">0%</div>
+        <div class="load-desc" style="margin-top:10px;">
+          <b>คำอธิบายเกม:</b> วิ่ง เก็บเหรียญ เลี่ยงอุปสรรค รักษาพลังงานให้เหลือรอดจนจบด่าน • เมื่อเริ่มเกมจะใช้ของที่ซื้อไว้ (Boost/Energy/Passive) อัตโนมัติ
+        </div>
+      </div>
     </div>
 
     <div id="pauseOverlay">
@@ -1518,6 +1624,12 @@
       const LS_OBS_UNLOCK = "phantom_runner_obstacles_unlocked";
       const LS_OBS_SELECTED = "phantom_runner_obstacles_selected";
 
+      // Power items / passive (shop)
+      const LS_INV_BOOST = "phantom_runner_inv_boost";
+      const LS_INV_ENERGY_CORE = "phantom_runner_inv_energy_core";
+      const LS_INV_REVIVE = "phantom_runner_inv_revive";
+      const LS_PASSIVE_ID = "phantom_runner_passive_id";
+
       const LS_AUDIO_MASTER = "phantom_runner_audio_master";
       const LS_AUDIO_BGM_ON = "phantom_runner_audio_bgm_on";
       const LS_AUDIO_SFX_ON = "phantom_runner_audio_sfx_on";
@@ -1532,7 +1644,10 @@
       const cheatTimerEl = document.getElementById("cheatTimer");
       const btnJump = document.getElementById("btnJump");
       const btnDuck = document.getElementById("btnDuck");
-      const energyBar = document.getElementById("energyBar");
+      
+      const zoneLeft = document.getElementById("zoneLeft");
+      const zoneRight = document.getElementById("zoneRight");
+const energyBar = document.getElementById("energyBar");
       const energyText = document.getElementById("energyText");
 
       const walletCoinsEl = document.getElementById("walletCoins");
@@ -1587,7 +1702,40 @@
       function randomBetween(min, max) { return Math.random() * (max - min) + min; }
       function randInt(min, maxIncl){ return Math.floor(randomBetween(min, maxIncl + 1)); }
 
-      const Sounds = {
+      
+
+      const PassivePool = [
+        { id:"drain15", name:"ประหยัดพลังงาน -15%", desc:"อัตราการใช้พลังงานต่อวินาที ลดลง 15%" },
+        { id:"coin2x", name:"เหรียญ x2", desc:"ได้รับเหรียญ 2 เท่า (คำนวณหลังจบเกม)" },
+        { id:"dmg70", name:"กันชน -70%", desc:"ความเสียหายจากการชนสิ่งกีดขวาง ลดลง 70%" },
+        { id:"noPit", name:"กันตกหลุม", desc:"ป้องกันการตกหลุม ตลอดทั้งเกม" },
+        { id:"magnet", name:"แม่เหล็กถาวร", desc:"ดูดเหรียญ/ไอเท็มได้ทุกแบบตลอดเกม" },
+        { id:"panic", name:"โหมดฉุกเฉิน", desc:"เมื่อพลังงาน <15%: ลดการใช้พลังงาน 35% + ลดความเสียหายชน 70%" },
+      ];
+      function getPassive(){ return PassivePool.find(p=>p.id===passiveId) || null; }
+      function setPassive(newId){
+        passiveId = newId || "";
+        try{ localStorage.setItem(LS_PASSIVE_ID, passiveId); }catch(_){}
+        const p = getPassive();
+        const lobbyPassiveText = document.getElementById("lobbyPassiveText");
+        if (lobbyPassiveText) lobbyPassiveText.textContent = p ? p.name : "ไม่มี";
+      }
+
+      function energyDecayMult(){
+        if (passiveId === "panic" && (energy / Math.max(1, maxEnergy)) < 0.15) return 0.65; // -35%
+        if (passiveId === "drain15") return 0.85;
+        return 1;
+      }
+      function damageMult(){
+        if (passiveId === "panic" && (energy / Math.max(1, maxEnergy)) < 0.15) return 0.30; // -70%
+        if (passiveId === "dmg70") return 0.30;
+        return 1;
+      }
+      function coinEndMult(){
+        return (passiveId === "coin2x") ? 2 : 1;
+      }
+
+const Sounds = {
         bgm: new Audio("bgm_main.mp3"),
         countdown: new Audio("sfx_countdown.mp3"),
         jump: new Audio("sfx_jump.mp3"),
@@ -1709,25 +1857,25 @@
       }
 
       const Backdrops = [
-        { id:"toxic",  name:"Toxic Lab (Default)", desc:"ฉากหลังเข้ม ๆ โทนพิษ", price:0,   css:{ "--bg1":"#1d2337", "--bg2":"#020617" } },
-        { id:"nebula", name:"Purple Nebula",       desc:"ม่วงลึก ๆ แบบจักรวาล", price:120, css:{ "--bg1":"#20102e", "--bg2":"#050312" } },
-        { id:"neon",   name:"Neon City",           desc:"น้ำเงิน/นีออนเข้ม ๆ",  price:150, css:{ "--bg1":"#0b1b2e", "--bg2":"#020617" } },
-        { id:"dusk",   name:"Midnight Dusk",       desc:"เข้มสลับน้ำเงิน",      price:180, css:{ "--bg1":"#0a1224", "--bg2":"#020617" } },
-        { id:"sunset", name:"Sunset Ember",        desc:"ส้ม/แดงเข้มแบบพระอาทิตย์ตก", price:220, css:{ "--bg1":"#2a0f10", "--bg2":"#07040a" } },
-        { id:"arctic", name:"Arctic Cyan",         desc:"ฟ้า/ไซแอนเย็น ๆ",      price:240, css:{ "--bg1":"#061a2b", "--bg2":"#020617" } },
+        { id:"toxic",  name:"Toxic Lab (Default)", desc:"ฉากหลังโทนพิษ (ค่าเริ่มต้น)", price:0,   css:{ "--bg1":"#1d2337", "--bg2":"#020617" } },
+        { id:"nebula", name:"Purple Nebula",       desc:"ม่วงลึกแบบเนบิวลา",          price:120, css:{ "--bg1":"#20102e", "--bg2":"#050312" } },
+        { id:"neon",   name:"Neon City",           desc:"น้ำเงิน/นีออนในเมือง",        price:150, css:{ "--bg1":"#0b1b2e", "--bg2":"#020617" } },
+        { id:"dusk",   name:"Midnight Dusk",       desc:"เข้ม-ดึก (คอนทราสต์สูง)",     price:180, css:{ "--bg1":"#0a1224", "--bg2":"#020617" } },
+        { id:"sunset", name:"Sunset Ember",        desc:"ส้ม/แดงแบบพระอาทิตย์ตก",      price:220, css:{ "--bg1":"#2a0f10", "--bg2":"#07040a" } },
+        { id:"arctic", name:"Arctic Cyan",         desc:"ฟ้าเย็น/ไซแอนคม ๆ",           price:240, css:{ "--bg1":"#061a2b", "--bg2":"#020617" } },
       ];
 
       const ObstacleThemes = [
-        { id:"poison", name:"Poison Slate (Default)", desc:"โทนพิษมืด ๆ", price:0,
-          css:{ "--obs-a":"#111827","--obs-b":"#0b1020","--obs-c":"#2e1065","--obs-d":"#0b1020","--obs-border":"rgba(148,163,184,0.16)","--obs-shadow":"rgba(0,0,0,0.35)" } },
+        { id:"poison", name:"Poison Slate (Default)", desc:"โทนพิษมืด ๆ (ค่าเริ่มต้น)", price:0,
+          css:{ "--obs-a":"#111827","--obs-b":"#0b1020","--obs-c":"#263246","--obs-border":"rgba(148,163,184,0.16)","--obs-shadow":"rgba(0,0,0,0.35)" } },
         { id:"ember", name:"Ember Core", desc:"แดง/ส้มเดือด ๆ", price:140,
-          css:{ "--obs-a":"#2b0a0a","--obs-b":"#3b0a0a","--obs-c":"#7f1d1d","--obs-d":"#1f0a0a","--obs-border":"rgba(248,113,113,0.18)","--obs-shadow":"rgba(0,0,0,0.38)" } },
+          css:{ "--obs-a":"#2b0a0a","--obs-b":"#3b0a0a","--obs-c":"#7f1d1d","--obs-border":"rgba(248,113,113,0.18)","--obs-shadow":"rgba(0,0,0,0.38)" } },
         { id:"cyber", name:"Cyber Neon", desc:"น้ำเงิน/ม่วงนีออน", price:170,
-          css:{ "--obs-a":"#0a1020","--obs-b":"#0b2a3a","--obs-c":"#5b21b6","--obs-d":"#0b1020","--obs-border":"rgba(56,189,248,0.18)","--obs-shadow":"rgba(0,0,0,0.36)" } },
+          css:{ "--obs-a":"#0a1020","--obs-b":"#0b2a3a","--obs-c":"#164e63","--obs-border":"rgba(56,189,248,0.18)","--obs-shadow":"rgba(0,0,0,0.36)" } },
         { id:"forest", name:"Deep Forest", desc:"เขียวเข้ม/ดำ", price:190,
-          css:{ "--obs-a":"#07110b","--obs-b":"#0a1a12","--obs-c":"#14532d","--obs-d":"#07110b","--obs-border":"rgba(34,197,94,0.16)","--obs-shadow":"rgba(0,0,0,0.36)" } },
+          css:{ "--obs-a":"#07110b","--obs-b":"#0a1a12","--obs-c":"#14532d","--obs-border":"rgba(34,197,94,0.16)","--obs-shadow":"rgba(0,0,0,0.36)" } },
         { id:"ice", name:"Frost Byte", desc:"ฟ้าเย็น/น้ำเงิน", price:210,
-          css:{ "--obs-a":"#07141f","--obs-b":"#0b2a3a","--obs-c":"#1d4ed8","--obs-d":"#07141f","--obs-border":"rgba(147,197,253,0.18)","--obs-shadow":"rgba(0,0,0,0.34)" } },
+          css:{ "--obs-a":"#07141f","--obs-b":"#0b2a3a","--obs-c":"#1e3a8a","--obs-border":"rgba(147,197,253,0.18)","--obs-shadow":"rgba(0,0,0,0.34)" } },
       ];
 
       function loadUnlockedObj(key, defaultId){
@@ -1814,6 +1962,7 @@ function applyGroundLayout(){
 
       let isDucking = false;
 
+      let maxEnergy = CFG_MAX_ENERGY;
       let energy = CFG_MAX_ENERGY;
 
       let score = 0;
@@ -1898,7 +2047,7 @@ function applyGroundLayout(){
       }
 
       function updateEnergyUI() {
-        const ratio = clamp(energy / CFG_MAX_ENERGY, 0, 1);
+        const ratio = clamp(energy / Math.max(1, maxEnergy), 0, 1);
         energyBar.style.width = (ratio * 100) + "%";
         energyText.textContent = Math.round(energy) + " / " + CFG_MAX_ENERGY;
       }
@@ -1928,11 +2077,18 @@ function applyGroundLayout(){
       function hideGameOverModal(){ gameOverModal.classList.remove("show"); }
 
       function showGameOverModal(){
-        const canRevive = (!revivedThisRun && walletCoins >= CFG_REVIVE_COST);
+        const canReviveToken = (!revivedThisRun && invRevive > 0);
+        const canReviveCoins = (!revivedThisRun && walletCoins >= CFG_REVIVE_COST);
+        const canRevive = canReviveToken || canReviveCoins;
+
         reviveBtn.style.display = canRevive ? "block" : "none";
-        reviveBtn.textContent = canRevive
-          ? ("คืนชีพด้วย " + CFG_REVIVE_COST + " เหรียญ (คงเหลือ: " + walletCoins + ")")
-          : "";
+        if (canReviveToken){
+          reviveBtn.textContent = "ใช้ Revive Token (เหลือ: " + invRevive + ") — ไม่หักคะแนน/เหรียญ";
+        } else if (canReviveCoins){
+          reviveBtn.textContent = "คืนชีพด้วย " + CFG_REVIVE_COST + " เหรียญ (คงเหลือ: " + walletCoins + ")";
+        } else {
+          reviveBtn.textContent = "";
+        }
 
         modalStats.innerHTML =
           "คะแนน: <b>" + score + "</b><br/>" +
@@ -1990,6 +2146,22 @@ function applyGroundLayout(){
         }
       }
 
+
+      function applyStartBoostIfAny(){
+        if (invBoost > 0){
+          invBoost--;
+          try{ localStorage.setItem(LS_INV_BOOST, String(invBoost)); }catch(_){}
+          boostActive = true;
+          boostTimer = 12000; // 12s
+          invincible = true;
+          invincibleTimer = Math.max(invincibleTimer, 900); // small i-frame
+          player.classList.add("invincible");
+          messageEl.textContent = "Start Boost 12s ถูกใช้อัตโนมัติ! 🚀";
+          unlockAudioOnce();
+          playSFX(Sounds.powerup);
+        }
+      }
+
       function addScore(base){
         if (!postReviveActive){
           score += base;
@@ -2020,7 +2192,77 @@ function applyGroundLayout(){
         }
       }
 
-      function prepareNewRun(){
+      
+      // =========================
+      // LEVEL SYSTEM (7 levels)
+      // =========================
+      const Levels = [
+        { id:1, name:"Level 1 • Warm-up", speedMult:1.00, obsRate:1.00, jellyRate:1.00, coinRate:1.00, airChance:0.16 },
+        { id:2, name:"Level 2 • Toxic Breeze", speedMult:1.07, obsRate:1.06, jellyRate:1.00, coinRate:1.05, airChance:0.18 },
+        { id:3, name:"Level 3 • Split Lanes", speedMult:1.12, obsRate:1.10, jellyRate:1.02, coinRate:1.08, airChance:0.20 },
+        { id:4, name:"Level 4 • Pressure", speedMult:1.18, obsRate:1.15, jellyRate:1.02, coinRate:1.10, airChance:0.22 },
+        { id:5, name:"Level 5 • Laser Week", speedMult:1.24, obsRate:1.22, jellyRate:1.03, coinRate:1.12, airChance:0.24 },
+        { id:6, name:"Level 6 • Night Rush", speedMult:1.30, obsRate:1.28, jellyRate:1.04, coinRate:1.14, airChance:0.26 },
+        { id:7, name:"Level 7 • PHANToM Trial", speedMult:1.38, obsRate:1.36, jellyRate:1.05, coinRate:1.18, airChance:0.28 },
+      ];
+      let currentLevelIndex = 0; // 0..6
+      let designedLevelPlan = null; // filled before start
+
+      function getLevel(){ return Levels[currentLevelIndex] || Levels[0]; }
+
+      function showLoading(stepPct, stepText){
+        const ov = document.getElementById("loadingOverlay");
+        const fill = document.getElementById("loadingBarFill");
+        const st = document.getElementById("loadingStep");
+        const desc = document.getElementById("loadingDesc");
+        if (!ov || !fill || !st) return;
+        ov.classList.add("show");
+        fill.style.width = Math.max(0, Math.min(100, stepPct)) + "%";
+        st.textContent = stepText || (Math.round(stepPct) + "%");
+        if (desc) desc.textContent = "กำลังสร้างแพทเทิร์น เจลลี่ / ไอเท็ม / อุปสรรค • " + (stepText || "");
+      }
+      function hideLoading(){
+        const ov = document.getElementById("loadingOverlay");
+        if (ov) ov.classList.remove("show");
+      }
+
+      function design7LevelsWithProgress(done){
+        // simulate “ออกแบบแพทเทิร์น” แบบเป็นขั้น พร้อม progress
+        let pct = 0;
+        currentLevelIndex = 0;
+        designedLevelPlan = { levels: [] };
+
+        const steps = [];
+        for (let i=0;i<7;i++){
+          steps.push({ pct: (i*100/7), text: "กำลังออกแบบด่าน " + (i+1) + "/7..." });
+        }
+        steps.push({ pct: 100, text: "เสร็จแล้ว! เตรียมเริ่มเกม..." });
+
+        let si = 0;
+        const tick = ()=>{
+          const s = steps[si];
+          pct = s.pct;
+          showLoading(pct, s.text);
+
+          if (si < 7){
+            // “แพทเทิร์น” ที่เรียบง่าย: สร้าง seed และค่าการสุ่มของด่าน
+            designedLevelPlan.levels.push({
+              levelId: si+1,
+              seed: Math.floor(Math.random()*1e9),
+            });
+          }
+
+          si++;
+          if (si > steps.length-1){
+            hideLoading();
+            done && done();
+            return;
+          }
+          setTimeout(tick, 260);
+        };
+        tick();
+      }
+function prepareNewRun(){
         cancelCountdown();
         closeAllModals();
         clearArrays();
@@ -2045,10 +2287,15 @@ function applyGroundLayout(){
 
         resetPowerupsAndVFX();
 
-        energy = CFG_MAX_ENERGY;
+        // apply Energy Core (start energy 120) + passive effects
+        maxEnergy = hasEnergyCore ? 120 : CFG_MAX_ENERGY;
+        energy = maxEnergy;
+        // apply Passive / items at start
+        if (passiveId === "magnet") { magnetActive = true; magnetTimer = 999999999; }
+        applyStartBoostIfAny();
 
         timeSinceLastObstacle = 0;
-        nextSpawnIn = 900 + Math.random() * 700;
+        nextSpawnIn = (900 + Math.random() * 700) / (getLevel().obsRate || 1);
 
         timeSinceLastCoin = 0;
         timeSinceLastHeart = 0;
@@ -2089,6 +2336,15 @@ function applyGroundLayout(){
 
         bgmPause();
         showStartOverlay();
+      }
+
+      function prepareStartGame(){
+        // design levels first with progress, then start countdown
+        design7LevelsWithProgress(()=>{
+          // start at level 1 every new run
+          currentLevelIndex = 0;
+          prepareStartGame();
+        });
       }
 
       function startCountdown(isResume){
@@ -2207,6 +2463,7 @@ function applyGroundLayout(){
       });
 
       function spawnHole() {
+        if (passiveId === "noPit") return;
         const h = document.createElement("div");
         h.classList.add("hole");
         const width = randomBetween(80, 160);
@@ -2230,7 +2487,7 @@ function applyGroundLayout(){
       function spawnObstacle() {
         const roll = Math.random();
 
-        if (roll < 0.18) {
+        if (roll < (getLevel().airChance || 0.18)) {
           const obs = document.createElement("div");
           obs.classList.add("obstacle", "ceiling");
 
@@ -2629,7 +2886,7 @@ function applyGroundLayout(){
               const isAir = obs.classList.contains("air") || obs.classList.contains("ceiling");
               const dmg = isAir ? CFG_DAMAGE_AIR : CFG_DAMAGE_GROUND;
 
-              energy -= dmg;
+              energy -= dmg * damageMult();
               unlockAudioOnce();
               playSFX(Sounds.hit);
 
@@ -2697,10 +2954,10 @@ function applyGroundLayout(){
             timeSinceLastObstacle = 0;
 
             if (obstacleWaveLeft > 0) {
-              nextSpawnIn = randomBetween(820, 1250);
+              nextSpawnIn = randomBetween(820, 1250) / (getLevel().obsRate || 1);
             } else {
               obstacleRestLeft = randomBetween(1400, 2700);
-              nextSpawnIn = randomBetween(minInterval, maxInterval);
+              nextSpawnIn = randomBetween(minInterval, maxInterval) / (getLevel().obsRate || 1);
             }
           } else {
             timeSinceLastObstacle = Math.max(0, nextSpawnIn - 120);
@@ -2915,8 +3172,20 @@ function applyGroundLayout(){
         const delta = timestamp - lastTime;
         lastTime = timestamp;
 
+        // level progression by score (7 levels)
+        const LEVEL_THRESHOLDS = [0, 200, 450, 750, 1100, 1500, 2000];
+        const prevLevel = currentLevelIndex;
+        for (let i=LEVEL_THRESHOLDS.length-1;i>=0;i--){
+          if (score >= LEVEL_THRESHOLDS[i]) { currentLevelIndex = Math.min(6, i); break; }
+        }
+        if (currentLevelIndex !== prevLevel){
+          messageEl.textContent = (getLevel().name || ("Level " + (currentLevelIndex+1))) + " เริ่มแล้ว!";
+          unlockAudioOnce();
+          playSFX(Sounds.powerup);
+        }
+
         if (!invincible) {
-          energy -= CFG_ENERGY_DECAY_PER_SEC * (delta / 1000);
+          energy -= (CFG_ENERGY_DECAY_PER_SEC * energyDecayMult()) * (delta / 1000);
           if (energy <= 0) {
             energy = 0;
             updateEnergyUI();
@@ -3006,6 +3275,14 @@ function applyGroundLayout(){
         }
         bestScoreEl.textContent = "สถิติสูงสุด: " + bestScore;
 
+        // Passive: coin2x (calculated after game ends)
+        if (coinEndMult() === 2 && runCoins > 0){
+          const bonus = runCoins; // add the extra 1x
+          runCoins += bonus;
+          walletCoins += bonus;
+          saveWallet();
+        }
+
         messageEl.textContent =
           "Game Over! คะแนน: " + score +
           " • เหรียญรอบนี้: " + runCoins +
@@ -3019,14 +3296,27 @@ function applyGroundLayout(){
       function reviveNow(){
         if (!gameOver) return;
         if (revivedThisRun) return;
-        if (walletCoins < CFG_REVIVE_COST) return;
+
+        const useToken = (invRevive > 0);
+        const useCoins = (!useToken && walletCoins >= CFG_REVIVE_COST);
+        if (!useToken && !useCoins) return;
 
         unlockAudioOnce();
         playSFX(Sounds.revive);
 
-        walletCoins -= CFG_REVIVE_COST;
-        saveWallet();
-        updateCoinsUI();
+        if (useToken){
+          invRevive = Math.max(0, invRevive - 1);
+          try{ localStorage.setItem(LS_INV_REVIVE, String(invRevive)); }catch(_){}
+          // Token revive: keep score/coins as-is (no post penalties)
+          postReviveActive = false;
+        } else {
+          walletCoins -= CFG_REVIVE_COST;
+          saveWallet();
+          updateCoinsUI();
+          // Coin revive keeps existing postRevive penalties
+          // postReviveActive set above (token vs coins)
+        // postReviveActive = true;
+        }
 
         revivedThisRun = true;
         postReviveActive = true;
@@ -3038,7 +3328,7 @@ function applyGroundLayout(){
         clearArrays();
         resetPowerupsAndVFX();
 
-        energy = clamp(CFG_REVIVE_ENERGY, 1, CFG_MAX_ENERGY);
+        energy = clamp(CFG_REVIVE_ENERGY, 1, maxEnergy);
         updateEnergyUI();
 
         invincible = true;
@@ -3057,7 +3347,7 @@ function applyGroundLayout(){
         speed = clamp(speed, CFG_START_SPEED, CFG_MAX_SPEED);
 
         timeSinceLastObstacle = 0;
-        nextSpawnIn = 900 + Math.random() * 700;
+        nextSpawnIn = (900 + Math.random() * 700) / (getLevel().obsRate || 1);
 
         timeSinceLastCoin = 0;
         timeSinceLastHeart = 0;
@@ -3193,7 +3483,7 @@ function applyGroundLayout(){
       });
       resumeBtnOverlay.addEventListener("click", resumeGame);
 
-      startGameBtn.addEventListener("click", ()=> startCountdown(false));
+      startGameBtn.addEventListener("click", ()=> prepareStartGame());
 
       restartBtn.addEventListener("click", prepareNewRun);
       restartOutsideBtn.addEventListener("click", prepareNewRun);
@@ -3233,12 +3523,48 @@ function applyGroundLayout(){
       });
 
       btnDuck.addEventListener("pointerdown", (e) => {
+
         e.preventDefault();
         setDuck(true);
         registerCheat("ArrowDown");
       });
       btnDuck.addEventListener("pointerup", (e) => { e.preventDefault(); setDuck(false); });
       btnDuck.addEventListener("pointercancel",(e)=> { e.preventDefault(); setDuck(false); });
+
+      // Full-screen split touch zones: Left = Jump (tap), Right = Duck (hold)
+      function attachZoneHandlers(){
+        if (!zoneLeft || !zoneRight) return;
+
+        const setActive = (el, on)=>{ if (!el) return; el.classList.toggle("active", !!on); };
+
+        zoneLeft.addEventListener("pointerdown", (e)=>{
+          e.preventDefault();
+          if (isPaused || gameOver) return;
+          setActive(zoneLeft, true);
+          handleJump();
+          registerCheat("Space");
+        }, { passive:false });
+
+        zoneLeft.addEventListener("pointerup", ()=> setActive(zoneLeft, false));
+        zoneLeft.addEventListener("pointercancel", ()=> setActive(zoneLeft, false));
+
+        zoneRight.addEventListener("pointerdown", (e)=>{
+          e.preventDefault();
+          if (isPaused || gameOver) return;
+          setActive(zoneRight, true);
+          setDuck(true);
+          registerCheat("ArrowDown");
+        }, { passive:false });
+
+        const endDuck = ()=>{
+          setActive(zoneRight, false);
+          setDuck(false);
+        };
+        zoneRight.addEventListener("pointerup", endDuck);
+        zoneRight.addEventListener("pointercancel", endDuck);
+        zoneRight.addEventListener("pointerleave", endDuck);
+      }
+      attachZoneHandlers();
       btnDuck.addEventListener("pointerleave", () => { if (isDucking) setDuck(false); });
 
       function openSound(){
@@ -3360,6 +3686,43 @@ function applyGroundLayout(){
           const selected = (selectedObsTheme === t.id);
           addItem(t, "obstacle", unlocked, selected, swatchObstacle(t));
         });
+
+        // Power Items
+        addSection("Power Items", "ไอเท็มสะสม/ถาวร (ใช้ตอนเริ่มเกมอัตโนมัติ) และสุ่ม Passive");
+        const powerItems = [
+          { id:"boost12",   name:"Start Boost 12s", desc:"เริ่มเกมติด Boost 12 วินาที (สะสมได้)", price:80,  kind:"stack", getCount:()=>invBoost, buy:()=>{ invBoost++; saveNum(LS_INV_BOOST, invBoost); } },
+          { id:"energy120", name:"Energy Core +20%", desc:"พลังงานเริ่มต้น 120 (ถาวร)",           price:260, kind:"toggle", enabled:()=>hasEnergyCore, buy:()=>{ hasEnergyCore=true; try{localStorage.setItem(LS_INV_ENERGY_CORE,"1");}catch(_){} } },
+          { id:"revive",    name:"Revive Token", desc:"คืนชีพ 1 ครั้ง (สะสมได้) — ไม่หักคะแนน/เหรียญ", price:200, kind:"stack", getCount:()=>invRevive, buy:()=>{ invRevive++; saveNum(LS_INV_REVIVE, invRevive); } },
+          { id:"passive",   name:"สุ่ม Passive Skill", desc:"ถือได้ 1 อันเท่านั้น (ซื้อซ้ำจะทับอันเดิม) และใช้ตอนเริ่มเกม", price:180, kind:"passive", getPassive:()=>getPassive(), buy:()=>{ 
+              const pick = PassivePool[Math.floor(Math.random()*PassivePool.length)];
+              setPassive(pick.id);
+            } },
+        ];
+
+        powerItems.forEach(it=>{
+          const el = document.createElement("div");
+          el.className = "shop-item";
+          const badge = (it.kind==="stack") ? ("x" + it.getCount()) : (it.kind==="toggle" ? (it.enabled() ? "ON" : "OFF") : (it.getPassive() ? it.getPassive().name : "NONE"));
+          const ownedNote = (it.kind==="stack") ? ("คงเหลือ: " + it.getCount()) :
+                            (it.kind==="toggle" ? (it.enabled() ? "เปิดใช้งานแล้ว" : "ยังไม่เปิดใช้งาน") :
+                            (it.getPassive() ? ("ได้: " + it.getPassive().desc) : "ยังไม่มี Passive"));
+          el.innerHTML = `
+            <div class="shop-item-inner">
+              <div class="shop-item-title-row">
+                <div class="shop-item-title">${it.name}</div>
+                <div class="shop-pill">${badge}</div>
+              </div>
+              <div class="shop-item-desc">${it.desc}</div>
+              <div class="shop-item-desc" style="margin-top:6px;color:#cbd5e1;opacity:.8;">${ownedNote}</div>
+              <div class="shop-item-actions">
+                <button class="shop-buy" data-kind="power" data-id="${it.id}">
+                  ซื้อ <b>${it.price}</b> เหรียญ
+                </button>
+              </div>
+            </div>
+          `;
+          shopGrid.appendChild(el);
+        });
       }
 
       function openShop(){
@@ -3393,6 +3756,39 @@ function applyGroundLayout(){
         const id = btn.getAttribute("data-id");
         const act = btn.getAttribute("data-act");
         const kind = btn.getAttribute("data-kind");
+
+        // Power items (separate from themes)
+        if (kind === "power"){
+          const PowerPrice = { boost12:80, energy120:260, revive:200, passive:180 };
+          const price = PowerPrice[id];
+          if (!price) return;
+          if (walletCoins < price) return;
+
+          // buy rules
+          if (id === "energy120" && hasEnergyCore) return;
+
+          walletCoins -= price;
+          saveWallet();
+          updateCoinsUI();
+
+          if (id === "boost12"){
+            invBoost++;
+            saveNum(LS_INV_BOOST, invBoost);
+          } else if (id === "energy120"){
+            hasEnergyCore = true;
+            try{ localStorage.setItem(LS_INV_ENERGY_CORE,"1"); }catch(_){}
+          } else if (id === "revive"){
+            invRevive++;
+            saveNum(LS_INV_REVIVE, invRevive);
+          } else if (id === "passive"){
+            const pick = PassivePool[Math.floor(Math.random()*PassivePool.length)];
+            setPassive(pick.id);
+          }
+
+          playSFX(Sounds.click);
+          renderShop();
+          return;
+        }
 
         const list = (kind === "obstacle") ? ObstacleThemes : Backdrops;
         const item = list.find(x=>x.id===id);
