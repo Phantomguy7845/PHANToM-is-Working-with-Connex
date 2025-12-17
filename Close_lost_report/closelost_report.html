@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PHANToM • Deal Close lost Uploader</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg0:#020617;
+      --bg1:#0b1224;
+      --card:rgba(15,23,42,.72);
+      --border:rgba(148,163,184,.24);
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --accent:#22d3ee;
+      --accent2:#a855f7;
+      --ok:#22c55e;
+      --bad:#ef4444;
+      --warn:#f59e0b;
+      --shadow: 0 14px 60px rgba(0,0,0,.45);
+      --r:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:"Prompt",system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(34,211,238,.18), transparent 60%),
+        radial-gradient(1000px 700px at 80% 20%, rgba(168,85,247,.16), transparent 55%),
+        linear-gradient(180deg,var(--bg0),var(--bg1));
+      color:var(--text);
+      min-height:100vh;
+      padding:18px;
+    }
+    .wrap{max-width:980px;margin:0 auto}
+    .top{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin-bottom:14px;
+    }
+    .brand{display:flex; flex-direction:column; gap:2px}
+    .brand .t1{font-weight:800; letter-spacing:.6px; font-size:18px}
+    .brand .t2{color:var(--muted); font-size:12px}
+    .pill{
+      display:inline-flex; gap:8px; align-items:center;
+      border:1px solid var(--border);
+      background:rgba(2,6,23,.55);
+      padding:8px 10px;
+      border-radius:999px;
+      color:var(--muted);
+      font-size:12px;
+      user-select:none;
+      max-width:520px;
+      overflow:hidden;
+    }
+    .pill span:last-child{
+      color:var(--text);
+      opacity:.9;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width:420px;
+      display:inline-block;
+    }
+    .card{
+      border:1px solid var(--border);
+      background:var(--card);
+      box-shadow:var(--shadow);
+      border-radius:var(--r);
+      padding:14px;
+      backdrop-filter: blur(10px);
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
+    }
+    @media(min-width:960px){
+      .grid{grid-template-columns: 1.05fr .95fr;}
+    }
+    label{display:block; font-size:12px; color:var(--muted); margin-bottom:8px}
+    textarea{
+      width:100%;
+      min-height:240px;
+      resize:vertical;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.28);
+      background:rgba(2,6,23,.55);
+      color:var(--text);
+      padding:12px 12px;
+      outline:none;
+      line-height:1.35;
+      font-size:14px;
+    }
+    textarea:focus{border-color:rgba(34,211,238,.6); box-shadow:0 0 0 3px rgba(34,211,238,.14)}
+    .row{
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
+      margin-top:10px;
+    }
+    .btns{display:flex; gap:10px; flex-wrap:wrap}
+    button{
+      border:1px solid rgba(148,163,184,.28);
+      background:rgba(2,6,23,.6);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      font-weight:700;
+      cursor:pointer;
+      transition:.15s transform, .15s opacity, .15s border-color;
+    }
+    button:hover{transform:translateY(-1px); border-color:rgba(34,211,238,.55)}
+    button:active{transform:translateY(0px); opacity:.9}
+    .primary{
+      border-color:rgba(34,211,238,.55);
+      background:linear-gradient(180deg, rgba(34,211,238,.22), rgba(2,6,23,.62));
+    }
+    .danger{
+      border-color:rgba(239,68,68,.45);
+      background:linear-gradient(180deg, rgba(239,68,68,.16), rgba(2,6,23,.62));
+    }
+    .small{font-size:12px; color:var(--muted)}
+    .status{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:rgba(2,6,23,.55);
+      color:var(--muted);
+      min-height:44px;
+      display:flex; align-items:center; gap:10px;
+    }
+    .dot{width:10px;height:10px;border-radius:999px;background:rgba(148,163,184,.55)}
+    .dot.ok{background:rgba(34,197,94,.9)}
+    .dot.bad{background:rgba(239,68,68,.9)}
+    .dot.warn{background:rgba(245,158,11,.95)}
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(2,6,23,.55);
+    }
+    th,td{
+      padding:10px 10px;
+      border-bottom:1px solid rgba(148,163,184,.14);
+      font-size:13px;
+      vertical-align:top;
+    }
+    th{color:var(--muted); text-align:left; font-weight:700; background:rgba(15,23,42,.38)}
+    tr:last-child td{border-bottom:none}
+    .muted{color:var(--muted)}
+    .kpi{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px}
+    .kpi .box{
+      flex:1;
+      min-width:140px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(148,163,184,.22);
+      background:rgba(2,6,23,.55);
+    }
+    .kpi .n{font-size:20px; font-weight:900}
+    .kpi .d{font-size:12px; color:var(--muted)}
+    .footer{
+      margin-top:14px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.5;
+    }
+    code{color:rgba(34,211,238,.9)}
+  </style>
+</head>
+
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <div class="t1">PHANToM • Deal Close lost Uploader</div>
+      <div class="t2">วางข้อความหลายบรรทัด → ตรวจพรีวิว → กดยืนยันเพื่อบันทึกลง Google Sheet</div>
+    </div>
+    <div class="pill">
+      <span class="muted">Endpoint:</span>
+      <span id="endpointText"></span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <label for="input">ช่องกรอกข้อความ (วางได้ทั้งชุดหลายบรรทัด)</label>
+      <textarea id="input" placeholder="ตัวอย่าง:
+D-99901 เปิดใหม่ Pannawit (Atom)
+D-87916 เปิดใหม่ Napadon (ยกเลิกสิทธิ) (Yimwaan)
+D-12345 เปิดใหม่
+D-54321  (กรณีขาดบางอย่างก็ยังส่งได้)"></textarea>
+
+      <div class="row">
+        <div class="small">
+          รองรับ Sale แบบหลายวงเล็บ: <code>Napadon (ยกเลิกสิทธิ) (Yimwaan)</code><br>
+          และถ้าข้อมูลไม่ครบ จะยังส่งได้ (เว้นช่องว่างไว้)
+        </div>
+        <div class="btns">
+          <button id="btnPreview" type="button">พรีวิว</button>
+          <button id="btnClear" type="button" class="danger">ล้าง</button>
+          <button id="btnSubmit" type="button" class="primary">ยืนยันส่งเข้า Sheet</button>
+        </div>
+      </div>
+
+      <div class="status">
+        <span class="dot" id="statusDot"></span>
+        <span id="statusText">พร้อมใช้งาน</span>
+      </div>
+
+      <div class="kpi">
+        <div class="box">
+          <div class="n" id="kpiLines">0</div>
+          <div class="d">บรรทัดที่ตรวจพบ</div>
+        </div>
+        <div class="box">
+          <div class="n" id="kpiKept">0</div>
+          <div class="d">บรรทัดที่ส่ง (มี Deal)</div>
+        </div>
+        <div class="box">
+          <div class="n" id="kpiSkipped">0</div>
+          <div class="d">บรรทัดที่ข้าม (ไม่มี Deal)</div>
+        </div>
+      </div>
+
+      <div class="footer">
+        วิธีส่ง: <b>Form POST</b> ผ่าน iframe (ไม่ติด CORS) • รับผลกลับด้วย <code>PHANTOM_POSTBACK:</code>
+      </div>
+    </div>
+
+    <div class="card">
+      <label>พรีวิวข้อมูลที่จะถูกส่ง</label>
+      <div class="small muted" style="margin-bottom:10px">
+        Date = วันที่ปัจจุบัน (จากเครื่องผู้ใช้) • ถ้าข้อมูลบางช่องไม่มี จะเป็นค่าว่าง
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width:120px">Date</th>
+            <th style="width:120px">Deal</th>
+            <th style="width:260px">Sale</th>
+            <th>Remark</th>
+          </tr>
+        </thead>
+        <tbody id="previewBody">
+          <tr><td colspan="4" class="muted">ยังไม่มีข้อมูล — กด “พรีวิว”</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden iframe + form -->
+<iframe id="phantom_iframe" name="phantom_iframe" style="display:none"></iframe>
+
+<form id="phantomForm" method="POST" target="phantom_iframe"
+  action="https://script.google.com/macros/s/AKfycbxrii5h6wPZi1K4EbxHZ2g5LOi7UnA7h4K5rrQCscOnPpg5cMonQCk2gZWPp_a2X4RV/exec">
+  <input type="hidden" name="payload" id="payloadField">
+</form>
+
+<script>
+  const ENDPOINT = "https://script.google.com/macros/s/AKfycbxrii5h6wPZi1K4EbxHZ2g5LOi7UnA7h4K5rrQCscOnPpg5cMonQCk2gZWPp_a2X4RV/exec";
+  document.getElementById("endpointText").textContent = ENDPOINT;
+
+  const $ = (id) => document.getElementById(id);
+
+  function setStatus(type, text){
+    const dot = $("statusDot");
+    dot.className = "dot";
+    if(type === "ok") dot.classList.add("ok");
+    if(type === "bad") dot.classList.add("bad");
+    if(type === "warn") dot.classList.add("warn");
+    $("statusText").textContent = text;
+  }
+
+  function todayISO(){
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,"0");
+    const dd = String(d.getDate()).padStart(2,"0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  function escapeHtml(str){
+    return String(str ?? "").replace(/[&<>"']/g, s => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[s]));
+  }
+
+  function parseLines(text){
+    const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+
+    const reDeal = /^(D-\d+)/;
+    const reSaleEnd = /(\S+(?:\s*\(.+?\))+)\s*$/;              // ✅ หลายวงเล็บ
+    const reMid = /^D-\d+\s+(.*?)\s+\S+(?:\s*\(.+?\))+\s*$/;   // ✅ กลาง (มี Sale)
+
+    const rows = [];
+    let skipped = 0;
+
+    for(const raw of lines){
+      const deal = (raw.match(reDeal) || [,""])[1] || "";
+      if(!deal){ skipped++; continue; }
+
+      const saleMatch = raw.match(reSaleEnd);
+      const sale = saleMatch ? saleMatch[1].trim() : "";
+
+      let remark = "";
+      const mid = raw.match(reMid);
+      if(mid && typeof mid[1] === "string"){
+        remark = mid[1].trim();
+      }else{
+        remark = raw.replace(reDeal, "").trim();
+        if(sale){
+          remark = remark.replace(reSaleEnd, "").trim();
+        }
+      }
+
+      // ✅ อนุญาตให้ sale/remark ว่างได้
+      rows.push({ date: todayISO(), deal, sale, remark, raw });
+    }
+
+    return { lines, rows, skipped };
+  }
+
+  function renderPreview(rows){
+    const tbody = $("previewBody");
+    tbody.innerHTML = "";
+
+    if(rows.length === 0){
+      tbody.innerHTML = `<tr><td colspan="4" class="muted">ไม่มีแถวที่จะส่ง (ต้องมี Deal อย่างน้อย)</td></tr>`;
+      return;
+    }
+
+    for(const r of rows){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${escapeHtml(r.date)}</td>
+        <td>${escapeHtml(r.deal)}</td>
+        <td>${escapeHtml(r.sale)}</td>
+        <td>${escapeHtml(r.remark)}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+  }
+
+  // ✅ รับผลตอบกลับเฉพาะที่ขึ้นต้นด้วย PHANTOM_POSTBACK: (กัน noise ใน console)
+  window.addEventListener("message", (event) => {
+    try{
+      const msg = String(event.data || "");
+      if(!msg.startsWith("PHANTOM_POSTBACK:")) return;
+
+      const json = msg.slice("PHANTOM_POSTBACK:".length);
+      const data = JSON.parse(json);
+
+      if(data.ok){
+        setStatus("ok", data.message || "ส่งสำเร็จ");
+        $("input").value = "";
+        $("btnPreview").click();
+      }else{
+        setStatus("bad", data.message || "ส่งไม่สำเร็จ");
+      }
+    }catch(e){
+      // ignore
+    }
+  });
+
+  $("btnPreview").addEventListener("click", () => {
+    const text = $("input").value.trim();
+    const { lines, rows, skipped } = parseLines(text);
+
+    $("kpiLines").textContent = lines.length;
+    $("kpiKept").textContent = rows.length;
+    $("kpiSkipped").textContent = skipped;
+
+    renderPreview(rows);
+
+    if(lines.length === 0) setStatus("warn","ยังไม่มีข้อมูล");
+    else setStatus("ok",`พรีวิวแล้ว: จะส่ง ${rows.length} แถว (ข้าม ${skipped} แถวที่ไม่มี Deal)`);
+  });
+
+  $("btnClear").addEventListener("click", () => {
+    $("input").value = "";
+    $("previewBody").innerHTML = `<tr><td colspan="4" class="muted">ยังไม่มีข้อมูล — กด “พรีวิว”</td></tr>`;
+    $("kpiLines").textContent = "0";
+    $("kpiKept").textContent = "0";
+    $("kpiSkipped").textContent = "0";
+    setStatus("ok","ล้างแล้ว");
+  });
+
+  $("btnSubmit").addEventListener("click", () => {
+    const text = $("input").value.trim();
+    if(!text){
+      setStatus("warn","ยังไม่มีข้อความให้ส่ง");
+      return;
+    }
+
+    // พรีวิวอัตโนมัติก่อนส่ง
+    $("btnPreview").click();
+
+    const { rows } = parseLines(text);
+    if(rows.length === 0){
+      setStatus("bad","ส่งไม่ได้: ไม่มีบรรทัดที่มี Deal");
+      return;
+    }
+
+    setStatus("warn","กำลังส่งข้อมูล...");
+    $("payloadField").value = text;
+    $("phantomForm").submit();
+  });
+</script>
+</body>
+</html>
