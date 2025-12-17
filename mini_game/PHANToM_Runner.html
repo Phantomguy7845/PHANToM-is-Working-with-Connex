@@ -2038,6 +2038,12 @@ function applyGroundLayout(){
       let obstacleWaveLeft = 0;
       let obstacleRestLeft = 0;
 
+      // Inventory & passive state
+      let invBoost = Number(localStorage.getItem(LS_INV_BOOST) || 0);
+      let hasEnergyCore = !!Number(localStorage.getItem(LS_INV_ENERGY_CORE) || 0);
+      let invRevive = Number(localStorage.getItem(LS_INV_REVIVE) || 0);
+      let passiveId = localStorage.getItem(LS_PASSIVE_ID) || "";
+
       function saveWallet(){ try{ localStorage.setItem(LS_WALLET, String(walletCoins)); }catch(_){ } }
 
       function updateCoinsUI(){
