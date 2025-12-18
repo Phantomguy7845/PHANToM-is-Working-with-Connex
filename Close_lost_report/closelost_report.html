@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="th">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -7,466 +8,706 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700;800;900&display=swap"
+    rel="stylesheet">
 
   <style>
-    :root{
-      /* PHANToM Palette */
-      --bg0:#040816;
-      --bg1:#020617;
+    /* ------ Cyber-Calm Neo Dark Tech ------ */
+    :root {
+      /* สีพื้นหลัง – ดำอมคราม ไม่ขรุขระ */
+      --bg0: #0d0d0f;
+      --bg1: #1a1a1d;
       --panel: rgba(11, 16, 32, .62);
       --panel2: rgba(2, 6, 23, .56);
-      --stroke: rgba(148,163,184,.22);
-      --stroke2: rgba(148,163,184,.14);
-      --text:#e5e7eb;
-      --muted:#94a3b8;
+      --stroke: rgba(148, 163, 184, .18);
+      --stroke2: rgba(148, 163, 184, .12);
+      --text: #e5e7eb;
+      --muted: #94a3b8;
 
-      --cyan:#22d3ee;
-      --cyan2:#06b6d4;
-      --violet:#a855f7;
-      --violet2:#7c3aed;
-      --pink:#fb7185;
+      /* ไฮไลท์ neon – ใช้น้อย แต่เด่น */
+      --cyan: #00f0ff;
+      --cyan2: #06b6d4;
+      --violet: #a855f7;
+      --violet2: #7c3aed;
+      --pink: #ff4df0;
 
-      --ok:#22c55e;
-      --bad:#ef4444;
-      --warn:#f59e0b;
+      --ok: #22c55e;
+      --bad: #ef4444;
+      --warn: #f59e0b;
 
-      --r:22px;
-      --r2:16px;
+      --r: 18px;
+      --r2: 14px;
 
-      --shadow: 0 24px 90px rgba(0,0,0,.55);
-      --shadow2: 0 10px 30px rgba(0,0,0,.35);
+      --shadow: 0 20px 60px rgba(0, 0, 0, .45);
+      --shadow2: 0 8px 24px rgba(0, 0, 0, .25);
 
-      --glowC: 0 0 22px rgba(34,211,238,.28);
-      --glowV: 0 0 22px rgba(168,85,247,.26);
+      --glowC: 0 0 20px rgba(0, 240, 255, .32);
+      --glowV: 0 0 20px rgba(168, 85, 247, .28);
+
+      /* smooth ทุกอย่าง */
+      --ts: .25s cubic-bezier(.4, .8, .2, 1);
     }
 
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family:"Prompt",system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      color:var(--text);
+    * {
+      box-sizing: border-box;
+      scroll-behavior: smooth;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Prompt", system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color: var(--text);
       background:
-        radial-gradient(900px 600px at 20% 15%, rgba(34,211,238,.18), transparent 60%),
-        radial-gradient(900px 620px at 84% 18%, rgba(168,85,247,.16), transparent 58%),
-        radial-gradient(900px 620px at 50% 85%, rgba(251,113,133,.10), transparent 55%),
-        linear-gradient(180deg,var(--bg0),var(--bg1));
-      overflow-x:hidden;
+        radial-gradient(900px 600px at 20% 15%, rgba(0, 240, 255, .08), transparent 60%),
+        radial-gradient(900px 620px at 84% 18%, rgba(168, 85, 247, .06), transparent 58%),
+        radial-gradient(900px 620px at 50% 85%, rgba(255, 77, 240, .04), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x: hidden;
     }
 
-    /* Subtle animated grid */
-    .bg-grid{
-      position:fixed; inset:0;
-      pointer-events:none;
-      opacity:.22;
-      mix-blend-mode:screen;
+    /* กริด – ลด opacity + blur เพิ่ม */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .12;
+      /* ลดลงจาก 0.22 */
+      mix-blend-mode: screen;
       background-image:
-        linear-gradient(to right, rgba(34,211,238,.09) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(168,85,247,.08) 1px, transparent 1px);
+        linear-gradient(to right, rgba(0, 240, 255, .06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(168, 85, 247, .05) 1px, transparent 1px);
       background-size: 60px 60px;
       mask-image: radial-gradient(closest-side at 50% 20%, black 0%, transparent 80%);
-      animation: drift 14s linear infinite;
-    }
-    @keyframes drift{
-      0%{transform:translateY(0)}
-      100%{transform:translateY(60px)}
+      animation: drift 20s linear infinite;
     }
 
-    /* Floating glow orbs */
-    .orb{
-      position:fixed; border-radius:999px; filter: blur(34px);
-      opacity:.22; pointer-events:none;
-      animation: floaty 10s ease-in-out infinite;
-    }
-    .orb.c{width:260px;height:260px; background:rgba(34,211,238,.55); left:-90px; top:120px; box-shadow: var(--glowC)}
-    .orb.v{width:320px;height:320px; background:rgba(168,85,247,.45); right:-120px; top:160px; box-shadow: var(--glowV); animation-duration:12s}
-    .orb.p{width:240px;height:240px; background:rgba(251,113,133,.35); left:40%; bottom:-120px; animation-duration:13s}
-    @keyframes floaty{
-      0%,100%{transform:translateY(0) translateX(0) scale(1)}
-      50%{transform:translateY(-18px) translateX(10px) scale(1.04)}
+    @keyframes drift {
+      to {
+        transform: translateY(60px)
+      }
     }
 
-    .wrap{max-width:1140px;margin:0 auto;padding:18px}
-
-    /* Top bar */
-    .top{
-      display:flex; gap:14px; align-items:flex-start; justify-content:space-between;
-      flex-wrap:wrap;
-      margin-bottom:14px;
+    /* ลูกไฟ – ลด opacity + blur ใหญ่ขึ้น → นุ่ม */
+    .orb {
+      position: fixed;
+      border-radius: 999px;
+      filter: blur(40px);
+      opacity: .18;
+      pointer-events: none;
+      animation: floaty 12s ease-in-out infinite;
     }
 
-    .brand{
-      display:flex; align-items:center; gap:12px;
+    .orb.c {
+      width: 300px;
+      height: 300px;
+      background: rgba(0, 240, 255, .45);
+      left: -100px;
+      top: 120px;
+      box-shadow: var(--glowC)
+    }
+
+    .orb.v {
+      width: 360px;
+      height: 360px;
+      background: rgba(168, 85, 247, .35);
+      right: -140px;
+      top: 160px;
+      box-shadow: var(--glowV);
+      animation-duration: 14s
+    }
+
+    .orb.p {
+      width: 280px;
+      height: 280px;
+      background: rgba(255, 77, 240, .28);
+      left: 40%;
+      bottom: -140px;
+      animation-duration: 15s
+    }
+
+    @keyframes floaty {
+
+      0%,
+      100% {
+        transform: translateY(0) translateX(0) scale(1)
+      }
+
+      50% {
+        transform: translateY(-20px) translateX(12px) scale(1.05)
+      }
+    }
+
+    .wrap {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 24px
+    }
+
+    /* Top bar – เพิ่มระยะห่าง */
+    .top {
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
       min-width: 320px;
     }
-    .logo{
-      width:46px;height:46px;border-radius:14px;
+
+    .logo {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--r);
       background:
-        radial-gradient(18px 18px at 30% 30%, rgba(34,211,238,.85), transparent 60%),
-        radial-gradient(18px 18px at 70% 70%, rgba(168,85,247,.85), transparent 60%),
-        linear-gradient(180deg, rgba(2,6,23,.3), rgba(2,6,23,.75));
-      border:1px solid rgba(148,163,184,.20);
-      box-shadow: var(--shadow2), 0 0 0 4px rgba(34,211,238,.06);
-      position:relative;
-      overflow:hidden;
-    }
-    .logo:after{
-      content:"";
-      position:absolute; inset:-40%;
-      background: conic-gradient(from 180deg, rgba(34,211,238,.18), rgba(168,85,247,.14), rgba(251,113,133,.10), rgba(34,211,238,.18));
-      animation: spin 10s linear infinite;
-      opacity:.85;
-    }
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .logo:before{
-      content:"";
-      position:absolute; inset:1px;
-      background: rgba(2,6,23,.62);
-      border-radius:13px;
-      z-index:1;
-    }
-    .logo svg{
-      position:absolute; inset:0; margin:auto; z-index:2;
-      width:26px;height:26px;
-      opacity:.95;
-      filter: drop-shadow(0 0 10px rgba(34,211,238,.25));
+        radial-gradient(20px 20px at 30% 30%, rgba(0, 240, 255, .75), transparent 60%),
+        radial-gradient(20px 20px at 70% 70%, rgba(168, 85, 247, .75), transparent 60%),
+        linear-gradient(180deg, rgba(2, 6, 23, .3), rgba(2, 6, 23, .75));
+      border: 1px solid rgba(148, 163, 184, .22);
+      box-shadow: var(--shadow2), 0 0 0 4px rgba(0, 240, 255, .06);
+      position: relative;
+      overflow: hidden;
+      transition: var(--ts);
     }
 
-    .brandText{display:flex; flex-direction:column; gap:4px}
-    .title{
-      font-size:20px; font-weight:900; letter-spacing:.6px;
-      line-height:1.1;
-    }
-    .subtitle{
-      font-size:12px; color:var(--muted); line-height:1.35;
-      max-width:680px;
+    .logo:hover {
+      transform: scale(1.05);
+      box-shadow: var(--shadow2), 0 0 0 6px rgba(0, 240, 255, .12);
     }
 
-    .metaRow{
-      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end;
+    .logo:after {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: conic-gradient(from 180deg, rgba(0, 240, 255, .15), rgba(168, 85, 247, .12), rgba(255, 77, 240, .08), rgba(0, 240, 255, .15));
+      animation: spin 12s linear infinite;
+      opacity: .85;
     }
 
-    .pill{
-      display:flex; align-items:center; gap:10px;
-      border:1px solid rgba(148,163,184,.18);
-      background: rgba(2,6,23,.42);
-      border-radius:999px;
-      padding:10px 12px;
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .logo:before {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      background: rgba(2, 6, 23, .62);
+      border-radius: 17px;
+      z-index: 1;
+    }
+
+    .logo svg {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      z-index: 2;
+      width: 28px;
+      height: 28px;
+      opacity: .95;
+      filter: drop-shadow(0 0 12px rgba(0, 240, 255, .3));
+    }
+
+    .brandText {
+      display: flex;
+      flex-direction: column;
+      gap: 6px
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: .6px;
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+      max-width: 680px;
+    }
+
+    .metaRow {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid var(--stroke);
+      background: var(--panel2);
+      border-radius: 999px;
+      padding: 12px 14px;
       box-shadow: var(--shadow2);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
       max-width: 560px;
-      overflow:hidden;
+      overflow: hidden;
     }
-    .pill .k{font-size:12px;color:var(--muted);white-space:nowrap}
-    .pill .v{
-      font-size:12px;color:var(--text); opacity:.92;
-      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+
+    .pill .k {
+      font-size: 13px;
+      color: var(--muted);
+      white-space: nowrap
+    }
+
+    .pill .v {
+      font-size: 13px;
+      color: var(--text);
+      opacity: .92;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       max-width: 420px;
     }
 
-    .quick{
-      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end;
+    .quick {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
     }
-    .qbtn{
-      border:1px solid rgba(148,163,184,.18);
-      background: rgba(2,6,23,.42);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:999px;
-      font-weight:800;
-      font-size:12px;
-      cursor:pointer;
+
+    .qbtn {
+      border: 1px solid var(--stroke);
+      background: var(--panel2);
+      color: var(--text);
+      padding: 11px 14px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
       box-shadow: var(--shadow2);
-      transition:.15s transform,.15s border-color,.15s box-shadow;
-      user-select:none;
-      display:flex; align-items:center; gap:8px;
+      transition: var(--ts);
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    .qbtn:hover{
-      transform:translateY(-1px);
-      border-color:rgba(34,211,238,.42);
-      box-shadow: var(--shadow2), 0 0 0 3px rgba(34,211,238,.08);
-    }
-    .qbtn:active{transform:translateY(0); opacity:.92}
-    .qbtn .dotMini{
-      width:8px;height:8px;border-radius:999px;
-      background: rgba(34,211,238,.75);
-      box-shadow: 0 0 14px rgba(34,211,238,.25);
-    }
-    .qbtn.purple .dotMini{background: rgba(168,85,247,.75); box-shadow:0 0 14px rgba(168,85,247,.25)}
-    .qbtn.pink .dotMini{background: rgba(251,113,133,.75); box-shadow:0 0 14px rgba(251,113,133,.22)}
 
-    /* Layout cards */
-    .grid{
-      display:grid;
+    .qbtn:hover {
+      transform: translateY(-2px);
+      border-color: rgba(0, 240, 255, .45);
+      box-shadow: var(--shadow2), 0 0 0 4px rgba(0, 240, 255, .08), var(--glowC);
+    }
+
+    .qbtn:active {
+      transform: translateY(0);
+      opacity: .92
+    }
+
+    .qbtn .dotMini {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(0, 240, 255, .85);
+      box-shadow: 0 0 16px rgba(0, 240, 255, .35);
+    }
+
+    .qbtn.purple .dotMini {
+      background: rgba(168, 85, 247, .85);
+      box-shadow: 0 0 16px rgba(168, 85, 247, .3)
+    }
+
+    .qbtn.pink .dotMini {
+      background: rgba(255, 77, 240, .85);
+      box-shadow: 0 0 16px rgba(255, 77, 240, .28)
+    }
+
+    /* Layout cards – ลดความหนา + เพิ่ม radius */
+    .grid {
+      display: grid;
       grid-template-columns: 1fr;
-      gap:14px;
-    }
-    @media(min-width:1020px){
-      .grid{grid-template-columns: 1.18fr .82fr;}
+      gap: 18px;
     }
 
-    .card{
-      border:1px solid rgba(148,163,184,.16);
+    @media(min-width:1020px) {
+      .grid {
+        grid-template-columns: 1.2fr .8fr;
+      }
+    }
+
+    .card {
+      border: 1px solid var(--stroke);
       background: var(--panel);
       border-radius: var(--r);
       box-shadow: var(--shadow);
-      backdrop-filter: blur(14px);
-      overflow:hidden;
-      position:relative;
+      backdrop-filter: blur(16px);
+      overflow: hidden;
+      position: relative;
+      transition: var(--ts);
     }
-    .card:before{
-      content:"";
-      position:absolute; inset:0;
-      background:
-        radial-gradient(380px 240px at 20% 0%, rgba(34,211,238,.12), transparent 60%),
-        radial-gradient(380px 240px at 85% 0%, rgba(168,85,247,.10), transparent 55%);
-      pointer-events:none;
-      opacity:.9;
-    }
-    .cardInner{position:relative; padding:14px}
 
-    /* Tabs */
-    .tabs{
-      display:flex; gap:10px; flex-wrap:wrap;
-      padding:12px 14px;
-      border-bottom:1px solid rgba(148,163,184,.14);
-      background: linear-gradient(180deg, rgba(2,6,23,.46), rgba(2,6,23,.10));
-      position:relative;
-      z-index:1;
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow), 0 0 0 1px rgba(0, 240, 255, .15);
     }
-    .tab{
-      border:1px solid rgba(148,163,184,.18);
-      background: rgba(2,6,23,.46);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:999px;
-      font-weight:900;
-      font-size:12px;
-      cursor:pointer;
-      user-select:none;
-      display:flex; align-items:center; gap:9px;
-      transition:.15s transform,.15s border-color,.15s box-shadow;
-    }
-    .tab:hover{
-      transform:translateY(-1px);
-      border-color:rgba(34,211,238,.40);
-      box-shadow: 0 0 0 3px rgba(34,211,238,.08);
-    }
-    .tab.active{
-      border-color: rgba(34,211,238,.55);
-      box-shadow: 0 0 0 3px rgba(34,211,238,.10), 0 0 18px rgba(34,211,238,.10);
-      background:
-        radial-gradient(120px 60px at 30% 0%, rgba(34,211,238,.22), transparent 70%),
-        radial-gradient(120px 60px at 80% 0%, rgba(168,85,247,.18), transparent 70%),
-        rgba(2,6,23,.50);
-    }
-    .tab .ic{
-      width:16px;height:16px; opacity:.95;
-      filter: drop-shadow(0 0 10px rgba(34,211,238,.15));
-    }
-    .tabSettings.active{border-color: rgba(168,85,247,.55); box-shadow:0 0 0 3px rgba(168,85,247,.10), 0 0 18px rgba(168,85,247,.10)}
-    .tabClose.active{border-color: rgba(251,113,133,.55); box-shadow:0 0 0 3px rgba(251,113,133,.10), 0 0 18px rgba(251,113,133,.08)}
 
-    /* Form fields */
-    .sectionTitle{
-      font-weight:900;
-      letter-spacing:.4px;
-      margin:0 0 10px 0;
-      font-size:14px;
+    .card:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(380px 240px at 20% 0%, rgba(0, 240, 255, .08), transparent 60%),
+        radial-gradient(380px 240px at 85% 0%, rgba(168, 85, 247, .06), transparent 55%);
+      pointer-events: none;
+      opacity: .9;
     }
-    label{display:block; font-size:12px; color:var(--muted); margin-bottom:8px}
-    textarea{
-      width:100%;
-      min-height:240px;
-      resize:vertical;
-      border-radius: 18px;
-      border:1px solid rgba(148,163,184,.18);
-      background: rgba(2,6,23,.52);
+
+    .cardInner {
+      position: relative;
+      padding: 18px
+    }
+
+    /* Tabs – ขอบมน + glow นุ่ม */
+    .tabs {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--stroke2);
+      background: linear-gradient(180deg, rgba(2, 6, 23, .46), rgba(2, 6, 23, .10));
+      position: relative;
+      z-index: 1;
+    }
+
+    .tab {
+      border: 1px solid var(--stroke);
+      background: rgba(2, 6, 23, .46);
       color: var(--text);
-      padding:12px 12px;
-      outline:none;
-      line-height:1.35;
-      font-size:14px;
-      box-shadow: inset 0 0 0 1px rgba(2,6,23,.35);
-    }
-    textarea:focus{
-      border-color: rgba(34,211,238,.55);
-      box-shadow: 0 0 0 4px rgba(34,211,238,.12), inset 0 0 0 1px rgba(34,211,238,.12);
-    }
-    input[type="url"]{
-      width:100%;
-      border-radius: 16px;
-      border:1px solid rgba(148,163,184,.18);
-      background: rgba(2,6,23,.52);
-      color:var(--text);
-      padding:10px 12px;
-      outline:none;
-      font-size:13px;
-    }
-    input[type="url"]:focus{
-      border-color: rgba(168,85,247,.55);
-      box-shadow: 0 0 0 4px rgba(168,85,247,.12);
-    }
-
-    .help{
-      font-size:12px;
-      color: var(--muted);
-      line-height:1.55;
-    }
-    .help code{
-      color: rgba(34,211,238,.95);
-      background: rgba(34,211,238,.06);
-      border: 1px solid rgba(34,211,238,.14);
-      padding: 1px 6px;
+      padding: 11px 14px;
       border-radius: 999px;
-      font-weight:700;
-      font-size:12px;
+      font-weight: 800;
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: var(--ts);
     }
 
-    .row{
-      display:flex; gap:10px; flex-wrap:wrap;
-      align-items:center; justify-content:space-between;
-      margin-top:12px;
+    .tab:hover {
+      transform: translateY(-2px);
+      border-color: rgba(0, 240, 255, .4);
+      box-shadow: 0 0 0 4px rgba(0, 240, 255, .08);
     }
-    .btns{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
 
-    button{
-      border:1px solid rgba(148,163,184,.18);
-      background: rgba(2,6,23,.44);
+    .tab.active {
+      border-color: rgba(0, 240, 255, .55);
+      box-shadow: 0 0 0 4px rgba(0, 240, 255, .1), var(--glowC);
+      background:
+        radial-gradient(120px 60px at 30% 0%, rgba(0, 240, 255, .18), transparent 70%),
+        radial-gradient(120px 60px at 80% 0%, rgba(168, 85, 247, .12), transparent 70%),
+        rgba(2, 6, 23, .50);
+    }
+
+    .tabSettings.active {
+      border-color: rgba(168, 85, 247, .55);
+      box-shadow: 0 0 0 4px rgba(168, 85, 247, .1), 0 0 18px rgba(168, 85, 247, .1)
+    }
+
+    .tabClose.active {
+      border-color: rgba(255, 77, 240, .55);
+      box-shadow: 0 0 0 4px rgba(255, 77, 240, .1), 0 0 18px rgba(255, 77, 240, .08)
+    }
+
+    .tab .ic {
+      width: 18px;
+      height: 18px;
+      opacity: .95;
+      filter: drop-shadow(0 0 10px rgba(0, 240, 255, .2));
+    }
+
+    /* Form fields – focus แสงฟ้านุ่ม */
+    .sectionTitle {
+      font-weight: 800;
+      letter-spacing: .4px;
+      margin: 0 0 12px 0;
+      font-size: 15px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 8px
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 260px;
+      resize: vertical;
+      border-radius: var(--r);
+      border: 1px solid var(--stroke);
+      background: rgba(2, 6, 23, .52);
       color: var(--text);
-      padding:10px 12px;
-      border-radius: 16px;
-      font-weight:900;
-      cursor:pointer;
-      transition:.15s transform,.15s border-color,.15s box-shadow,.15s opacity;
-      display:flex; align-items:center; gap:8px;
-      user-select:none;
+      padding: 14px 16px;
+      outline: none;
+      line-height: 1.4;
+      font-size: 14px;
+      box-shadow: inset 0 0 0 1px rgba(2, 6, 23, .35);
+      transition: var(--ts);
     }
-    button:hover{
-      transform: translateY(-1px);
-      border-color: rgba(34,211,238,.42);
-      box-shadow: 0 0 0 4px rgba(34,211,238,.10);
+
+    textarea:focus {
+      border-color: rgba(0, 240, 255, .55);
+      box-shadow: 0 0 0 4px rgba(0, 240, 255, .12), inset 0 0 0 1px rgba(0, 240, 255, .12);
     }
-    button:active{transform:translateY(0); opacity:.92}
-    .primary{
-      border-color: rgba(34,211,238,.55);
+
+    input[type="url"] {
+      width: 100%;
+      border-radius: var(--r2);
+      border: 1px solid var(--stroke);
+      background: rgba(2, 6, 23, .52);
+      color: var(--text);
+      padding: 11px 14px;
+      outline: none;
+      font-size: 13px;
+      transition: var(--ts);
+    }
+
+    input[type="url"]:focus {
+      border-color: rgba(168, 85, 247, .55);
+      box-shadow: 0 0 0 4px rgba(168, 85, 247, .12);
+    }
+
+    .help {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .help code {
+      color: rgba(0, 240, 255, .95);
+      background: rgba(0, 240, 255, .06);
+      border: 1px solid rgba(0, 240, 255, .14);
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+    }
+
+    .btns {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center
+    }
+
+    button {
+      border: 1px solid var(--stroke);
+      background: rgba(2, 6, 23, .44);
+      color: var(--text);
+      padding: 11px 14px;
+      border-radius: var(--r2);
+      font-weight: 800;
+      cursor: pointer;
+      transition: var(--ts);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      user-select: none;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      border-color: rgba(0, 240, 255, .42);
+      box-shadow: 0 0 0 4px rgba(0, 240, 255, .1);
+    }
+
+    button:active {
+      transform: translateY(0);
+      opacity: .92
+    }
+
+    .primary {
+      border-color: rgba(0, 240, 255, .55);
       background:
-        radial-gradient(120px 60px at 30% 0%, rgba(34,211,238,.30), transparent 70%),
-        radial-gradient(120px 60px at 80% 0%, rgba(168,85,247,.18), transparent 70%),
-        rgba(2,6,23,.52);
-      box-shadow: 0 0 0 1px rgba(34,211,238,.08), 0 16px 44px rgba(0,0,0,.35);
+        radial-gradient(120px 60px at 30% 0%, rgba(0, 240, 255, .25), transparent 70%),
+        radial-gradient(120px 60px at 80% 0%, rgba(168, 85, 247, .15), transparent 70%),
+        rgba(2, 6, 23, .52);
+      box-shadow: 0 0 0 1px rgba(0, 240, 255, .08), 0 12px 36px rgba(0, 0, 0, .3);
     }
-    .danger{
-      border-color: rgba(239,68,68,.42);
+
+    .danger {
+      border-color: rgba(239, 68, 68, .42);
       background:
-        radial-gradient(120px 60px at 30% 0%, rgba(239,68,68,.18), transparent 70%),
-        rgba(2,6,23,.52);
+        radial-gradient(120px 60px at 30% 0%, rgba(239, 68, 68, .15), transparent 70%),
+        rgba(2, 6, 23, .52);
     }
-    .ghost{
-      border-color: rgba(168,85,247,.42);
+
+    .ghost {
+      border-color: rgba(168, 85, 247, .42);
       background:
-        radial-gradient(120px 60px at 30% 0%, rgba(168,85,247,.18), transparent 70%),
-        rgba(2,6,23,.52);
+        radial-gradient(120px 60px at 30% 0%, rgba(168, 85, 247, .15), transparent 70%),
+        rgba(2, 6, 23, .52);
     }
-    .mini{
-      font-size:12px;
-      padding:9px 10px;
+
+    .mini {
+      font-size: 12px;
+      padding: 9px 12px;
       border-radius: 14px;
     }
 
-    .icBtn{
-      width:16px;height:16px; opacity:.95;
-      filter: drop-shadow(0 0 12px rgba(34,211,238,.15));
+    .icBtn {
+      width: 18px;
+      height: 18px;
+      opacity: .95;
+      filter: drop-shadow(0 0 12px rgba(0, 240, 255, .15));
     }
 
-    /* Status bar */
-    .status{
-      margin-top:12px;
-      padding:12px 12px;
-      border-radius: 18px;
-      border:1px solid rgba(148,163,184,.16);
-      background: rgba(2,6,23,.46);
+    /* Status bar – ลดความสูง */
+    .status {
+      margin-top: 14px;
+      padding: 14px 14px;
+      border-radius: var(--r);
+      border: 1px solid var(--stroke2);
+      background: rgba(2, 6, 23, .46);
       color: var(--muted);
-      min-height: 48px;
-      display:flex; align-items:center; gap:10px;
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    .dot{
-      width:10px;height:10px;border-radius:999px;
-      background: rgba(148,163,184,.55);
-      box-shadow: 0 0 0 4px rgba(148,163,184,.06);
-    }
-    .dot.ok{background: rgba(34,197,94,.92); box-shadow:0 0 0 4px rgba(34,197,94,.12), 0 0 18px rgba(34,197,94,.08)}
-    .dot.bad{background: rgba(239,68,68,.92); box-shadow:0 0 0 4px rgba(239,68,68,.12), 0 0 18px rgba(239,68,68,.10)}
-    .dot.warn{background: rgba(245,158,11,.95); box-shadow:0 0 0 4px rgba(245,158,11,.12), 0 0 18px rgba(245,158,11,.08)}
-    .status strong{color:var(--text); font-weight:900}
 
-    /* Right panel table */
-    table{
-      width:100%;
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(148, 163, 184, .55);
+      box-shadow: 0 0 0 4px rgba(148, 163, 184, .06);
+    }
+
+    .dot.ok {
+      background: rgba(34, 197, 94, .92);
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, .12), 0 0 18px rgba(34, 197, 94, .08)
+    }
+
+    .dot.bad {
+      background: rgba(239, 68, 68, .92);
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, .12), 0 0 18px rgba(239, 68, 68, .1)
+    }
+
+    .dot.warn {
+      background: rgba(245, 158, 11, .95);
+      box-shadow: 0 0 0 4px rgba(245, 158, 11, .12), 0 0 18px rgba(245, 158, 11, .08)
+    }
+
+    .status strong {
+      color: var(--text);
+      font-weight: 800
+    }
+
+    /* Table – โปร่งขึ้น */
+    table {
+      width: 100%;
       border-collapse: separate;
       border-spacing: 0;
-      overflow:hidden;
-      border-radius: 18px;
-      border:1px solid rgba(148,163,184,.16);
-      background: rgba(2,6,23,.44);
+      overflow: hidden;
+      border-radius: var(--r);
+      border: 1px solid var(--stroke2);
+      background: rgba(2, 6, 23, .44);
     }
-    thead th{
-      font-size:12px;
+
+    thead th {
+      font-size: 13px;
       color: var(--muted);
-      text-align:left;
-      font-weight:900;
-      padding:10px 10px;
-      border-bottom:1px solid rgba(148,163,184,.12);
+      text-align: left;
+      font-weight: 800;
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, .12);
       background:
-        radial-gradient(180px 90px at 30% 0%, rgba(34,211,238,.12), transparent 70%),
-        radial-gradient(180px 90px at 80% 0%, rgba(168,85,247,.10), transparent 70%),
-        rgba(2,6,23,.40);
+        radial-gradient(180px 90px at 30% 0%, rgba(0, 240, 255, .08), transparent 70%),
+        radial-gradient(180px 90px at 80% 0%, rgba(168, 85, 247, .06), transparent 70%),
+        rgba(2, 6, 23, .40);
     }
-    tbody td{
-      padding:10px 10px;
-      border-bottom:1px solid rgba(148,163,184,.10);
-      font-size:13px;
+
+    tbody td {
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, .08);
+      font-size: 13px;
       vertical-align: top;
-      color: rgba(229,231,235,.92);
+      color: rgba(229, 231, 235, .92);
     }
-    tbody tr:last-child td{border-bottom:none}
-    .muted{color:var(--muted)}
-    .hr{
-      height:1px;
-      background:rgba(148,163,184,.14);
-      margin:12px 0;
+
+    tbody tr:last-child td {
+      border-bottom: none
     }
-    .hidden{display:none!important}
+
+    .muted {
+      color: var(--muted)
+    }
+
+    .hr {
+      height: 1px;
+      background: rgba(148, 163, 184, .1);
+      margin: 14px 0;
+    }
+
+    .hidden {
+      display: none !important
+    }
 
     /* Info panel */
-    .panelNote{
-      border:1px solid rgba(148,163,184,.14);
-      background: rgba(2,6,23,.40);
-      border-radius: 18px;
-      padding:10px 12px;
-      color:var(--muted);
-      font-size:12px;
-      line-height:1.55;
-    }
-    .panelNote b{color:rgba(229,231,235,.92)}
-    .panelNote .tag{
-      display:inline-block;
-      margin-left:6px;
-      padding:2px 8px;
-      border-radius:999px;
-      border:1px solid rgba(34,211,238,.18);
-      background: rgba(34,211,238,.06);
-      color: rgba(34,211,238,.92);
-      font-weight:900;
-      font-size:11px;
+    .panelNote {
+      border: 1px solid rgba(148, 163, 184, .12);
+      background: rgba(2, 6, 23, .38);
+      border-radius: var(--r);
+      padding: 12px 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
     }
 
-    /* Footer mini tip */
-    .tip{
-      margin-top:10px;
-      font-size:12px;
-      color:var(--muted);
+    .panelNote b {
+      color: rgba(229, 231, 235, .92)
+    }
+
+    .panelNote .tag {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 240, 255, .18);
+      background: rgba(0, 240, 255, .06);
+      color: rgba(0, 240, 255, .92);
+      font-weight: 800;
+      font-size: 11px;
+    }
+
+    /* Footer tip */
+    .tip {
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--muted);
     }
   </style>
 </head>
@@ -483,10 +724,12 @@
       <div class="brand">
         <div class="logo" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none">
-            <path d="M4 13.2c3.3-3.7 6.8-5.4 10.6-5.4 2.1 0 4.2.5 6.4 1.6-2.2 5.8-6 9.2-11.4 10.2-2.2.4-4.2.1-6.1-.9 1.1-1.5 2.1-3.2 0-5.5z"
-              stroke="rgba(34,211,238,.9)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M6.6 12.8c.9 1.1 1.1 2.3.3 3.5" stroke="rgba(168,85,247,.85)" stroke-width="1.6" stroke-linecap="round"/>
-            <circle cx="16.2" cy="11" r="1.2" fill="rgba(229,231,235,.92)"/>
+            <path
+              d="M4 13.2c3.3-3.7 6.8-5.4 10.6-5.4 2.1 0 4.2.5 6.4 1.6-2.2 5.8-6 9.2-11.4 10.2-2.2.4-4.2.1-6.1-.9 1.1-1.5 2.1-3.2 0-5.5z"
+              stroke="rgba(34,211,238,.9)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M6.6 12.8c.9 1.1 1.1 2.3.3 3.5" stroke="rgba(168,85,247,.85)" stroke-width="1.6"
+              stroke-linecap="round" />
+            <circle cx="16.2" cy="11" r="1.2" fill="rgba(229,231,235,.92)" />
           </svg>
         </div>
         <div class="brandText">
@@ -518,26 +761,30 @@
         <div class="tabs">
           <div class="tab active" id="tabDeal1m">
             <svg class="ic" viewBox="0 0 24 24" fill="none">
-              <path d="M6 4h12a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" stroke="rgba(34,211,238,.9)" stroke-width="1.8"/>
-              <path d="M8 8h10M8 12h10M8 16h7" stroke="rgba(229,231,235,.9)" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M6 4h12a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" stroke="rgba(34,211,238,.9)"
+                stroke-width="1.8" />
+              <path d="M8 8h10M8 12h10M8 16h7" stroke="rgba(229,231,235,.9)" stroke-width="1.6"
+                stroke-linecap="round" />
             </svg>
             Deal ย้อนหลัง 1 เดือน
           </div>
 
           <div class="tab tabClose" id="tabCloseLost">
             <svg class="ic" viewBox="0 0 24 24" fill="none">
-              <path d="M7 4h10l3 3v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" stroke="rgba(251,113,133,.9)" stroke-width="1.8"/>
-              <path d="M9 12h6" stroke="rgba(229,231,235,.9)" stroke-width="1.8" stroke-linecap="round"/>
-              <path d="M12 9v6" stroke="rgba(229,231,235,.9)" stroke-width="1.8" stroke-linecap="round" opacity=".45"/>
+              <path d="M7 4h10l3 3v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" stroke="rgba(251,113,133,.9)"
+                stroke-width="1.8" />
+              <path d="M9 12h6" stroke="rgba(229,231,235,.9)" stroke-width="1.8" stroke-linecap="round" />
+              <path d="M12 9v6" stroke="rgba(229,231,235,.9)" stroke-width="1.8" stroke-linecap="round" opacity=".45" />
             </svg>
             Deal Close lost
           </div>
 
           <div class="tab tabSettings" id="tabSettings">
             <svg class="ic" viewBox="0 0 24 24" fill="none">
-              <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke="rgba(168,85,247,.9)" stroke-width="1.8"/>
-              <path d="M19.4 15a8 8 0 0 0 .1-2l2-1.2-2-3.4-2.3.5a7.5 7.5 0 0 0-1.7-1L15 5h-6l-.5 2.4a7.5 7.5 0 0 0-1.7 1L4 8.4 2 11.8l2 1.2a8 8 0 0 0 .1 2L2 16.2l2 3.4 2.3-.5a7.5 7.5 0 0 0 1.7 1L9 22h6l.5-2.4a7.5 7.5 0 0 0 1.7-1l2.3.5 2-3.4-2.1-1.2z"
-                stroke="rgba(229,231,235,.86)" stroke-width="1.2" stroke-linejoin="round" opacity=".9"/>
+              <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke="rgba(168,85,247,.9)" stroke-width="1.8" />
+              <path
+                d="M19.4 15a8 8 0 0 0 .1-2l2-1.2-2-3.4-2.3.5a7.5 7.5 0 0 0-1.7-1L15 5h-6l-.5 2.4a7.5 7.5 0 0 0-1.7 1L4 8.4 2 11.8l2 1.2a8 8 0 0 0 .1 2L2 16.2l2 3.4 2.3-.5a7.5 7.5 0 0 0 1.7 1L9 22h6l.5-2.4a7.5 7.5 0 0 0 1.7-1l2.3.5 2-3.4-2.1-1.2z"
+                stroke="rgba(229,231,235,.86)" stroke-width="1.2" stroke-linejoin="round" opacity=".9" />
             </svg>
             ตั้งค่า
           </div>
@@ -547,7 +794,8 @@
           <!-- PANEL: DEAL 1M -->
           <div id="panelDeal1m">
             <div class="sectionTitle">โหมด: Deal ย้อนหลัง 1 เดือน</div>
-            <label for="inputDeal1m">วางข้อความหลายบรรทัด (รองรับ: <span class="help"><code>D-xxxx</code> + <code>Remark</code></span>)</label>
+            <label for="inputDeal1m">วางข้อความหลายบรรทัด (รองรับ: <span class="help"><code>D-xxxx</code> +
+                <code>Remark</code></span>)</label>
             <textarea id="inputDeal1m" placeholder="ตัวอย่าง:
 D-101241 ไม่รับสาย
 D-102333 ปิดเครื่อง
@@ -561,20 +809,24 @@ D-104000 ไม่สนใจแล้ว"></textarea>
               <div class="btns">
                 <button type="button" id="btnPreviewDeal1m" class="mini">
                   <svg class="icBtn" viewBox="0 0 24 24" fill="none">
-                    <path d="M2.5 12s3.6-7 9.5-7 9.5 7 9.5 7-3.6 7-9.5 7-9.5-7-9.5-7z" stroke="rgba(229,231,235,.9)" stroke-width="1.6"/>
-                    <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z" stroke="rgba(34,211,238,.9)" stroke-width="1.6"/>
+                    <path d="M2.5 12s3.6-7 9.5-7 9.5 7 9.5 7-3.6 7-9.5 7-9.5-7-9.5-7z" stroke="rgba(229,231,235,.9)"
+                      stroke-width="1.6" />
+                    <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z" stroke="rgba(34,211,238,.9)"
+                      stroke-width="1.6" />
                   </svg>
                   พรีวิว
                 </button>
                 <button type="button" id="btnClearDeal1m" class="danger mini">
                   <svg class="icBtn" viewBox="0 0 24 24" fill="none">
-                    <path d="M6 7h12M10 7V5h4v2M8 7l1 14h6l1-14" stroke="rgba(239,68,68,.9)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M6 7h12M10 7V5h4v2M8 7l1 14h6l1-14" stroke="rgba(239,68,68,.9)" stroke-width="1.6"
+                      stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                   ล้าง
                 </button>
                 <button type="button" id="btnSubmitDeal1m" class="primary">
                   <svg class="icBtn" viewBox="0 0 24 24" fill="none">
-                    <path d="M4 12l6 6 10-14" stroke="rgba(34,211,238,.95)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 12l6 6 10-14" stroke="rgba(34,211,238,.95)" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round" />
                   </svg>
                   ส่งเข้า Sheet
                 </button>
@@ -599,20 +851,24 @@ D-200000 ไม่รับสาย (กรณีไม่มีชื่อ Sa
               <div class="btns">
                 <button type="button" id="btnPreviewCloseLost" class="mini">
                   <svg class="icBtn" viewBox="0 0 24 24" fill="none">
-                    <path d="M2.5 12s3.6-7 9.5-7 9.5 7 9.5 7-3.6 7-9.5 7-9.5-7-9.5-7z" stroke="rgba(229,231,235,.9)" stroke-width="1.6"/>
-                    <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z" stroke="rgba(251,113,133,.9)" stroke-width="1.6"/>
+                    <path d="M2.5 12s3.6-7 9.5-7 9.5 7 9.5 7-3.6 7-9.5 7-9.5-7-9.5-7z" stroke="rgba(229,231,235,.9)"
+                      stroke-width="1.6" />
+                    <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z" stroke="rgba(251,113,133,.9)"
+                      stroke-width="1.6" />
                   </svg>
                   พรีวิว
                 </button>
                 <button type="button" id="btnClearCloseLost" class="danger mini">
                   <svg class="icBtn" viewBox="0 0 24 24" fill="none">
-                    <path d="M6 7h12M10 7V5h4v2M8 7l1 14h6l1-14" stroke="rgba(239,68,68,.9)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M6 7h12M10 7V5h4v2M8 7l1 14h6l1-14" stroke="rgba(239,68,68,.9)" stroke-width="1.6"
+                      stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                   ล้าง
                 </button>
                 <button type="button" id="btnSubmitCloseLost" class="primary">
                   <svg class="icBtn" viewBox="0 0 24 24" fill="none">
-                    <path d="M4 12l6 6 10-14" stroke="rgba(34,211,238,.95)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 12l6 6 10-14" stroke="rgba(34,211,238,.95)" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round" />
                   </svg>
                   ส่งเข้า Sheet
                 </button>
@@ -642,35 +898,40 @@ D-200000 ไม่รับสาย (กรณีไม่มีชื่อ Sa
               <div class="btns">
                 <button type="button" id="btnSaveSettings" class="primary">
                   <svg class="icBtn" viewBox="0 0 24 24" fill="none">
-                    <path d="M5 21h14a2 2 0 0 0 2-2V8l-4-4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z" stroke="rgba(34,211,238,.9)" stroke-width="1.6"/>
-                    <path d="M7 21V13h10v8" stroke="rgba(229,231,235,.88)" stroke-width="1.6" stroke-linejoin="round"/>
-                    <path d="M8 4v4h8V4" stroke="rgba(168,85,247,.85)" stroke-width="1.6" stroke-linejoin="round"/>
+                    <path d="M5 21h14a2 2 0 0 0 2-2V8l-4-4H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2z"
+                      stroke="rgba(34,211,238,.9)" stroke-width="1.6" />
+                    <path d="M7 21V13h10v8" stroke="rgba(229,231,235,.88)" stroke-width="1.6" stroke-linejoin="round" />
+                    <path d="M8 4v4h8V4" stroke="rgba(168,85,247,.85)" stroke-width="1.6" stroke-linejoin="round" />
                   </svg>
                   บันทึก
                 </button>
 
                 <button type="button" id="btnResetSettings" class="danger">
                   <svg class="icBtn" viewBox="0 0 24 24" fill="none">
-                    <path d="M20 12a8 8 0 1 1-2.3-5.6" stroke="rgba(239,68,68,.9)" stroke-width="1.8" stroke-linecap="round"/>
-                    <path d="M20 4v6h-6" stroke="rgba(239,68,68,.9)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M20 12a8 8 0 1 1-2.3-5.6" stroke="rgba(239,68,68,.9)" stroke-width="1.8"
+                      stroke-linecap="round" />
+                    <path d="M20 4v6h-6" stroke="rgba(239,68,68,.9)" stroke-width="1.8" stroke-linecap="round"
+                      stroke-linejoin="round" />
                   </svg>
                   รีเซ็ต
                 </button>
 
                 <button type="button" id="btnOpenSheet" class="ghost">
                   <svg class="icBtn" viewBox="0 0 24 24" fill="none">
-                    <path d="M14 3h7v7" stroke="rgba(168,85,247,.9)" stroke-width="1.8" stroke-linecap="round"/>
-                    <path d="M10 14L21 3" stroke="rgba(229,231,235,.86)" stroke-width="1.8" stroke-linecap="round"/>
-                    <path d="M21 14v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6" stroke="rgba(229,231,235,.86)" stroke-width="1.4" stroke-linecap="round"/>
+                    <path d="M14 3h7v7" stroke="rgba(168,85,247,.9)" stroke-width="1.8" stroke-linecap="round" />
+                    <path d="M10 14L21 3" stroke="rgba(229,231,235,.86)" stroke-width="1.8" stroke-linecap="round" />
+                    <path d="M21 14v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6" stroke="rgba(229,231,235,.86)"
+                      stroke-width="1.4" stroke-linecap="round" />
                   </svg>
                   เปิดชีต
                 </button>
 
                 <button type="button" id="btnTestPing">
                   <svg class="icBtn" viewBox="0 0 24 24" fill="none">
-                    <path d="M4 12a8 8 0 0 1 16 0" stroke="rgba(229,231,235,.86)" stroke-width="1.6" stroke-linecap="round"/>
-                    <path d="M12 12l4-4" stroke="rgba(34,211,238,.9)" stroke-width="1.8" stroke-linecap="round"/>
-                    <circle cx="12" cy="12" r="1.5" fill="rgba(34,211,238,.9)"/>
+                    <path d="M4 12a8 8 0 0 1 16 0" stroke="rgba(229,231,235,.86)" stroke-width="1.6"
+                      stroke-linecap="round" />
+                    <path d="M12 12l4-4" stroke="rgba(34,211,238,.9)" stroke-width="1.8" stroke-linecap="round" />
+                    <circle cx="12" cy="12" r="1.5" fill="rgba(34,211,238,.9)" />
                   </svg>
                   ping
                 </button>
@@ -687,7 +948,8 @@ D-200000 ไม่รับสาย (กรณีไม่มีชื่อ Sa
               <span class="tag">GET get_deal_1m</span>
               <span class="tag">GET get_close_lost</span>
               <div style="margin-top:8px">
-                ถ้าต้องการให้ “ดึงข้อมูลแล้วโชว์บนหน้า” แบบสวย ๆ ได้เลย บอกผม เดี๋ยวทำโหมด JSONP/Fetch เพิ่มให้ (แต่โหมดนี้ตอนนี้เน้นเสถียร + ไม่ติด CORS)
+                ถ้าต้องการให้ “ดึงข้อมูลแล้วโชว์บนหน้า” แบบสวย ๆ ได้เลย บอกผม เดี๋ยวทำโหมด JSONP/Fetch เพิ่มให้
+                (แต่โหมดนี้ตอนนี้เน้นเสถียร + ไม่ติด CORS)
               </div>
             </div>
           </div>
@@ -713,7 +975,9 @@ D-200000 ไม่รับสาย (กรณีไม่มีชื่อ Sa
           <table>
             <thead id="previewHead"></thead>
             <tbody id="previewBody">
-              <tr><td class="muted">ยังไม่มีข้อมูล — กด “พรีวิว”</td></tr>
+              <tr>
+                <td class="muted">ยังไม่มีข้อมูล — กด “พรีวิว”</td>
+              </tr>
             </tbody>
           </table>
 
@@ -724,18 +988,20 @@ D-200000 ไม่รับสาย (กรณีไม่มีชื่อ Sa
             <div class="btns">
               <button type="button" id="btnLoadDeal1m" class="mini">
                 <svg class="icBtn" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 3v10" stroke="rgba(34,211,238,.9)" stroke-width="1.8" stroke-linecap="round"/>
-                  <path d="M8 9l4 4 4-4" stroke="rgba(229,231,235,.86)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M5 21h14" stroke="rgba(229,231,235,.60)" stroke-width="1.6" stroke-linecap="round"/>
+                  <path d="M12 3v10" stroke="rgba(34,211,238,.9)" stroke-width="1.8" stroke-linecap="round" />
+                  <path d="M8 9l4 4 4-4" stroke="rgba(229,231,235,.86)" stroke-width="1.8" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                  <path d="M5 21h14" stroke="rgba(229,231,235,.60)" stroke-width="1.6" stroke-linecap="round" />
                 </svg>
                 โหลด Deal 1 เดือน
               </button>
 
               <button type="button" id="btnLoadCloseLost" class="mini">
                 <svg class="icBtn" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 3v10" stroke="rgba(251,113,133,.9)" stroke-width="1.8" stroke-linecap="round"/>
-                  <path d="M8 9l4 4 4-4" stroke="rgba(229,231,235,.86)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M5 21h14" stroke="rgba(229,231,235,.60)" stroke-width="1.6" stroke-linecap="round"/>
+                  <path d="M12 3v10" stroke="rgba(251,113,133,.9)" stroke-width="1.8" stroke-linecap="round" />
+                  <path d="M8 9l4 4 4-4" stroke="rgba(229,231,235,.86)" stroke-width="1.8" stroke-linecap="round"
+                    stroke-linejoin="round" />
+                  <path d="M5 21h14" stroke="rgba(229,231,235,.60)" stroke-width="1.6" stroke-linecap="round" />
                 </svg>
                 โหลด Close lost
               </button>
@@ -744,7 +1010,8 @@ D-200000 ไม่รับสาย (กรณีไม่มีชื่อ Sa
           </div>
 
           <div class="panelNote" id="loadHint" style="margin-top:10px">
-            ทิป: ถ้าจะให้โชว์ผล GET เป็นตารางในหน้านี้ได้เลย — บอกผม แล้วผมทำ “ตัวแสดงผล JSON” เพิ่มแบบ PHANToM style ให้
+            ทิป: ถ้าจะให้โชว์ผล GET เป็นตารางในหน้านี้ได้เลย — บอกผม แล้วผมทำ “ตัวแสดงผล JSON” เพิ่มแบบ PHANToM style
+            ให้
           </div>
         </div>
       </div>
@@ -765,362 +1032,363 @@ D-200000 ไม่รับสาย (กรณีไม่มีชื่อ Sa
     <input type="hidden" name="action" id="getAction">
   </form>
 
-<script>
-  /***********************
-   * Defaults (ตามที่คุณให้)
-   ***********************/
-  const DEFAULT_API =
-    "https://script.google.com/macros/s/AKfycbzUIQjPy88PzOGl1Y7m1GI-rvKNfuqUseex2TWamsrwphwmB8cyP0iv32rlr3OP8D3C/exec";
+  <script>
+    /***********************
+     * Defaults (ตามที่คุณให้)
+     ***********************/
+    const DEFAULT_API =
+      "https://script.google.com/macros/s/AKfycbzUIQjPy88PzOGl1Y7m1GI-rvKNfuqUseex2TWamsrwphwmB8cyP0iv32rlr3OP8D3C/exec";
 
-  const DEFAULT_SHEET =
-    "https://docs.google.com/spreadsheets/d/1GTqgmiDoUOLew543LrLRjyIIMYknFvMFvbIUSFnduLc/edit?usp=sharing";
+    const DEFAULT_SHEET =
+      "https://docs.google.com/spreadsheets/d/1GTqgmiDoUOLew543LrLRjyIIMYknFvMFvbIUSFnduLc/edit?usp=sharing";
 
-  const $ = (id) => document.getElementById(id);
+    const $ = (id) => document.getElementById(id);
 
-  function setStatus(type, title, sub){
-    const dot = $("statusDot");
-    dot.className = "dot";
-    if(type === "ok") dot.classList.add("ok");
-    if(type === "bad") dot.classList.add("bad");
-    if(type === "warn") dot.classList.add("warn");
-    $("statusText").textContent = title || "สถานะ";
-    $("statusSub").textContent = sub || "";
-  }
-
-  function todayDMY(){
-    const d = new Date();
-    const dd = String(d.getDate()).padStart(2,"0");
-    const mm = String(d.getMonth()+1).padStart(2,"0");
-    const yyyy = d.getFullYear();
-    return `${dd}/${mm}/${yyyy}`;
-  }
-
-  function escapeHtml(str){
-    return String(str ?? "").replace(/[&<>"']/g, s => ({
-      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-    }[s]));
-  }
-
-  function getSettings(){
-    const api = localStorage.getItem("PHANTOM_API") || DEFAULT_API;
-    const sheet = localStorage.getItem("PHANTOM_SHEET") || DEFAULT_SHEET;
-    return { api, sheet };
-  }
-
-  function applySettingsToUI(){
-    const { api, sheet } = getSettings();
-    $("apiUrl").value = api;
-    $("sheetUrl").value = sheet;
-    $("endpointText").textContent = api;
-    $("formPost").action = api;
-    $("formGet").action = api;
-  }
-
-  /***********************
-   * Parsing
-   ***********************/
-  const reDeal = /^(D-\d+)/i;
-  const reSaleEnd = /(\S+(?:\s*\(.+?\))+)\s*$/;
-  const reMid = /^D-\d+\s+(.*?)\s+\S+(?:\s*\(.+?\))+\s*$/;
-
-  function parseDeal1m(text){
-    const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-    const rows = [];
-    let skipped = 0;
-
-    for(const raw of lines){
-      const deal = (raw.match(reDeal) || [,""])[1] || "";
-      if(!deal){ skipped++; continue; }
-      const remark = raw.replace(reDeal, "").trim();
-      rows.push({ date: todayDMY(), deal: deal.toUpperCase(), remark, raw });
+    function setStatus(type, title, sub) {
+      const dot = $("statusDot");
+      dot.className = "dot";
+      if (type === "ok") dot.classList.add("ok");
+      if (type === "bad") dot.classList.add("bad");
+      if (type === "warn") dot.classList.add("warn");
+      $("statusText").textContent = title || "สถานะ";
+      $("statusSub").textContent = sub || "";
     }
-    return { lines, rows, skipped };
-  }
 
-  function parseCloseLost(text){
-    const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-    const rows = [];
-    let skipped = 0;
+    function todayDMY() {
+      const d = new Date();
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    }
 
-    for(const raw of lines){
-      const deal = (raw.match(reDeal) || [,""])[1] || "";
-      if(!deal){ skipped++; continue; }
+    function escapeHtml(str) {
+      return String(str ?? "").replace(/[&<>"']/g, s => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[s]));
+    }
 
-      const saleMatch = raw.match(reSaleEnd);
-      const sale = saleMatch ? saleMatch[1].trim() : "";
+    function getSettings() {
+      const api = localStorage.getItem("PHANTOM_API") || DEFAULT_API;
+      const sheet = localStorage.getItem("PHANTOM_SHEET") || DEFAULT_SHEET;
+      return { api, sheet };
+    }
 
-      let remark = "";
-      const mid = raw.match(reMid);
-      if(mid && typeof mid[1] === "string"){
-        remark = mid[1].trim();
-      }else{
-        remark = raw.replace(reDeal, "").trim();
-        if(sale){
-          remark = remark.replace(reSaleEnd, "").trim();
-        }
+    function applySettingsToUI() {
+      const { api, sheet } = getSettings();
+      $("apiUrl").value = api;
+      $("sheetUrl").value = sheet;
+      $("endpointText").textContent = api;
+      $("formPost").action = api;
+      $("formGet").action = api;
+    }
+
+    /***********************
+     * Parsing
+     ***********************/
+    const reDeal = /^(D-\d+)/i;
+    const reSaleEnd = /(\S+(?:\s*\(.+?\))+)\s*$/;
+    const reMid = /^D-\d+\s+(.*?)\s+\S+(?:\s*\(.+?\))+\s*$/;
+
+    function parseDeal1m(text) {
+      const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      const rows = [];
+      let skipped = 0;
+
+      for (const raw of lines) {
+        const deal = (raw.match(reDeal) || [, ""])[1] || "";
+        if (!deal) { skipped++; continue; }
+        const remark = raw.replace(reDeal, "").trim();
+        rows.push({ date: todayDMY(), deal: deal.toUpperCase(), remark, raw });
       }
-
-      rows.push({ date: todayDMY(), deal: deal.toUpperCase(), sale, remark, raw });
+      return { lines, rows, skipped };
     }
-    return { lines, rows, skipped };
-  }
 
-  /***********************
-   * Preview
-   ***********************/
-  function setPreviewHead(mode){
-    const head = $("previewHead");
-    if(mode === "deal1m"){
-      head.innerHTML = `
+    function parseCloseLost(text) {
+      const lines = text.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      const rows = [];
+      let skipped = 0;
+
+      for (const raw of lines) {
+        const deal = (raw.match(reDeal) || [, ""])[1] || "";
+        if (!deal) { skipped++; continue; }
+
+        const saleMatch = raw.match(reSaleEnd);
+        const sale = saleMatch ? saleMatch[1].trim() : "";
+
+        let remark = "";
+        const mid = raw.match(reMid);
+        if (mid && typeof mid[1] === "string") {
+          remark = mid[1].trim();
+        } else {
+          remark = raw.replace(reDeal, "").trim();
+          if (sale) {
+            remark = remark.replace(reSaleEnd, "").trim();
+          }
+        }
+
+        rows.push({ date: todayDMY(), deal: deal.toUpperCase(), sale, remark, raw });
+      }
+      return { lines, rows, skipped };
+    }
+
+    /***********************
+     * Preview
+     ***********************/
+    function setPreviewHead(mode) {
+      const head = $("previewHead");
+      if (mode === "deal1m") {
+        head.innerHTML = `
         <tr>
           <th style="width:120px">Date</th>
           <th style="width:140px">Deal</th>
           <th>Remark</th>
         </tr>`;
-    }else{
-      head.innerHTML = `
+      } else {
+        head.innerHTML = `
         <tr>
           <th style="width:120px">Date</th>
           <th style="width:140px">Deal</th>
           <th style="width:280px">Sale</th>
           <th>Remark</th>
         </tr>`;
+      }
     }
-  }
 
-  function renderPreviewDeal1m(rows){
-    setPreviewHead("deal1m");
-    const tbody = $("previewBody");
-    tbody.innerHTML = "";
-    if(rows.length === 0){
-      tbody.innerHTML = `<tr><td colspan="3" class="muted">ไม่มีแถวที่จะส่ง (ต้องมี Deal)</td></tr>`;
-      return;
-    }
-    for(const r of rows){
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
+    function renderPreviewDeal1m(rows) {
+      setPreviewHead("deal1m");
+      const tbody = $("previewBody");
+      tbody.innerHTML = "";
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="muted">ไม่มีแถวที่จะส่ง (ต้องมี Deal)</td></tr>`;
+        return;
+      }
+      for (const r of rows) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
         <td>${escapeHtml(r.date)}</td>
         <td>${escapeHtml(r.deal)}</td>
         <td>${escapeHtml(r.remark)}</td>
       `;
-      tbody.appendChild(tr);
+        tbody.appendChild(tr);
+      }
     }
-  }
 
-  function renderPreviewCloseLost(rows){
-    setPreviewHead("closeLost");
-    const tbody = $("previewBody");
-    tbody.innerHTML = "";
-    if(rows.length === 0){
-      tbody.innerHTML = `<tr><td colspan="4" class="muted">ไม่มีแถวที่จะส่ง (ต้องมี Deal)</td></tr>`;
-      return;
-    }
-    for(const r of rows){
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
+    function renderPreviewCloseLost(rows) {
+      setPreviewHead("closeLost");
+      const tbody = $("previewBody");
+      tbody.innerHTML = "";
+      if (rows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="muted">ไม่มีแถวที่จะส่ง (ต้องมี Deal)</td></tr>`;
+        return;
+      }
+      for (const r of rows) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
         <td>${escapeHtml(r.date)}</td>
         <td>${escapeHtml(r.deal)}</td>
         <td>${escapeHtml(r.sale)}</td>
         <td>${escapeHtml(r.remark)}</td>
       `;
-      tbody.appendChild(tr);
+        tbody.appendChild(tr);
+      }
     }
-  }
 
-  /***********************
-   * Tabs + Quick
-   ***********************/
-  function activateTab(tab){
-    $("tabDeal1m").classList.toggle("active", tab==="deal1m");
-    $("tabCloseLost").classList.toggle("active", tab==="closeLost");
-    $("tabSettings").classList.toggle("active", tab==="settings");
+    /***********************
+     * Tabs + Quick
+     ***********************/
+    function activateTab(tab) {
+      $("tabDeal1m").classList.toggle("active", tab === "deal1m");
+      $("tabCloseLost").classList.toggle("active", tab === "closeLost");
+      $("tabSettings").classList.toggle("active", tab === "settings");
 
-    $("panelDeal1m").classList.toggle("hidden", tab!=="deal1m");
-    $("panelCloseLost").classList.toggle("hidden", tab!=="closeLost");
-    $("panelSettings").classList.toggle("hidden", tab!=="settings");
+      $("panelDeal1m").classList.toggle("hidden", tab !== "deal1m");
+      $("panelCloseLost").classList.toggle("hidden", tab !== "closeLost");
+      $("panelSettings").classList.toggle("hidden", tab !== "settings");
 
-    if(tab==="deal1m"){
+      if (tab === "deal1m") {
+        setPreviewHead("deal1m");
+        $("previewBody").innerHTML = `<tr><td colspan="3" class="muted">ยังไม่มีข้อมูล — กด “พรีวิว”</td></tr>`;
+        setStatus("ok", "พร้อมใช้งาน", "โหมด: Deal ย้อนหลัง 1 เดือน");
+      } else if (tab === "closeLost") {
+        setPreviewHead("closeLost");
+        $("previewBody").innerHTML = `<tr><td colspan="4" class="muted">ยังไม่มีข้อมูล — กด “พรีวิว”</td></tr>`;
+        setStatus("ok", "พร้อมใช้งาน", "โหมด: Deal Close lost");
+      } else {
+        $("previewHead").innerHTML = `<tr><th>Preview</th></tr>`;
+        $("previewBody").innerHTML = `<tr><td class="muted">ไปที่โหมดใดโหมดหนึ่งแล้วกดพรีวิว</td></tr>`;
+        setStatus("ok", "พร้อมใช้งาน", "โหมด: ตั้งค่า");
+      }
+    }
+
+    $("tabDeal1m").addEventListener("click", () => activateTab("deal1m"));
+    $("tabCloseLost").addEventListener("click", () => activateTab("closeLost"));
+    $("tabSettings").addEventListener("click", () => activateTab("settings"));
+
+    $("btnQuickDeal1m").addEventListener("click", () => activateTab("deal1m"));
+    $("btnQuickClose").addEventListener("click", () => activateTab("closeLost"));
+    $("btnQuickSettings").addEventListener("click", () => activateTab("settings"));
+
+    /***********************
+     * Batch POST (ส่งรวดเดียวทั้งชุด)
+     ***********************/
+    function postBatch(items, label) {
+      if (!items.length) {
+        setStatus("bad", "ส่งไม่ได้", "ไม่มีบรรทัดที่มี Deal");
+        return;
+      }
+      setStatus("warn", "กำลังส่ง...", `Batch ${items.length} รายการ • ${label}`);
+      $("postAction").value = "batch_upsert";
+      $("postItems").value = JSON.stringify(items);
+      $("formPost").submit();
+    }
+
+    /***********************
+     * Listen postMessage from Apps Script (mode=postback)
+     ***********************/
+    window.addEventListener("message", (event) => {
+      try {
+        const msg = String(event.data || "");
+        if (!msg.startsWith("PHANTOM_POSTBACK:")) return;
+
+        const json = msg.slice("PHANTOM_POSTBACK:".length);
+        const data = JSON.parse(json);
+
+        if (data && typeof data.ok === "boolean") {
+          if (data.ok) {
+            setStatus("ok", "ส่งสำเร็จ ✅", data.message || "");
+          } else {
+            setStatus("bad", "ส่งไม่สำเร็จ", data.message || "");
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    });
+
+    /***********************
+     * Buttons: Deal 1M
+     ***********************/
+    $("btnPreviewDeal1m").addEventListener("click", () => {
+      const { lines, rows, skipped } = parseDeal1m($("inputDeal1m").value.trim());
+      renderPreviewDeal1m(rows);
+      if (lines.length === 0) setStatus("warn", "ยังไม่มีข้อมูล", "วางข้อความก่อนแล้วกดพรีวิว");
+      else setStatus("ok", "พรีวิวแล้ว", `จะส่ง ${rows.length} แถว • ข้าม ${skipped} แถวที่ไม่มี Deal`);
+    });
+
+    $("btnClearDeal1m").addEventListener("click", () => {
+      $("inputDeal1m").value = "";
       setPreviewHead("deal1m");
       $("previewBody").innerHTML = `<tr><td colspan="3" class="muted">ยังไม่มีข้อมูล — กด “พรีวิว”</td></tr>`;
-      setStatus("ok","พร้อมใช้งาน","โหมด: Deal ย้อนหลัง 1 เดือน");
-    }else if(tab==="closeLost"){
+      setStatus("ok", "ล้างแล้ว", "พร้อมรับชุดใหม่");
+    });
+
+    $("btnSubmitDeal1m").addEventListener("click", () => {
+      const text = $("inputDeal1m").value.trim();
+      const { rows } = parseDeal1m(text);
+      renderPreviewDeal1m(rows);
+
+      const items = rows.map(r => ({
+        sheet: "deal_1m",
+        deal: r.deal,
+        remark: r.remark || ""
+      }));
+
+      postBatch(items, "Deal ย้อนหลัง 1 เดือน");
+    });
+
+    /***********************
+     * Buttons: Close lost
+     ***********************/
+    $("btnPreviewCloseLost").addEventListener("click", () => {
+      const { lines, rows, skipped } = parseCloseLost($("inputCloseLost").value.trim());
+      renderPreviewCloseLost(rows);
+      if (lines.length === 0) setStatus("warn", "ยังไม่มีข้อมูล", "วางข้อความก่อนแล้วกดพรีวิว");
+      else setStatus("ok", "พรีวิวแล้ว", `จะส่ง ${rows.length} แถว • ข้าม ${skipped} แถวที่ไม่มี Deal`);
+    });
+
+    $("btnClearCloseLost").addEventListener("click", () => {
+      $("inputCloseLost").value = "";
       setPreviewHead("closeLost");
       $("previewBody").innerHTML = `<tr><td colspan="4" class="muted">ยังไม่มีข้อมูล — กด “พรีวิว”</td></tr>`;
-      setStatus("ok","พร้อมใช้งาน","โหมด: Deal Close lost");
-    }else{
-      $("previewHead").innerHTML = `<tr><th>Preview</th></tr>`;
-      $("previewBody").innerHTML = `<tr><td class="muted">ไปที่โหมดใดโหมดหนึ่งแล้วกดพรีวิว</td></tr>`;
-      setStatus("ok","พร้อมใช้งาน","โหมด: ตั้งค่า");
-    }
-  }
+      setStatus("ok", "ล้างแล้ว", "พร้อมรับชุดใหม่");
+    });
 
-  $("tabDeal1m").addEventListener("click", ()=>activateTab("deal1m"));
-  $("tabCloseLost").addEventListener("click", ()=>activateTab("closeLost"));
-  $("tabSettings").addEventListener("click", ()=>activateTab("settings"));
+    $("btnSubmitCloseLost").addEventListener("click", () => {
+      const text = $("inputCloseLost").value.trim();
+      const { rows } = parseCloseLost(text);
+      renderPreviewCloseLost(rows);
 
-  $("btnQuickDeal1m").addEventListener("click", ()=>activateTab("deal1m"));
-  $("btnQuickClose").addEventListener("click", ()=>activateTab("closeLost"));
-  $("btnQuickSettings").addEventListener("click", ()=>activateTab("settings"));
+      const items = rows.map(r => ({
+        sheet: "close_lost",
+        deal: r.deal,
+        sale: r.sale || "",
+        remark: r.remark || ""
+      }));
 
-  /***********************
-   * Batch POST (ส่งรวดเดียวทั้งชุด)
-   ***********************/
-  function postBatch(items, label){
-    if(!items.length){
-      setStatus("bad","ส่งไม่ได้","ไม่มีบรรทัดที่มี Deal");
-      return;
-    }
-    setStatus("warn", "กำลังส่ง...", `Batch ${items.length} รายการ • ${label}`);
-    $("postAction").value = "batch_upsert";
-    $("postItems").value = JSON.stringify(items);
-    $("formPost").submit();
-  }
+      postBatch(items, "Deal Close lost");
+    });
 
-  /***********************
-   * Listen postMessage from Apps Script (mode=postback)
-   ***********************/
-  window.addEventListener("message", (event) => {
-    try{
-      const msg = String(event.data || "");
-      if(!msg.startsWith("PHANTOM_POSTBACK:")) return;
+    /***********************
+     * Settings buttons
+     ***********************/
+    $("btnSaveSettings").addEventListener("click", () => {
+      const api = $("apiUrl").value.trim() || DEFAULT_API;
+      const sheet = $("sheetUrl").value.trim() || DEFAULT_SHEET;
 
-      const json = msg.slice("PHANTOM_POSTBACK:".length);
-      const data = JSON.parse(json);
+      localStorage.setItem("PHANTOM_API", api);
+      localStorage.setItem("PHANTOM_SHEET", sheet);
 
-      if(data && typeof data.ok === "boolean"){
-        if(data.ok){
-          setStatus("ok", "ส่งสำเร็จ ✅", data.message || "");
-        }else{
-          setStatus("bad", "ส่งไม่สำเร็จ", data.message || "");
-        }
-      }
-    }catch(e){
-      // ignore
-    }
-  });
+      applySettingsToUI();
+      setStatus("ok", "บันทึกแล้ว ✅", "ตั้งค่า API / Sheet เรียบร้อย");
+    });
 
-  /***********************
-   * Buttons: Deal 1M
-   ***********************/
-  $("btnPreviewDeal1m").addEventListener("click", () => {
-    const { lines, rows, skipped } = parseDeal1m($("inputDeal1m").value.trim());
-    renderPreviewDeal1m(rows);
-    if(lines.length === 0) setStatus("warn","ยังไม่มีข้อมูล","วางข้อความก่อนแล้วกดพรีวิว");
-    else setStatus("ok","พรีวิวแล้ว",`จะส่ง ${rows.length} แถว • ข้าม ${skipped} แถวที่ไม่มี Deal`);
-  });
+    $("btnResetSettings").addEventListener("click", () => {
+      localStorage.removeItem("PHANTOM_API");
+      localStorage.removeItem("PHANTOM_SHEET");
+      applySettingsToUI();
+      setStatus("ok", "รีเซ็ตแล้ว ✅", "กลับสู่ค่าเริ่มต้น");
+    });
 
-  $("btnClearDeal1m").addEventListener("click", () => {
-    $("inputDeal1m").value = "";
-    setPreviewHead("deal1m");
-    $("previewBody").innerHTML = `<tr><td colspan="3" class="muted">ยังไม่มีข้อมูล — กด “พรีวิว”</td></tr>`;
-    setStatus("ok","ล้างแล้ว","พร้อมรับชุดใหม่");
-  });
+    $("btnOpenSheet").addEventListener("click", () => {
+      const { sheet } = getSettings();
+      window.open(sheet, "_blank");
+    });
 
-  $("btnSubmitDeal1m").addEventListener("click", () => {
-    const text = $("inputDeal1m").value.trim();
-    const { rows } = parseDeal1m(text);
-    renderPreviewDeal1m(rows);
+    $("btnTestPing").addEventListener("click", () => {
+      setStatus("warn", "กำลัง ping...", "ส่งคำสั่ง ping ไปที่ API");
+      $("getAction").value = "ping";
+      $("formGet").submit();
+      $("loadHint").innerHTML = `ส่งคำสั่ง <b>ping</b> แล้ว • ดู response ที่ DevTools → Network`;
+      setTimeout(() => setStatus("ok", "ping ส่งแล้ว ✅", "ถ้า API พร้อม จะตอบกลับเป็น JSON"), 450);
+    });
 
-    const items = rows.map(r => ({
-      sheet: "deal_1m",
-      deal: r.deal,
-      remark: r.remark || ""
-    }));
+    /***********************
+     * Load data (GET) – ยิงเรียก (ดูใน Network)
+     ***********************/
+    $("btnLoadDeal1m").addEventListener("click", () => {
+      setStatus("warn", "กำลังโหลด...", "GET get_deal_1m (ดูที่ Network)");
+      $("getAction").value = "get_deal_1m";
+      $("formGet").submit();
+      $("loadHint").innerHTML = `โหลดแล้ว • เปิด DevTools → Network → ดู response ของ <b>get_deal_1m</b>`;
+      setTimeout(() => setStatus("ok", "GET ส่งแล้ว ✅", "ยังไม่แสดงบนหน้า (ดูใน Network)"), 450);
+    });
 
-    postBatch(items, "Deal ย้อนหลัง 1 เดือน");
-  });
+    $("btnLoadCloseLost").addEventListener("click", () => {
+      setStatus("warn", "กำลังโหลด...", "GET get_close_lost (ดูที่ Network)");
+      $("getAction").value = "get_close_lost";
+      $("formGet").submit();
+      $("loadHint").innerHTML = `โหลดแล้ว • เปิด DevTools → Network → ดู response ของ <b>get_close_lost</b>`;
+      setTimeout(() => setStatus("ok", "GET ส่งแล้ว ✅", "ยังไม่แสดงบนหน้า (ดูใน Network)"), 450);
+    });
 
-  /***********************
-   * Buttons: Close lost
-   ***********************/
-  $("btnPreviewCloseLost").addEventListener("click", () => {
-    const { lines, rows, skipped } = parseCloseLost($("inputCloseLost").value.trim());
-    renderPreviewCloseLost(rows);
-    if(lines.length === 0) setStatus("warn","ยังไม่มีข้อมูล","วางข้อความก่อนแล้วกดพรีวิว");
-    else setStatus("ok","พรีวิวแล้ว",`จะส่ง ${rows.length} แถว • ข้าม ${skipped} แถวที่ไม่มี Deal`);
-  });
-
-  $("btnClearCloseLost").addEventListener("click", () => {
-    $("inputCloseLost").value = "";
-    setPreviewHead("closeLost");
-    $("previewBody").innerHTML = `<tr><td colspan="4" class="muted">ยังไม่มีข้อมูล — กด “พรีวิว”</td></tr>`;
-    setStatus("ok","ล้างแล้ว","พร้อมรับชุดใหม่");
-  });
-
-  $("btnSubmitCloseLost").addEventListener("click", () => {
-    const text = $("inputCloseLost").value.trim();
-    const { rows } = parseCloseLost(text);
-    renderPreviewCloseLost(rows);
-
-    const items = rows.map(r => ({
-      sheet: "close_lost",
-      deal: r.deal,
-      sale: r.sale || "",
-      remark: r.remark || ""
-    }));
-
-    postBatch(items, "Deal Close lost");
-  });
-
-  /***********************
-   * Settings buttons
-   ***********************/
-  $("btnSaveSettings").addEventListener("click", () => {
-    const api = $("apiUrl").value.trim() || DEFAULT_API;
-    const sheet = $("sheetUrl").value.trim() || DEFAULT_SHEET;
-
-    localStorage.setItem("PHANTOM_API", api);
-    localStorage.setItem("PHANTOM_SHEET", sheet);
-
+    /***********************
+     * Init
+     ***********************/
     applySettingsToUI();
-    setStatus("ok","บันทึกแล้ว ✅","ตั้งค่า API / Sheet เรียบร้อย");
-  });
-
-  $("btnResetSettings").addEventListener("click", () => {
-    localStorage.removeItem("PHANTOM_API");
-    localStorage.removeItem("PHANTOM_SHEET");
-    applySettingsToUI();
-    setStatus("ok","รีเซ็ตแล้ว ✅","กลับสู่ค่าเริ่มต้น");
-  });
-
-  $("btnOpenSheet").addEventListener("click", () => {
-    const { sheet } = getSettings();
-    window.open(sheet, "_blank");
-  });
-
-  $("btnTestPing").addEventListener("click", () => {
-    setStatus("warn","กำลัง ping...","ส่งคำสั่ง ping ไปที่ API");
-    $("getAction").value = "ping";
-    $("formGet").submit();
-    $("loadHint").innerHTML = `ส่งคำสั่ง <b>ping</b> แล้ว • ดู response ที่ DevTools → Network`;
-    setTimeout(()=>setStatus("ok","ping ส่งแล้ว ✅","ถ้า API พร้อม จะตอบกลับเป็น JSON"), 450);
-  });
-
-  /***********************
-   * Load data (GET) – ยิงเรียก (ดูใน Network)
-   ***********************/
-  $("btnLoadDeal1m").addEventListener("click", () => {
-    setStatus("warn","กำลังโหลด...","GET get_deal_1m (ดูที่ Network)");
-    $("getAction").value = "get_deal_1m";
-    $("formGet").submit();
-    $("loadHint").innerHTML = `โหลดแล้ว • เปิด DevTools → Network → ดู response ของ <b>get_deal_1m</b>`;
-    setTimeout(()=>setStatus("ok","GET ส่งแล้ว ✅","ยังไม่แสดงบนหน้า (ดูใน Network)"), 450);
-  });
-
-  $("btnLoadCloseLost").addEventListener("click", () => {
-    setStatus("warn","กำลังโหลด...","GET get_close_lost (ดูที่ Network)");
-    $("getAction").value = "get_close_lost";
-    $("formGet").submit();
-    $("loadHint").innerHTML = `โหลดแล้ว • เปิด DevTools → Network → ดู response ของ <b>get_close_lost</b>`;
-    setTimeout(()=>setStatus("ok","GET ส่งแล้ว ✅","ยังไม่แสดงบนหน้า (ดูใน Network)"), 450);
-  });
-
-  /***********************
-   * Init
-   ***********************/
-  applySettingsToUI();
-  activateTab("deal1m");
-  setStatus("ok","พร้อมใช้งาน","PHANToM style • Batch mode • Upsert safe");
-</script>
+    activateTab("deal1m");
+    setStatus("ok", "พร้อมใช้งาน", "PHANToM style • Batch mode • Upsert safe");
+  </script>
 </body>
+
 </html>
