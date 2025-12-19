@@ -167,10 +167,10 @@
       const n = Number(num);
       if (isNaN(n)) return num;
       if (n >= 1000000) {
-        return (n / 1000000).toFixed(2).replace(/\.0+$|(?<=\.\d)0+$/,'') + 'M';
+        return (n / 1000000).toFixed(4).replace(/\.0+$|(?<=\.\d)0+$/,'') + 'M';
       }
       if (n >= 1000) {
-        return (n / 1000).toFixed(2).replace(/\.0+$|(?<=\.\d)0+$/,'') + 'K';
+        return (n / 1000).toFixed(4).replace(/\.0+$|(?<=\.\d)0+$/,'') + 'K';
       }
       return String(n);
     };
